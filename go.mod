@@ -4,7 +4,7 @@ go 1.22.5
 
 require (
 	github.com/OpenPrinting/goipp v1.0.0
-	github.com/cespare/xxhash/v2 v2.2.0
+	github.com/cespare/xxhash/v2 v2.3.0
 	github.com/ddkwork/golibrary v0.0.0-20240728131742-3497a6ed9010
 	github.com/ebitengine/purego v0.7.1
 	github.com/google/uuid v1.6.0
