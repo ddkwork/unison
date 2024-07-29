@@ -3,18 +3,21 @@ module github.com/richardwilkes/unison
 go 1.22.5
 
 require (
-	github.com/OpenPrinting/goipp v1.0.0
+	github.com/OpenPrinting/goipp v1.1.0
 	github.com/cespare/xxhash/v2 v2.3.0
-	github.com/ddkwork/golibrary v0.0.0-20240728131742-3497a6ed9010
 	github.com/ebitengine/purego v0.7.1
 	github.com/google/uuid v1.6.0
 	github.com/grandcat/zeroconf v1.0.0
-	github.com/richardwilkes/json v0.1.0
-	github.com/richardwilkes/toolbox v1.99.0
-	github.com/yuin/goldmark v1.5.6
+	github.com/richardwilkes/json v0.3.0
+	github.com/yuin/goldmark v1.7.4
 	golang.org/x/image v0.18.0
 	golang.org/x/sys v0.22.0
 	golang.org/x/text v0.16.0
+)
+
+require (
+	github.com/ddkwork/golibrary v0.0.0-20240728131742-3497a6ed9010
+	github.com/richardwilkes/toolbox v1.99.0
 )
 
 require (
@@ -24,7 +27,7 @@ require (
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
-	github.com/miekg/dns v1.1.56 // indirect
+	github.com/miekg/dns v1.1.61 // indirect
 	github.com/pkg/term v1.1.0 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56 // indirect
