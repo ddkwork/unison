@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -13,8 +13,8 @@ import (
 	"errors"
 	"strings"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/toolbox/errs"
-	"github.com/richardwilkes/unison/enums/align"
 )
 
 // Pre-defined modal response codes. Apps should start their codes at ModalResponseUserBase.
@@ -34,19 +34,19 @@ const DialogClientDataKey = "dialog"
 var DefaultDialogTheme = DialogTheme{
 	ErrorIcon: &DrawableSVG{
 		SVG:  CircledExclamationSVG,
-		Size: Size{Width: 48, Height: 48},
+		Size: NewSize(48, 48),
 	},
-	ErrorIconInk: ThemeError,
+	ErrorIconInk: ErrorColor,
 	WarningIcon: &DrawableSVG{
 		SVG:  TriangleExclamationSVG,
-		Size: Size{Width: 48, Height: 48},
+		Size: NewSize(48, 48),
 	},
-	WarningIconInk: ThemeWarning,
+	WarningIconInk: WarningColor,
 	QuestionIcon: &DrawableSVG{
 		SVG:  CircledQuestionSVG,
-		Size: Size{Width: 48, Height: 48},
+		Size: NewSize(48, 48),
 	},
-	QuestionIconInk: ThemeOnSurface,
+	QuestionIconInk: OnBackgroundColor,
 }
 
 // DialogTheme holds theming data for a Dialog.
@@ -111,8 +111,8 @@ func NewDialog(icon Drawable, iconInk Ink, msgPanel Paneler, buttonInfo []*Dialo
 	p.SetLayoutData(&FlexLayoutData{
 		HSpan:  1,
 		VSpan:  1,
-		HAlign: align.Fill,
-		VAlign: align.Fill,
+		HAlign: FillAlignment,
+		VAlign: FillAlignment,
 		HGrab:  true,
 		VGrab:  true,
 	})
@@ -136,8 +136,8 @@ func NewDialog(icon Drawable, iconInk Ink, msgPanel Paneler, buttonInfo []*Dialo
 	buttonPanel.SetLayoutData(&FlexLayoutData{
 		HSpan:  columns,
 		VSpan:  1,
-		HAlign: align.End,
-		VAlign: align.Middle,
+		HAlign: EndAlignment,
+		VAlign: MiddleAlignment,
 	})
 	content.AddChild(buttonPanel)
 	originalKeyDownCallback := content.KeyDownCallback
@@ -165,7 +165,8 @@ func NewDialog(icon Drawable, iconInk Ink, msgPanel Paneler, buttonInfo []*Dialo
 	frame.Height = wndFrame.Height
 	frame.X += (frame.Width - wndFrame.Width) / 2
 	frame.Width = wndFrame.Width
-	d.wnd.SetFrameRect(frame.Align())
+	frame.Align()
+	d.wnd.SetFrameRect(frame)
 	return d, nil
 }
 
@@ -207,7 +208,7 @@ func NewMessagePanel(primary, detail string) *Panel {
 		MinSize: Size{Width: 200},
 		HSpan:   1,
 		VSpan:   1,
-		VAlign:  align.Middle,
+		VAlign:  MiddleAlignment,
 	})
 	return panel
 }
@@ -223,8 +224,8 @@ func breakTextIntoLabels(panel *Panel, text string, font Font, addSpaceAbove boo
 				} else {
 					part := text[:i]
 					l := NewLabel()
+					l.Text = part
 					l.Font = font
-					l.SetTitle(part)
 					if returns > 1 || addSpaceAbove {
 						addSpaceAbove = false
 						l.SetBorder(NewEmptyBorder(Insets{Top: StdHSpacing}))
@@ -236,8 +237,8 @@ func breakTextIntoLabels(panel *Panel, text string, font Font, addSpaceAbove boo
 			} else {
 				if text != "" {
 					l := NewLabel()
+					l.Text = text
 					l.Font = font
-					l.SetTitle(text)
 					if returns > 1 || addSpaceAbove {
 						l.SetBorder(NewEmptyBorder(Insets{Top: StdHSpacing}))
 					}
@@ -271,12 +272,9 @@ func ErrorDialogWithMessage(primary, detail string) {
 
 // ErrorDialogWithPanel displays a standard error dialog with the specified panel.
 func ErrorDialogWithPanel(msgPanel Paneler) {
-	if dialog, err := NewDialog(DefaultDialogTheme.ErrorIcon, DefaultDialogTheme.ErrorIconInk, msgPanel,
-		[]*DialogButtonInfo{NewOKButtonInfo()}); err != nil {
-		errs.Log(err)
-	} else {
-		dialog.RunModal()
-	}
+	dialog := mylog.Check2(NewDialog(DefaultDialogTheme.ErrorIcon, DefaultDialogTheme.ErrorIconInk, msgPanel,
+		[]*DialogButtonInfo{NewOKButtonInfo()}))
+	dialog.RunModal()
 }
 
 // WarningDialogWithMessage displays a standard warning dialog with the specified primary and detail messages. Embedded
@@ -287,12 +285,9 @@ func WarningDialogWithMessage(primary, detail string) {
 
 // WarningDialogWithPanel displays a standard error dialog with the specified panel.
 func WarningDialogWithPanel(msgPanel Paneler) {
-	if dialog, err := NewDialog(DefaultDialogTheme.WarningIcon, DefaultDialogTheme.WarningIconInk, msgPanel,
-		[]*DialogButtonInfo{NewOKButtonInfo()}); err != nil {
-		errs.Log(err)
-	} else {
-		dialog.RunModal()
-	}
+	dialog := mylog.Check2(NewDialog(DefaultDialogTheme.WarningIcon, DefaultDialogTheme.WarningIconInk, msgPanel,
+		[]*DialogButtonInfo{NewOKButtonInfo()}))
+	dialog.RunModal()
 }
 
 // QuestionDialog displays a standard question dialog with the specified primary and detail messages. Embedded line
@@ -305,12 +300,10 @@ func QuestionDialog(primary, detail string) int {
 // QuestionDialogWithPanel displays a standard question dialog with the specified panel. This function returns
 // ids.ModalResponseOK if the OK button was pressed and ids.ModalResponseCancel if the Cancel button was pressed.
 func QuestionDialogWithPanel(msgPanel Paneler) int {
-	if dialog, err := NewDialog(DefaultDialogTheme.QuestionIcon, DefaultDialogTheme.QuestionIconInk, msgPanel,
-		[]*DialogButtonInfo{NewCancelButtonInfo(), NewOKButtonInfo()}); err != nil {
-		errs.Log(err)
-	} else {
-		return dialog.RunModal()
-	}
+	dialog := mylog.Check2(NewDialog(DefaultDialogTheme.QuestionIcon, DefaultDialogTheme.QuestionIconInk, msgPanel,
+		[]*DialogButtonInfo{NewCancelButtonInfo(), NewOKButtonInfo()}))
+	return dialog.RunModal()
+
 	return ModalResponseCancel
 }
 
@@ -325,13 +318,11 @@ func YesNoDialog(primary, detail string) int {
 // This function returns ids.ModalResponseOK if the Yes button was pressed and ids.ModalResponseDiscard if the No button
 // was pressed.
 func YesNoDialogWithPanel(msgPanel Paneler) int {
-	if dialog, err := NewDialog(DefaultDialogTheme.QuestionIcon,
+	dialog := mylog.Check2(NewDialog(DefaultDialogTheme.QuestionIcon,
 		DefaultDialogTheme.QuestionIconInk, msgPanel,
-		[]*DialogButtonInfo{NewNoButtonInfo(), NewYesButtonInfo()}); err != nil {
-		errs.Log(err)
-	} else {
-		return dialog.RunModal()
-	}
+		[]*DialogButtonInfo{NewNoButtonInfo(), NewYesButtonInfo()}))
+	return dialog.RunModal()
+
 	return ModalResponseDiscard
 }
 
@@ -346,11 +337,11 @@ func YesNoCancelDialog(primary, detail string) int {
 // This function returns ids.ModalResponseOK if the Yes button was pressed, ids.ModalResponseDiscard if the No button
 // was pressed, and ids.ModalResponseCancel if the Cancel button was pressed.
 func YesNoCancelDialogWithPanel(msgPanel Paneler) int {
-	if dialog, err := NewDialog(DefaultDialogTheme.QuestionIcon, DefaultDialogTheme.QuestionIconInk, msgPanel,
-		[]*DialogButtonInfo{NewCancelButtonInfo(), NewNoButtonInfo(), NewYesButtonInfo()}); err != nil {
-		errs.Log(err)
-	} else {
+	dialog := mylog.Check2(NewDialog(DefaultDialogTheme.QuestionIcon, DefaultDialogTheme.QuestionIconInk, msgPanel,
+		[]*DialogButtonInfo{NewCancelButtonInfo(), NewNoButtonInfo(), NewYesButtonInfo()}))
+	{
 		return dialog.RunModal()
+
+		return ModalResponseCancel
 	}
-	return ModalResponseCancel
 }

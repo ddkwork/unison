@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -16,9 +16,6 @@ import (
 
 	"github.com/richardwilkes/toolbox/collection/dict"
 	"github.com/richardwilkes/toolbox/txt"
-	"github.com/richardwilkes/unison/enums/slant"
-	"github.com/richardwilkes/unison/enums/spacing"
-	"github.com/richardwilkes/unison/enums/weight"
 	"github.com/richardwilkes/unison/internal/skia"
 )
 
@@ -30,8 +27,8 @@ var slantMapping = [][]int{
 
 // FontFamily holds information about one font family.
 type FontFamily struct {
-	set  skia.FontStyleSet
 	name string
+	set  skia.FontStyleSet
 }
 
 // FontFamilies retrieves the names of the installed font families.
@@ -86,21 +83,21 @@ func (f *FontFamily) Count() int {
 }
 
 // Style returns the style information for the given index. Must be >= 0 and < Count().
-func (f *FontFamily) Style(index int) (description string, weightValue weight.Enum, spacingValue spacing.Enum, slantValue slant.Enum) {
+func (f *FontFamily) Style(index int) (description string, weight FontWeight, spacing FontSpacing, slant FontSlant) {
 	internalFontLock.RLock()
 	defer internalFontLock.RUnlock()
 	if fnt, exists := internalFonts[f.name]; exists {
 		if index >= 0 && index < len(fnt.faces) {
-			weightValue, spacingValue, slantValue = fnt.faces[index].Style()
+			weight, spacing, slant = fnt.faces[index].Style()
 			var buffer strings.Builder
-			buffer.WriteString(weightValue.String())
-			if spacingValue != spacing.Standard {
+			buffer.WriteString(weight.String())
+			if spacing != StandardSpacing {
 				buffer.WriteString(" ")
-				buffer.WriteString(spacingValue.String())
+				buffer.WriteString(spacing.String())
 			}
-			if slantValue != slant.Upright {
+			if slant != NoSlant {
 				buffer.WriteString(" ")
-				buffer.WriteString(slantValue.String())
+				buffer.WriteString(slant.String())
 			}
 			description = buffer.String()
 		}
@@ -111,8 +108,8 @@ func (f *FontFamily) Style(index int) (description string, weightValue weight.En
 	style := skia.FontStyleNew(0, 0, 0)
 	defer skia.FontStyleDelete(style)
 	skia.FontStyleSetGetStyle(f.set, index, style, ss)
-	return skia.StringGetString(ss), weight.Enum(skia.FontStyleGetWeight(style)),
-		spacing.Enum(skia.FontStyleGetWidth(style)), slant.Enum(skia.FontStyleGetSlant(style))
+	return skia.StringGetString(ss), FontWeight(skia.FontStyleGetWeight(style)),
+		FontSpacing(skia.FontStyleGetWidth(style)), FontSlant(skia.FontStyleGetSlant(style))
 }
 
 // Face returns the FontFace for the given index. Must be >= 0 and < Count().
@@ -130,9 +127,7 @@ func (f *FontFamily) Face(index int) *FontFace {
 
 // MatchStyle attempts to locate the FontFace within the family with the given style. Will return nil if nothing
 // suitable can be found.
-func (f *FontFamily) MatchStyle(weightValue weight.Enum, spacingValue spacing.Enum, slantValue slant.Enum) *FontFace {
-	spacingValue = spacingValue.EnsureValid()
-	slantValue = slantValue.EnsureValid()
+func (f *FontFamily) MatchStyle(weight FontWeight, spacing FontSpacing, slant FontSlant) *FontFace {
 	internalFontLock.RLock()
 	defer internalFontLock.RUnlock()
 	if fnt, exists := internalFonts[f.name]; exists {
@@ -140,47 +135,47 @@ func (f *FontFamily) MatchStyle(weightValue weight.Enum, spacingValue spacing.En
 		bestIndex := 0
 		for i, face := range fnt.faces {
 			w, sp, sl := face.Style()
-			if weightValue == w && spacingValue == sp && slantValue == sl {
+			if weight == w && spacing == sp && slant == sl {
 				return face
 			}
 			var score int
-			if spacingValue <= spacing.Standard {
-				if sp <= spacingValue {
-					score = 10 - int(spacingValue) + int(sp)
+			if spacing <= StandardSpacing {
+				if sp <= spacing {
+					score = 10 - int(spacing) + int(sp)
 				} else {
 					score = 10 - int(sp)
 				}
 			} else {
-				if sp > spacingValue {
-					score = 10 + int(spacingValue) - int(sp)
+				if sp > spacing {
+					score = 10 + int(spacing) - int(sp)
 				} else {
 					score = int(sp)
 				}
 			}
 			score <<= 8
-			score += slantMapping[slantValue][sl]
+			score += slantMapping[slant][sl]
 			score <<= 8
 			switch {
-			case weightValue == w:
+			case weight == w:
 				score += 1000
-			case weightValue < weight.Regular:
-				if w <= weightValue {
-					score += 1000 - int(weightValue) + int(w)
+			case weight < NormalFontWeight:
+				if w <= weight {
+					score += 1000 - int(weight) + int(w)
 				} else {
 					score += 1000 - int(w)
 				}
-			case weightValue <= weight.Medium:
+			case weight <= MediumFontWeight:
 				switch {
-				case w >= weightValue && w <= weight.Medium:
-					score += 1000 + int(weightValue) - int(w)
-				case w <= weightValue:
+				case w >= weight && w <= MediumFontWeight:
+					score += 1000 + int(weight) - int(w)
+				case w <= weight:
 					score += 500 + int(w)
 				default:
 					score += 1000 - int(w)
 				}
 			default:
-				if w > weightValue {
-					score += 1000 + int(weightValue) - int(w)
+				if w > weight {
+					score += 1000 + int(weight) - int(w)
 				} else {
 					score += int(w)
 				}
@@ -192,7 +187,7 @@ func (f *FontFamily) MatchStyle(weightValue weight.Enum, spacingValue spacing.En
 		}
 		return fnt.faces[bestIndex]
 	}
-	style := skia.FontStyleNew(skia.FontWeight(weightValue), skia.FontSpacing(spacingValue), skia.FontSlant(slantValue))
+	style := skia.FontStyleNew(skia.FontWeight(weight), skia.FontSpacing(spacing), skia.FontSlant(slant))
 	defer skia.FontStyleDelete(style)
 	return newFace(skia.FontStyleSetMatchStyle(f.set, style))
 }

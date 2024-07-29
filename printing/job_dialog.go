@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -17,19 +17,21 @@ import (
 	"sync"
 	"time"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xio"
 	"github.com/richardwilkes/unison"
-	"github.com/richardwilkes/unison/enums/align"
 )
 
 // JobDialog provides a print job dialog.
 type JobDialog struct {
 	mgr                   *PrintManager
+	printerID             PrinterID
 	printer               *Printer
 	printersChan          chan *Printer
 	scanCancel            func()
+	mimeType              string
 	printerAttributes     *PrinterAttributes
 	jobAttributes         *JobAttributes
 	dialog                *unison.Dialog
@@ -44,8 +46,6 @@ type JobDialog struct {
 	contentOptimization   stringPopup[capString]
 	sides                 stringPopup[capString]
 	orientation           stringPopup[capString]
-	mimeType              string
-	printerID             PrinterID
 	lock                  sync.Mutex
 	awaitingPrinterUpdate bool
 }
@@ -83,14 +83,11 @@ func (d *JobDialog) JobAttributes() *JobAttributes {
 // RunModal presents the dialog and returns true if the user pressed OK.
 func (d *JobDialog) RunModal() bool {
 	defer d.scanCancel()
-	dlg, err := unison.NewDialog(nil, nil, d.createContent(), []*unison.DialogButtonInfo{
+	dlg := mylog.Check2(unison.NewDialog(nil, nil, d.createContent(), []*unison.DialogButtonInfo{
 		unison.NewCancelButtonInfo(),
 		unison.NewOKButtonInfoWithTitle(i18n.Text("Print")),
-	})
-	if err != nil {
-		unison.ErrorDialogWithError(i18n.Text("Unable to create print dialog."), err)
-		return false
-	}
+	}))
+
 	dlg.Window().SetTitle(i18n.Text("Print"))
 	d.dialog = dlg
 	d.dialog.Button(unison.ModalResponseOK).SetEnabled(false)
@@ -146,8 +143,8 @@ func (d *JobDialog) createContent() unison.Paneler {
 	d.img = unison.NewLabel()
 	d.img.SetBorder(unison.NewEmptyBorder(unison.Insets{Left: unison.StdHSpacing}))
 	d.img.SetLayoutData(&unison.FlexLayoutData{
-		HAlign: align.Middle,
-		VAlign: align.Middle,
+		HAlign: unison.MiddleAlignment,
+		VAlign: unison.MiddleAlignment,
 	})
 	bottom.AddChild(d.img)
 	d.createCopies(left)
@@ -168,8 +165,8 @@ func (d *JobDialog) createPrinterPopup(parent *unison.Panel) {
 	d.printers.SetBorder(unison.NewEmptyBorder(unison.Insets{Bottom: unison.StdVSpacing * 4}))
 	d.printers.SetLayoutData(&unison.FlexLayoutData{
 		HSpan:  2,
-		HAlign: align.Middle,
-		VAlign: align.Middle,
+		HAlign: unison.MiddleAlignment,
+		VAlign: unison.MiddleAlignment,
 		HGrab:  true,
 	})
 	parent.AddChild(d.printers)
@@ -184,7 +181,7 @@ func (d *JobDialog) rebuildPrinterPopup() {
 	var sel *Printer
 	for _, p := range d.mgr.Printers() {
 		d.printers.AddItem(p)
-		if p.ID == d.printerID.ID {
+		if p.UUID == d.printerID.UUID {
 			sel = p
 		}
 	}
@@ -223,13 +220,10 @@ func (d *JobDialog) printerPopupSelectionHandler(popup *unison.PopupMenu[*Printe
 }
 
 func (d *JobDialog) setPrinter(printer *Printer) {
-	if printer == nil {
-		return
-	}
 	d.printer = printer
 	d.printerID = d.printer.PrinterID
-	var err error
-	if d.printerAttributes, err = d.printer.Attributes(15*time.Second, true); err != nil {
+
+	if d.printerAttributes = mylog.Check2(d.printer.Attributes(15*time.Second, true)); err != nil {
 		errs.Log(err)
 	}
 	if icon := d.retrieveIcon(); icon != nil {
@@ -259,25 +253,22 @@ func (d *JobDialog) retrieveIcon() *unison.Image {
 		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 		defer cancel()
 		link := icons[len(icons)-1]
-		req, err := http.NewRequestWithContext(ctx, http.MethodGet, link, http.NoBody)
-		if err != nil {
-			errs.Log(errs.NewWithCause("unable to create request for link", err), linkAttr, link)
-			return nil
-		}
+		req := mylog.Check2(http.NewRequestWithContext(ctx, http.MethodGet, link, http.NoBody))
+
 		req.Header.Add("Accept-Encoding", "identity")
 		var rsp *http.Response
-		if rsp, err = d.printer.httpClient.Do(req); err != nil { //nolint:bodyclose // Body is closed by xio.CloseIgnoringErrors
+		if rsp = mylog.Check2(d.printer.httpClient.Do(req)); err != nil { //nolint:bodyclose // Body is closed by xio.CloseIgnoringErrors
 			errs.Log(errs.NewWithCause("unable to initiate download for link", err), linkAttr, link)
 			return nil
 		}
 		defer xio.CloseIgnoringErrors(rsp.Body)
 		var content []byte
-		if content, err = io.ReadAll(rsp.Body); err != nil {
+		if content = mylog.Check2(io.ReadAll(rsp.Body)); err != nil {
 			errs.Log(errs.NewWithCause("unable to read body for link", err), linkAttr, link)
 			return nil
 		}
 		var img *unison.Image
-		if img, err = unison.NewImageFromBytes(content, 0.5); err != nil {
+		if img = mylog.Check2(unison.NewImageFromBytes(content, 0.5)); err != nil {
 			errs.Log(errs.NewWithCause("unable to create image from data for link", err), linkAttr, link)
 			return nil
 		}
@@ -288,9 +279,9 @@ func (d *JobDialog) retrieveIcon() *unison.Image {
 
 func (d *JobDialog) createCopies(parent *unison.Panel) {
 	d.copies = unison.NewNumericField(d.jobAttributes.Copies(), 1, d.printerAttributes.MaxCopies(), strconv.Itoa,
-		strconv.Atoi, func(_, maximum int) []int { return []int{maximum} })
+		strconv.Atoi, func(minimum, maximum int) []int { return []int{maximum} })
 	d.copies.ModifiedCallback = d.adjustOKButton
-	d.copies.SetLayoutData(&unison.FlexLayoutData{VAlign: align.Middle})
+	d.copies.SetLayoutData(&unison.FlexLayoutData{VAlign: unison.MiddleAlignment})
 
 	parent.AddChild(createLabel(i18n.Text("Copies")))
 	parent.AddChild(d.copies)
@@ -311,8 +302,8 @@ order with no overlapping ranges`))
 	d.pageRanges.ModifiedCallback = d.adjustOKButton
 	d.pageRanges.SetText(FormatPageRanges(d.jobAttributes.PageRanges()))
 	d.pageRanges.SetLayoutData(&unison.FlexLayoutData{
-		HAlign: align.Fill,
-		VAlign: align.Middle,
+		HAlign: unison.FillAlignment,
+		VAlign: unison.MiddleAlignment,
 		HGrab:  true,
 	})
 
@@ -322,11 +313,11 @@ order with no overlapping ranges`))
 
 func createLabel(text string) *unison.Label {
 	label := unison.NewLabel()
-	label.SetTitle(text)
-	label.HAlign = align.End
+	label.Text = text
+	label.HAlign = unison.EndAlignment
 	label.SetLayoutData(&unison.FlexLayoutData{
-		HAlign: align.End,
-		VAlign: align.Middle,
+		HAlign: unison.EndAlignment,
+		VAlign: unison.MiddleAlignment,
 	})
 	return label
 }

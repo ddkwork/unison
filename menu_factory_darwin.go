@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -10,7 +10,6 @@
 package unison
 
 import (
-	"github.com/richardwilkes/toolbox"
 	"github.com/richardwilkes/unison/internal/ns"
 )
 
@@ -65,7 +64,7 @@ func (f *macMenuFactory) NewItem(id int, title string, keyBinding KeyBinding, va
 	var h func(ns.MenuItem)
 	if handler != nil {
 		h = func(mi ns.MenuItem) {
-			toolbox.Call(func() { handler(&macMenuItem{factory: f, item: mi}) })
+			mylog.Call(func() { handler(&macMenuItem{factory: f, item: mi}) })
 		}
 	}
 	mi := ns.NewMenuItem(id, title, macKeyCodeToMenuEquivalentMap[keyBinding.KeyCode],
@@ -75,7 +74,7 @@ func (f *macMenuFactory) NewItem(id int, title string, keyBinding KeyBinding, va
 			}
 			if validator != nil {
 				var result bool
-				toolbox.Call(func() { result = validator(&macMenuItem{factory: f, item: mi}) })
+				mylog.Call(func() { result = validator(&macMenuItem{factory: f, item: mi}) })
 				return result
 			}
 			return true

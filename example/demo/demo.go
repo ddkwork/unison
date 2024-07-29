@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -15,12 +15,9 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/richardwilkes/toolbox/desktop"
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/unison"
-	"github.com/richardwilkes/unison/enums/align"
-	"github.com/richardwilkes/unison/enums/behavior"
-	"github.com/richardwilkes/unison/enums/check"
 )
 
 var windowCounter int
@@ -29,10 +26,7 @@ var windowCounter int
 func NewDemoWindow(where unison.Point) (*unison.Window, error) {
 	// Create the window
 	windowCounter++
-	wnd, err := unison.NewWindow(fmt.Sprintf("Demo #%d", windowCounter))
-	if err != nil {
-		return nil, err
-	}
+	wnd := mylog.Check2(unison.NewWindow(fmt.Sprintf("Demo #%d", windowCounter)))
 
 	// Install our menus
 	installDefaultMenus(wnd)
@@ -49,7 +43,9 @@ func NewDemoWindow(where unison.Point) (*unison.Window, error) {
 	// Create a wrappable row of buttons
 	panel := createButtonsPanel()
 	panel.SetLayoutData(&unison.FlexLayoutData{
-		VAlign: align.Middle,
+		HSpan:  1,
+		VSpan:  1,
+		VAlign: unison.MiddleAlignment,
 		HGrab:  true,
 	})
 	content.AddChild(panel)
@@ -57,27 +53,19 @@ func NewDemoWindow(where unison.Point) (*unison.Window, error) {
 	// Create a wrappable row of buttons that bring up dialogs
 	panel = createDialogButtonsPanel()
 	panel.SetLayoutData(&unison.FlexLayoutData{
-		VAlign: align.Middle,
+		HSpan:  1,
+		VSpan:  1,
+		VAlign: unison.MiddleAlignment,
 		HGrab:  true,
 	})
 	content.AddChild(panel)
 
-	addSeparator(content)
-
-	// Create a wrappable row of svg buttons
-	panel = createSVGButtonsPanel()
+	// Create a wrappable row of image buttons
+	panel = createImageButtonsPanel()
 	panel.SetLayoutData(&unison.FlexLayoutData{
-		VAlign: align.Middle,
-		HGrab:  true,
-	})
-	content.AddChild(panel)
-
-	addSeparator(content)
-
-	// Create a wrappable row of links
-	panel = createLinksPanel()
-	panel.SetLayoutData(&unison.FlexLayoutData{
-		VAlign: align.Middle,
+		HSpan:  1,
+		VSpan:  1,
+		VAlign: unison.MiddleAlignment,
 		HGrab:  true,
 	})
 	content.AddChild(panel)
@@ -87,7 +75,9 @@ func NewDemoWindow(where unison.Point) (*unison.Window, error) {
 	// Create a column of checkboxes
 	panel = createCheckBoxPanel()
 	panel.SetLayoutData(&unison.FlexLayoutData{
-		VAlign: align.Middle,
+		HSpan:  1,
+		VSpan:  1,
+		VAlign: unison.MiddleAlignment,
 		HGrab:  true,
 	})
 	content.AddChild(panel)
@@ -97,8 +87,10 @@ func NewDemoWindow(where unison.Point) (*unison.Window, error) {
 	// Create a column of radio buttons and a progress bar they control
 	panel = createRadioButtonsAndProgressBarsPanel()
 	panel.SetLayoutData(&unison.FlexLayoutData{
-		HAlign: align.Fill,
-		VAlign: align.Middle,
+		HSpan:  1,
+		VSpan:  1,
+		HAlign: unison.FillAlignment,
+		VAlign: unison.MiddleAlignment,
 		HGrab:  true,
 	})
 	content.AddChild(panel)
@@ -108,7 +100,9 @@ func NewDemoWindow(where unison.Point) (*unison.Window, error) {
 	// Create a column of popup menus
 	panel = createPopupMenusPanel()
 	panel.SetLayoutData(&unison.FlexLayoutData{
-		VAlign: align.Middle,
+		HSpan:  1,
+		VSpan:  1,
+		VAlign: unison.MiddleAlignment,
 		HGrab:  true,
 	})
 	content.AddChild(panel)
@@ -118,8 +112,10 @@ func NewDemoWindow(where unison.Point) (*unison.Window, error) {
 	// Create some fields and a list, side-by-side
 	panel = createFieldsAndListPanel()
 	panel.SetLayoutData(&unison.FlexLayoutData{
-		HAlign: align.Fill,
-		VAlign: align.Middle,
+		HSpan:  1,
+		VSpan:  1,
+		HAlign: unison.FillAlignment,
+		VAlign: unison.MiddleAlignment,
 		HGrab:  true,
 	})
 	content.AddChild(panel)
@@ -132,17 +128,21 @@ func NewDemoWindow(where unison.Point) (*unison.Window, error) {
 	// Create some color wells and pass it our image panel
 	panel = createWellsPanel(imgPanel)
 	panel.SetLayoutData(&unison.FlexLayoutData{
-		VAlign: align.Middle,
+		HSpan:  1,
+		VSpan:  1,
+		VAlign: unison.MiddleAlignment,
 		HGrab:  true,
 	})
 	content.AddChild(panel)
 
 	// Create a scroll panel and place the image panel inside it
 	scrollArea := unison.NewScrollPanel()
-	scrollArea.SetContent(imgPanel, behavior.Unmodified, behavior.Unmodified)
+	scrollArea.SetContent(imgPanel, unison.UnmodifiedBehavior, unison.UnmodifiedBehavior)
 	scrollArea.SetLayoutData(&unison.FlexLayoutData{
-		HAlign: align.Fill,
-		VAlign: align.Fill,
+		HSpan:  1,
+		VSpan:  1,
+		HAlign: unison.FillAlignment,
+		VAlign: unison.FillAlignment,
 		HGrab:  true,
 		VGrab:  true,
 	})
@@ -202,15 +202,15 @@ func createDialogButtonsPanel() *unison.Panel {
 
 func createButton(title string, panel *unison.Panel) *unison.Button {
 	btn := unison.NewButton()
-	btn.SetTitle(title)
+	btn.Text = title
 	btn.ClickCallback = func() { slog.Info(title) }
 	btn.Tooltip = unison.NewTooltipWithText(fmt.Sprintf("Tooltip for: %s", title))
-	btn.SetLayoutData(align.Middle)
+	btn.SetLayoutData(unison.MiddleAlignment)
 	panel.AddChild(btn)
 	return btn
 }
 
-func createSVGButtonsPanel() *unison.Panel {
+func createImageButtonsPanel() *unison.Panel {
 	// Create a panel to place some buttons into.
 	panel := unison.NewPanel()
 	panel.SetLayout(&unison.FlowLayout{
@@ -218,108 +218,58 @@ func createSVGButtonsPanel() *unison.Panel {
 		VSpacing: unison.StdVSpacing,
 	})
 
-	createSVGButton(unison.CircledQuestionSVG, "question", panel)
-	createSVGButton(unison.CircledQuestionSVG, "question_disabled", panel).SetEnabled(false)
+	// Load our home image, and if successful (we should be!), add two buttons with it, one enabled and one not.
+	homeImg := mylog.Check2(HomeImage())
 
-	createSVGButton(unison.TriangleExclamationSVG, "warning", panel)
-	createSVGButton(unison.TriangleExclamationSVG, "warning_disabled", panel).SetEnabled(false)
+	// Load our logo image, and if successful (we should be!), add two buttons with it, one enabled and one not.
+	var logoImg *unison.Image
+	logoImg = mylog.Check2(ClassicAppleLogoImage())
+	createImageButton(logoImg, "logo_enabled", panel)
+	createImageButton(logoImg, "logo_disabled", panel).SetEnabled(false)
 
-	createSpacer(20, panel)
+	if homeImg != nil && logoImg != nil {
+		// Add spacer
+		spacer := &unison.Panel{}
+		spacer.Self = spacer
+		spacer.SetSizer(func(_ unison.Size) (minSize, prefSize, maxSize unison.Size) {
+			minSize.Width = 40
+			prefSize.Width = 40
+			maxSize.Width = 40
+			return
+		})
+		panel.AddChild(spacer)
 
-	createSVGButton(unison.CircledQuestionSVG, "question_boxed", panel).HideBase = false
-	b := createSVGButton(unison.CircledQuestionSVG, "question_boxed_disabled", panel)
-	b.HideBase = false
-	b.SetEnabled(false)
-
-	createSVGButton(unison.TriangleExclamationSVG, "warning_boxed", panel).HideBase = false
-	b = createSVGButton(unison.TriangleExclamationSVG, "warning_boxed_disabled", panel)
-	b.HideBase = false
-	b.SetEnabled(false)
-
-	createSpacer(20, panel)
-
-	group := unison.NewGroup()
-	first := createSVGButton(unison.CircledQuestionSVG, "question_toggle", panel)
-	first.Sticky = true
-	group.Add(first)
-	second := createSVGButton(unison.TriangleExclamationSVG, "warning_toggle", panel)
-	second.Sticky = true
-	group.Add(second)
-	group.Select(first)
-
-	createSpacer(20, panel)
-
-	group = unison.NewGroup()
-	first = createSVGButton(unison.CircledQuestionSVG, "question_toggle_boxed", panel)
-	first.HideBase = false
-	first.Sticky = true
-	group.Add(first)
-	second = createSVGButton(unison.TriangleExclamationSVG, "warning_toggle_boxed", panel)
-	second.HideBase = false
-	second.Sticky = true
-	group.Add(second)
-	group.Select(first)
+		// Add some sticky buttons in a group with our images
+		group := unison.NewGroup()
+		first := createImageButton(homeImg, "home_toggle", panel)
+		first.Sticky = true
+		group.Add(first.AsGroupPanel())
+		second := createImageButton(logoImg, "logo_toggle", panel)
+		second.Sticky = true
+		group.Add(second.AsGroupPanel())
+		group.Select(first.AsGroupPanel())
+	}
 
 	return panel
 }
 
-func createSVGButton(svg *unison.SVG, actionText string, panel *unison.Panel) *unison.Button {
-	btn := unison.NewSVGButton(svg)
+func createImageButton(img *unison.Image, actionText string, panel *unison.Panel) *unison.Button {
+	btn := unison.NewButton()
+	btn.Drawable = img
 	btn.ClickCallback = func() { slog.Info(actionText) }
 	btn.Tooltip = unison.NewTooltipWithText(fmt.Sprintf("Tooltip for: %s", actionText))
-	btn.SetLayoutData(align.Middle)
+	btn.SetLayoutData(unison.MiddleAlignment)
 	panel.AddChild(btn)
 	return btn
-}
-
-func createSpacer(width float32, panel *unison.Panel) {
-	spacer := &unison.Panel{}
-	spacer.Self = spacer
-	spacer.SetSizer(func(_ unison.Size) (minSize, prefSize, maxSize unison.Size) {
-		minSize.Width = width
-		prefSize.Width = width
-		maxSize.Width = width
-		return
-	})
-	panel.AddChild(spacer)
-}
-
-func createLinksPanel() *unison.Panel {
-	// Create a panel to place some links into.
-	panel := unison.NewPanel()
-	panel.SetLayout(&unison.FlowLayout{
-		HSpacing: unison.StdHSpacing * 2,
-		VSpacing: unison.StdVSpacing,
-	})
-
-	// Add some links
-	panel.AddChild(unison.NewLink("Apple", "Open the Apple home page", "", unison.DefaultLinkTheme,
-		func(_ unison.Paneler, _ string) {
-			if err := desktop.Open("https://www.apple.com"); err != nil {
-				errs.Log(err)
-			}
-		}))
-	panel.AddChild(unison.NewLink("Google", "Open the Google home page", "", unison.DefaultLinkTheme,
-		func(_ unison.Paneler, _ string) {
-			if err := desktop.Open("https://www.google.com"); err != nil {
-				errs.Log(err)
-			}
-		}))
-	panel.AddChild(unison.NewLink("Microsoft", "Open the Microsoft home page", "", unison.DefaultLinkTheme,
-		func(_ unison.Paneler, _ string) {
-			if err := desktop.Open("https://www.microsoft.com"); err != nil {
-				errs.Log(err)
-			}
-		}))
-
-	return panel
 }
 
 func addSeparator(parent *unison.Panel) {
 	sep := unison.NewSeparator()
 	sep.SetLayoutData(&unison.FlexLayoutData{
-		HAlign: align.Fill,
-		VAlign: align.Middle,
+		HSpan:  1,
+		VSpan:  1,
+		HAlign: unison.FillAlignment,
+		VAlign: unison.MiddleAlignment,
 	})
 	parent.AddChild(sep)
 }
@@ -327,27 +277,27 @@ func addSeparator(parent *unison.Panel) {
 func createCheckBoxPanel() *unison.Panel {
 	panel := unison.NewPanel()
 	panel.SetLayout(&unison.FlexLayout{
-		Columns:  2,
-		HSpacing: unison.StdHSpacing * 2,
+		Columns:  1,
+		HSpacing: unison.StdHSpacing,
 		VSpacing: unison.StdVSpacing,
 	})
-	createCheckBox("Initially Off", check.Off, panel)
-	createCheckBox("Disabled", check.Off, panel).SetEnabled(false)
-	createCheckBox("Initially On", check.On, panel)
-	createCheckBox("Disabled w/Check", check.On, panel).SetEnabled(false)
-	createCheckBox("Initially Mixed", check.Mixed, panel)
-	createCheckBox("Disabled w/Mixed", check.Mixed, panel).SetEnabled(false)
+	createCheckBox("Initially Off", unison.OffCheckState, panel)
+	createCheckBox("Initially On", unison.OnCheckState, panel)
+	createCheckBox("Initially Mixed", unison.MixedCheckState, panel)
+	createCheckBox("Disabled", unison.OffCheckState, panel).SetEnabled(false)
+	createCheckBox("Disabled w/Check", unison.OnCheckState, panel).SetEnabled(false)
+	createCheckBox("Disabled w/Mixed", unison.MixedCheckState, panel).SetEnabled(false)
 	return panel
 }
 
-func createCheckBox(title string, initialState check.Enum, panel *unison.Panel) *unison.CheckBox {
-	cb := unison.NewCheckBox()
-	cb.SetTitle(title)
-	cb.State = initialState
-	cb.ClickCallback = func() { slog.Info("checkbox clicked", "title", title) }
-	cb.Tooltip = unison.NewTooltipWithText(fmt.Sprintf("This is the tooltip for '%s'", title))
-	panel.AddChild(cb)
-	return cb
+func createCheckBox(title string, initialState unison.CheckState, panel *unison.Panel) *unison.CheckBox {
+	check := unison.NewCheckBox()
+	check.Text = title
+	check.State = initialState
+	check.ClickCallback = func() { slog.Info("checkbox clicked", "title", title) }
+	check.Tooltip = unison.NewTooltipWithText(fmt.Sprintf("This is the tooltip for '%s'", title))
+	panel.AddChild(check)
+	return check
 }
 
 func createRadioButtonsAndProgressBarsPanel() *unison.Panel {
@@ -357,7 +307,7 @@ func createRadioButtonsAndProgressBarsPanel() *unison.Panel {
 		Columns:      2,
 		HSpacing:     10,
 		VSpacing:     unison.StdVSpacing,
-		VAlign:       align.Middle,
+		VAlign:       unison.MiddleAlignment,
 		EqualColumns: true,
 	})
 
@@ -365,8 +315,10 @@ func createRadioButtonsAndProgressBarsPanel() *unison.Panel {
 	progress := unison.NewProgressBar(100)
 	progress.SetCurrent(25)
 	progress.SetLayoutData(&unison.FlexLayoutData{
-		HAlign: align.Fill,
-		VAlign: align.Middle,
+		HSpan:  1,
+		VSpan:  1,
+		HAlign: unison.FillAlignment,
+		VAlign: unison.MiddleAlignment,
 		HGrab:  true,
 	})
 
@@ -383,7 +335,7 @@ func createRadioButtonsAndProgressBarsPanel() *unison.Panel {
 	createRadioButton("75%", panel, group, progress, 75, 100).SetEnabled(false)
 	createRadioButton("100%", panel, group, progress, 100, 100)
 	createRadioButton("Indeterminate", panel, group, progress, 0, 0)
-	group.Select(first)
+	group.Select(first.AsGroupPanel())
 
 	// Add the radio buttons to the left
 	wrapper.AddChild(panel)
@@ -396,7 +348,7 @@ func createRadioButtonsAndProgressBarsPanel() *unison.Panel {
 
 func createRadioButton(title string, panel *unison.Panel, group *unison.Group, progressBar *unison.ProgressBar, current, maximum float32) *unison.RadioButton {
 	rb := unison.NewRadioButton()
-	rb.SetTitle(title)
+	rb.Text = title
 	rb.ClickCallback = func() {
 		progressBar.SetMaximum(maximum)
 		progressBar.SetCurrent(current)
@@ -404,7 +356,7 @@ func createRadioButton(title string, panel *unison.Panel, group *unison.Group, p
 	}
 	rb.Tooltip = unison.NewTooltipWithText(fmt.Sprintf("This is the tooltip for %s", title))
 	panel.AddChild(rb)
-	group.Add(rb)
+	group.Add(rb.AsGroupPanel())
 	return rb
 }
 
@@ -444,22 +396,25 @@ func createFieldsAndListPanel() *unison.Panel {
 	// Create a wrapper to put them side-by-side
 	wrapper := unison.NewPanel()
 	wrapper.SetLayout(&unison.FlexLayout{
-		Columns:  2,
-		HSpacing: 10,
-		VSpacing: unison.StdVSpacing,
+		Columns:      2,
+		HSpacing:     10,
+		VSpacing:     unison.StdVSpacing,
+		EqualColumns: true,
 	})
 
 	// Add the text fields to the left side
 	textFieldsPanel := createTextFieldsPanel()
 	textFieldsPanel.SetLayoutData(&unison.FlexLayoutData{
-		HAlign: align.Fill,
-		VAlign: align.Middle,
+		HSpan:  1,
+		VSpan:  1,
+		HAlign: unison.FillAlignment,
+		VAlign: unison.MiddleAlignment,
 		HGrab:  true,
 	})
 	wrapper.AddChild(textFieldsPanel)
 
 	// Add the list to the right side
-	wrapper.AddChild(createListPanel(textFieldsPanel))
+	wrapper.AddChild(createListPanel())
 
 	return wrapper
 }
@@ -477,7 +432,7 @@ func createTextFieldsPanel() *unison.Panel {
 	field.Watermark = "Password Field"
 	field.ObscurementRune = '●'
 	field = createTextField("Field 4:", "", panel)
-	field.HAlign = align.End
+	field.HAlign = unison.EndAlignment
 	field.Watermark = "Enter only numbers"
 	field.ValidateCallback = func() bool {
 		for _, r := range field.Text() {
@@ -493,18 +448,22 @@ func createTextFieldsPanel() *unison.Panel {
 
 func createTextField(labelText, fieldText string, panel *unison.Panel) *unison.Field {
 	lbl := unison.NewLabel()
-	lbl.SetTitle(labelText)
-	lbl.HAlign = align.End
+	lbl.Text = labelText
+	lbl.HAlign = unison.EndAlignment
 	lbl.SetLayoutData(&unison.FlexLayoutData{
-		HAlign: align.End,
-		VAlign: align.Middle,
+		HSpan:  1,
+		VSpan:  1,
+		HAlign: unison.EndAlignment,
+		VAlign: unison.MiddleAlignment,
 	})
 	panel.AddChild(lbl)
 	field := unison.NewField()
 	field.SetText(fieldText)
 	field.SetLayoutData(&unison.FlexLayoutData{
-		HAlign: align.Fill,
-		VAlign: align.Middle,
+		HSpan:  1,
+		VSpan:  1,
+		HAlign: unison.FillAlignment,
+		VAlign: unison.MiddleAlignment,
 		HGrab:  true,
 	})
 	field.Tooltip = unison.NewTooltipWithText(fmt.Sprintf("This is the tooltip for %v", field))
@@ -514,18 +473,22 @@ func createTextField(labelText, fieldText string, panel *unison.Panel) *unison.F
 
 func createMultiLineTextField(labelText, fieldText string, panel *unison.Panel) *unison.Field {
 	lbl := unison.NewLabel()
-	lbl.SetTitle(labelText)
-	lbl.HAlign = align.End
+	lbl.Text = labelText
+	lbl.HAlign = unison.EndAlignment
 	lbl.SetLayoutData(&unison.FlexLayoutData{
-		HAlign: align.End,
-		VAlign: align.Middle,
+		HSpan:  1,
+		VSpan:  1,
+		HAlign: unison.EndAlignment,
+		VAlign: unison.MiddleAlignment,
 	})
 	panel.AddChild(lbl)
 	field := unison.NewMultiLineField()
 	field.SetText(fieldText)
 	field.SetLayoutData(&unison.FlexLayoutData{
-		HAlign: align.Fill,
-		VAlign: align.Middle,
+		HSpan:  1,
+		VSpan:  1,
+		HAlign: unison.FillAlignment,
+		VAlign: unison.MiddleAlignment,
 		HGrab:  true,
 	})
 	field.Tooltip = unison.NewTooltipWithText(fmt.Sprintf("This is the tooltip for %v", field))
@@ -533,7 +496,7 @@ func createMultiLineTextField(labelText, fieldText string, panel *unison.Panel) 
 	return field
 }
 
-func createListPanel(companion unison.Paneler) *unison.Panel {
+func createListPanel() *unison.Panel {
 	lst := unison.NewList[string]()
 	lst.Append(
 		"One",
@@ -541,13 +504,6 @@ func createListPanel(companion unison.Paneler) *unison.Panel {
 		"Three with some long text to make it interesting",
 		"Four",
 		"Five",
-		"Six",
-		"Seven",
-		"Eight",
-		"Nine",
-		"Ten",
-		"Eleven",
-		"Twelve",
 	)
 	lst.NewSelectionCallback = func() {
 		var buffer strings.Builder
@@ -574,35 +530,33 @@ func createListPanel(companion unison.Paneler) *unison.Panel {
 	_, prefSize, _ := lst.Sizes(unison.Size{})
 	lst.SetFrameRect(unison.Rect{Size: prefSize})
 	scroller := unison.NewScrollPanel()
-	scroller.SetContent(lst, behavior.Fill, behavior.Fill)
-	_, prefSize, _ = companion.AsPanel().Sizes(unison.Size{})
+	scroller.SetBorder(unison.NewLineBorder(unison.ControlEdgeColor, 0, unison.NewUniformInsets(1), false))
+	scroller.SetContent(lst, unison.FillBehavior, unison.FillBehavior)
 	scroller.SetLayoutData(&unison.FlexLayoutData{
-		SizeHint: prefSize,
-		HAlign:   align.Fill,
-		VAlign:   align.Fill,
-		HGrab:    true,
-		VGrab:    true,
+		HSpan:  1,
+		VSpan:  1,
+		HAlign: unison.FillAlignment,
+		VAlign: unison.FillAlignment,
+		HGrab:  true,
+		VGrab:  true,
 	})
-	unison.InstallDefaultFieldBorder(lst, scroller)
 	return scroller.AsPanel()
 }
 
 func createImagePanel() *unison.Label {
-	// Create the label
+	// Create the label and make it focusable
 	imgPanel := unison.NewLabel()
+	imgPanel.SetFocusable(true)
 
 	// Prepare a cursor for when the mouse is over the image
 	cursor := unison.MoveCursor()
-	if logoImg, err := ClassicAppleLogoImage(); err != nil {
-		errs.Log(err)
-	} else {
-		size := logoImg.LogicalSize()
-		cursor = unison.NewCursor(logoImg, unison.Point{
-			X: size.Width / 2,
-			Y: size.Height / 2,
-		})
-	}
-	imgPanel.UpdateCursorCallback = func(_ unison.Point) *unison.Cursor { return cursor }
+	logoImg := mylog.Check2(ClassicAppleLogoImage())
+	size := logoImg.LogicalSize()
+	cursor = unison.NewCursor(logoImg, unison.Point{
+		X: size.Width / 2,
+		Y: size.Height / 2,
+	})
+	imgPanel.UpdateCursorCallback = func(where unison.Point) *unison.Cursor { return cursor }
 
 	// Add a tooltip that shows the current mouse coordinates
 	imgPanel.UpdateTooltipCallback = func(where unison.Point, suggestedAvoidInRoot unison.Rect) unison.Rect {
@@ -615,12 +569,7 @@ func createImagePanel() *unison.Label {
 	}
 
 	// Set the initial image
-	img, err := MountainsImage()
-	if err != nil {
-		errs.Log(err)
-	} else {
-		imgPanel.Drawable = img
-	}
+	mylog.Check2(MountainsImage())
 
 	// Set the set of the widget to match its preferred size
 	_, prefSize, _ := imgPanel.Sizes(unison.Size{})

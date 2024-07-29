@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -9,13 +9,12 @@
 
 package unison
 
-import "github.com/richardwilkes/unison/enums/paintstyle"
-
 // DefaultScrollBarTheme holds the default ScrollBarTheme values for ScrollBars. Modifying this data will not alter
 // existing ScrollBars, but will alter any ScrollBars created in the future.
 var DefaultScrollBarTheme = ScrollBarTheme{
-	EdgeInk:          ThemeSurfaceEdge,
-	ThumbInk:         ThemeFocus,
+	EdgeInk:          ScrollEdgeColor,
+	ThumbInk:         ScrollColor,
+	RolloverInk:      ScrollRolloverColor,
 	MinimumThickness: 16,
 	MinimumThumb:     16,
 	ThumbIndent:      3,
@@ -26,6 +25,7 @@ var DefaultScrollBarTheme = ScrollBarTheme{
 type ScrollBarTheme struct {
 	EdgeInk          Ink
 	ThumbInk         Ink
+	RolloverInk      Ink
 	MinimumThickness float32
 	MinimumThumb     float32
 	ThumbIndent      float32
@@ -34,16 +34,16 @@ type ScrollBarTheme struct {
 
 // ScrollBar holds the data necessary for tracking a scroll bar's state.
 type ScrollBar struct {
-	ChangedCallback func()
-	ScrollBarTheme
 	Panel
-	value         float32
-	extent        float32
-	maximum       float32
-	dragOffset    float32
-	horizontal    bool
-	overThumb     bool
-	trackingThumb bool
+	ScrollBarTheme
+	ChangedCallback func()
+	value           float32
+	extent          float32
+	maximum         float32
+	dragOffset      float32
+	horizontal      bool
+	overThumb       bool
+	trackingThumb   bool
 }
 
 // NewScrollBar creates a new scroll bar.
@@ -131,14 +131,14 @@ func (s *ScrollBar) Thumb() Rect {
 		if size < s.MinimumThumb {
 			size = s.MinimumThumb
 		}
-		return Rect{Point: Point{X: start, Y: s.ThumbIndent}, Size: Size{Width: size, Height: r.Height - 2*s.ThumbIndent}}
+		return NewRect(start, s.ThumbIndent, size, r.Height-2*s.ThumbIndent)
 	}
 	start := r.Height * (s.value / s.maximum)
 	size := r.Height * (s.extent / s.maximum)
 	if size < s.MinimumThumb {
 		size = s.MinimumThumb
 	}
-	return Rect{Point: Point{X: s.ThumbIndent, Y: start}, Size: Size{Width: r.Width - 2*s.ThumbIndent, Height: size}}
+	return NewRect(s.ThumbIndent, start, r.Width-2*s.ThumbIndent, size)
 }
 
 // DefaultSizes provides the default sizing.
@@ -162,19 +162,21 @@ func (s *ScrollBar) DefaultSizes(_ Size) (minSize, prefSize, maxSize Size) {
 // DefaultDraw provides the default drawing.
 func (s *ScrollBar) DefaultDraw(gc *Canvas, _ Rect) {
 	if thumb := s.Thumb(); thumb.Width > 0 && thumb.Height > 0 {
-		p := s.ThumbInk.Paint(gc, thumb, paintstyle.Fill)
-		if !s.overThumb {
-			p.SetColorFilter(Alpha30Filter())
+		var ink Ink
+		if s.overThumb {
+			ink = s.RolloverInk
+		} else {
+			ink = s.ThumbInk
 		}
-		gc.DrawRoundedRect(thumb, s.CornerRadius, s.CornerRadius, p)
-		gc.DrawRoundedRect(thumb, s.CornerRadius, s.CornerRadius, s.EdgeInk.Paint(gc, thumb, paintstyle.Stroke))
+		gc.DrawRoundedRect(thumb, s.CornerRadius, s.CornerRadius, ink.Paint(gc, thumb, Fill))
+		gc.DrawRoundedRect(thumb, s.CornerRadius, s.CornerRadius, s.EdgeInk.Paint(gc, thumb, Stroke))
 	}
 }
 
 // DefaultMouseDown provides the default mouse down handling.
 func (s *ScrollBar) DefaultMouseDown(where Point, _, _ int, _ Modifiers) bool {
 	thumb := s.Thumb()
-	if !where.In(thumb) {
+	if !thumb.ContainsPoint(where) {
 		s.dragOffset = 0
 		s.adjustValueForPoint(where)
 		thumb = s.Thumb()
@@ -247,7 +249,7 @@ func (s *ScrollBar) adjustValueForPoint(pt Point) {
 
 func (s *ScrollBar) checkOverThumb(pt Point) {
 	was := s.overThumb
-	s.overThumb = pt.In(s.Thumb())
+	s.overThumb = s.Thumb().ContainsPoint(pt)
 	if was != s.overThumb {
 		s.MarkForRedraw()
 	}

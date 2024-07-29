@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -14,9 +14,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/go-gl/glfw/v3.3/glfw"
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/json"
 	"github.com/richardwilkes/toolbox/i18n"
+	"github.com/richardwilkes/unison/internal/glfw"
 )
 
 var _ json.Omitter = KeyCode(0)
@@ -26,101 +27,101 @@ type KeyCode int16
 
 // Virtual key codes.
 const (
-	KeyNone           = KeyCode(glfw.KeyUnknown)
-	KeySpace          = KeyCode(glfw.KeySpace)
-	KeyApostrophe     = KeyCode(glfw.KeyApostrophe)
-	KeyComma          = KeyCode(glfw.KeyComma)
-	KeyMinus          = KeyCode(glfw.KeyMinus)
-	KeyPeriod         = KeyCode(glfw.KeyPeriod)
-	KeySlash          = KeyCode(glfw.KeySlash)
-	Key0              = KeyCode(glfw.Key0)
-	Key1              = KeyCode(glfw.Key1)
-	Key2              = KeyCode(glfw.Key2)
-	Key3              = KeyCode(glfw.Key3)
-	Key4              = KeyCode(glfw.Key4)
-	Key5              = KeyCode(glfw.Key5)
-	Key6              = KeyCode(glfw.Key6)
-	Key7              = KeyCode(glfw.Key7)
-	Key8              = KeyCode(glfw.Key8)
-	Key9              = KeyCode(glfw.Key9)
-	KeySemiColon      = KeyCode(glfw.KeySemicolon)
-	KeyEqual          = KeyCode(glfw.KeyEqual)
-	KeyA              = KeyCode(glfw.KeyA)
-	KeyB              = KeyCode(glfw.KeyB)
-	KeyC              = KeyCode(glfw.KeyC)
-	KeyD              = KeyCode(glfw.KeyD)
-	KeyE              = KeyCode(glfw.KeyE)
-	KeyF              = KeyCode(glfw.KeyF)
-	KeyG              = KeyCode(glfw.KeyG)
-	KeyH              = KeyCode(glfw.KeyH)
-	KeyI              = KeyCode(glfw.KeyI)
-	KeyJ              = KeyCode(glfw.KeyJ)
-	KeyK              = KeyCode(glfw.KeyK)
-	KeyL              = KeyCode(glfw.KeyL)
-	KeyM              = KeyCode(glfw.KeyM)
-	KeyN              = KeyCode(glfw.KeyN)
-	KeyO              = KeyCode(glfw.KeyO)
-	KeyP              = KeyCode(glfw.KeyP)
-	KeyQ              = KeyCode(glfw.KeyQ)
-	KeyR              = KeyCode(glfw.KeyR)
-	KeyS              = KeyCode(glfw.KeyS)
-	KeyT              = KeyCode(glfw.KeyT)
-	KeyU              = KeyCode(glfw.KeyU)
-	KeyV              = KeyCode(glfw.KeyV)
-	KeyW              = KeyCode(glfw.KeyW)
-	KeyX              = KeyCode(glfw.KeyX)
-	KeyY              = KeyCode(glfw.KeyY)
-	KeyZ              = KeyCode(glfw.KeyZ)
-	KeyOpenBracket    = KeyCode(glfw.KeyLeftBracket)
-	KeyBackslash      = KeyCode(glfw.KeyBackslash)
-	KeyCloseBracket   = KeyCode(glfw.KeyRightBracket)
-	KeyBackQuote      = KeyCode(glfw.KeyGraveAccent)
-	KeyWorld1         = KeyCode(glfw.KeyWorld1)
-	KeyWorld2         = KeyCode(glfw.KeyWorld2)
-	KeyEscape         = KeyCode(glfw.KeyEscape)
-	KeyReturn         = KeyCode(glfw.KeyEnter)
-	KeyTab            = KeyCode(glfw.KeyTab)
-	KeyBackspace      = KeyCode(glfw.KeyBackspace)
-	KeyInsert         = KeyCode(glfw.KeyInsert)
-	KeyDelete         = KeyCode(glfw.KeyDelete)
-	KeyRight          = KeyCode(glfw.KeyRight)
-	KeyLeft           = KeyCode(glfw.KeyLeft)
-	KeyDown           = KeyCode(glfw.KeyDown)
-	KeyUp             = KeyCode(glfw.KeyUp)
-	KeyPageUp         = KeyCode(glfw.KeyPageUp)
-	KeyPageDown       = KeyCode(glfw.KeyPageDown)
-	KeyHome           = KeyCode(glfw.KeyHome)
-	KeyEnd            = KeyCode(glfw.KeyEnd)
-	KeyCapsLock       = KeyCode(glfw.KeyCapsLock)
-	KeyScrollLock     = KeyCode(glfw.KeyScrollLock)
-	KeyNumLock        = KeyCode(glfw.KeyNumLock)
-	KeyPrintScreen    = KeyCode(glfw.KeyPrintScreen)
-	KeyPause          = KeyCode(glfw.KeyPause)
-	KeyF1             = KeyCode(glfw.KeyF1)
-	KeyF2             = KeyCode(glfw.KeyF2)
-	KeyF3             = KeyCode(glfw.KeyF3)
-	KeyF4             = KeyCode(glfw.KeyF4)
-	KeyF5             = KeyCode(glfw.KeyF5)
-	KeyF6             = KeyCode(glfw.KeyF6)
-	KeyF7             = KeyCode(glfw.KeyF7)
-	KeyF8             = KeyCode(glfw.KeyF8)
-	KeyF9             = KeyCode(glfw.KeyF9)
-	KeyF10            = KeyCode(glfw.KeyF10)
-	KeyF11            = KeyCode(glfw.KeyF11)
-	KeyF12            = KeyCode(glfw.KeyF12)
-	KeyF13            = KeyCode(glfw.KeyF13)
-	KeyF14            = KeyCode(glfw.KeyF14)
-	KeyF15            = KeyCode(glfw.KeyF15)
-	KeyF16            = KeyCode(glfw.KeyF16)
-	KeyF17            = KeyCode(glfw.KeyF17)
-	KeyF18            = KeyCode(glfw.KeyF18)
-	KeyF19            = KeyCode(glfw.KeyF19)
-	KeyF20            = KeyCode(glfw.KeyF20)
-	KeyF21            = KeyCode(glfw.KeyF21)
-	KeyF22            = KeyCode(glfw.KeyF22)
-	KeyF23            = KeyCode(glfw.KeyF23)
-	KeyF24            = KeyCode(glfw.KeyF24)
-	KeyF25            = KeyCode(glfw.KeyF25)
+	KeyNone         = KeyCode(glfw.KeyUnknown)
+	KeySpace        = KeyCode(glfw.KeySpace)
+	KeyApostrophe   = KeyCode(glfw.KeyApostrophe)
+	KeyComma        = KeyCode(glfw.KeyComma)
+	KeyMinus        = KeyCode(glfw.KeyMinus)
+	KeyPeriod       = KeyCode(glfw.KeyPeriod)
+	KeySlash        = KeyCode(glfw.KeySlash)
+	Key0            = KeyCode(glfw.Key0)
+	Key1            = KeyCode(glfw.Key1)
+	Key2            = KeyCode(glfw.Key2)
+	Key3            = KeyCode(glfw.Key3)
+	Key4            = KeyCode(glfw.Key4)
+	Key5            = KeyCode(glfw.Key5)
+	Key6            = KeyCode(glfw.Key6)
+	Key7            = KeyCode(glfw.Key7)
+	Key8            = KeyCode(glfw.Key8)
+	Key9            = KeyCode(glfw.Key9)
+	KeySemiColon    = KeyCode(glfw.KeySemicolon)
+	KeyEqual        = KeyCode(glfw.KeyEqual)
+	KeyA            = KeyCode(glfw.KeyA)
+	KeyB            = KeyCode(glfw.KeyB)
+	KeyC            = KeyCode(glfw.KeyC)
+	KeyD            = KeyCode(glfw.KeyD)
+	KeyE            = KeyCode(glfw.KeyE)
+	KeyF            = KeyCode(glfw.KeyF)
+	KeyG            = KeyCode(glfw.KeyG)
+	KeyH            = KeyCode(glfw.KeyH)
+	KeyI            = KeyCode(glfw.KeyI)
+	KeyJ            = KeyCode(glfw.KeyJ)
+	KeyK            = KeyCode(glfw.KeyK)
+	KeyL            = KeyCode(glfw.KeyL)
+	KeyM            = KeyCode(glfw.KeyM)
+	KeyN            = KeyCode(glfw.KeyN)
+	KeyO            = KeyCode(glfw.KeyO)
+	KeyP            = KeyCode(glfw.KeyP)
+	KeyQ            = KeyCode(glfw.KeyQ)
+	KeyR            = KeyCode(glfw.KeyR)
+	KeyS            = KeyCode(glfw.KeyS)
+	KeyT            = KeyCode(glfw.KeyT)
+	KeyU            = KeyCode(glfw.KeyU)
+	KeyV            = KeyCode(glfw.KeyV)
+	KeyW            = KeyCode(glfw.KeyW)
+	KeyX            = KeyCode(glfw.KeyX)
+	KeyY            = KeyCode(glfw.KeyY)
+	KeyZ            = KeyCode(glfw.KeyZ)
+	KeyOpenBracket  = KeyCode(glfw.KeyLeftBracket)
+	KeyBackslash    = KeyCode(glfw.KeyBackslash)
+	KeyCloseBracket = KeyCode(glfw.KeyRightBracket)
+	KeyBackQuote    = KeyCode(glfw.KeyGraveAccent)
+	KeyWorld1       = KeyCode(glfw.KeyWorld1)
+	KeyWorld2       = KeyCode(glfw.KeyWorld2)
+	KeyEscape       = KeyCode(glfw.KeyEscape)
+	KeyReturn       = KeyCode(glfw.KeyEnter)
+	KeyTab          = KeyCode(glfw.KeyTab)
+	KeyBackspace    = KeyCode(glfw.KeyBackspace)
+	KeyInsert       = KeyCode(glfw.KeyInsert)
+	KeyDelete       = KeyCode(glfw.KeyDelete)
+	KeyRight        = KeyCode(glfw.KeyRight)
+	KeyLeft         = KeyCode(glfw.KeyLeft)
+	KeyDown         = KeyCode(glfw.KeyDown)
+	KeyUp           = KeyCode(glfw.KeyUp)
+	KeyPageUp       = KeyCode(glfw.KeyPageUp)
+	KeyPageDown     = KeyCode(glfw.KeyPageDown)
+	KeyHome         = KeyCode(glfw.KeyHome)
+	KeyEnd          = KeyCode(glfw.KeyEnd)
+	KeyCapsLock     = KeyCode(glfw.KeyCapsLock)
+	KeyScrollLock   = KeyCode(glfw.KeyScrollLock)
+	KeyNumLock      = KeyCode(glfw.KeyNumLock)
+	KeyPrintScreen  = KeyCode(glfw.KeyPrintScreen)
+	KeyPause        = KeyCode(glfw.KeyPause)
+	KeyF1           = KeyCode(glfw.KeyF1)
+	KeyF2           = KeyCode(glfw.KeyF2)
+	KeyF3           = KeyCode(glfw.KeyF3)
+	KeyF4           = KeyCode(glfw.KeyF4)
+	KeyF5           = KeyCode(glfw.KeyF5)
+	KeyF6           = KeyCode(glfw.KeyF6)
+	KeyF7           = KeyCode(glfw.KeyF7)
+	KeyF8           = KeyCode(glfw.KeyF8)
+	KeyF9           = KeyCode(glfw.KeyF9)
+	KeyF10          = KeyCode(glfw.KeyF10)
+	KeyF11          = KeyCode(glfw.KeyF11)
+	KeyF12          = KeyCode(glfw.KeyF12)
+	KeyF13          = KeyCode(glfw.KeyF13)
+	KeyF14          = KeyCode(glfw.KeyF14)
+	KeyF15          = KeyCode(glfw.KeyF15)
+	KeyF16          = KeyCode(glfw.KeyF16)
+	KeyF17          = KeyCode(glfw.KeyF17)
+	KeyF18          = KeyCode(glfw.KeyF18)
+	KeyF19          = KeyCode(glfw.KeyF19)
+	KeyF20          = KeyCode(glfw.KeyF20)
+	KeyF21          = KeyCode(glfw.KeyF21)
+	KeyF22          = KeyCode(glfw.KeyF22)
+	KeyF23          = KeyCode(glfw.KeyF23)
+	KeyF24          = KeyCode(glfw.KeyF24)
+	// KeyF25            = KeyCode(glfw.KeyF25)
 	KeyNumPad0        = KeyCode(glfw.KeyKP0)
 	KeyNumPad1        = KeyCode(glfw.KeyKP1)
 	KeyNumPad2        = KeyCode(glfw.KeyKP2)
@@ -152,100 +153,100 @@ const (
 
 var (
 	keyCodeToKey = map[KeyCode]string{
-		KeySpace:          "space",
-		KeyApostrophe:     "'",
-		KeyComma:          ",",
-		KeyMinus:          "-",
-		KeyPeriod:         ".",
-		KeySlash:          "/",
-		Key0:              "0",
-		Key1:              "1",
-		Key2:              "2",
-		Key3:              "3",
-		Key4:              "4",
-		Key5:              "5",
-		Key6:              "6",
-		Key7:              "7",
-		Key8:              "8",
-		Key9:              "9",
-		KeySemiColon:      ";",
-		KeyEqual:          "=",
-		KeyA:              "A",
-		KeyB:              "B",
-		KeyC:              "C",
-		KeyD:              "D",
-		KeyE:              "E",
-		KeyF:              "F",
-		KeyG:              "G",
-		KeyH:              "H",
-		KeyI:              "I",
-		KeyJ:              "J",
-		KeyK:              "K",
-		KeyL:              "L",
-		KeyM:              "M",
-		KeyN:              "N",
-		KeyO:              "O",
-		KeyP:              "P",
-		KeyQ:              "Q",
-		KeyR:              "R",
-		KeyS:              "S",
-		KeyT:              "T",
-		KeyU:              "U",
-		KeyV:              "V",
-		KeyW:              "W",
-		KeyX:              "X",
-		KeyY:              "Y",
-		KeyZ:              "Z",
-		KeyOpenBracket:    "[",
-		KeyBackslash:      "\\",
-		KeyCloseBracket:   "]",
-		KeyBackQuote:      "`",
-		KeyWorld1:         "world1",
-		KeyWorld2:         "world2",
-		KeyEscape:         "escape",
-		KeyReturn:         "return",
-		KeyTab:            "tab",
-		KeyBackspace:      "backspace",
-		KeyInsert:         "insert",
-		KeyDelete:         "delete",
-		KeyRight:          "right",
-		KeyLeft:           "left",
-		KeyDown:           "down",
-		KeyUp:             "up",
-		KeyPageUp:         "pageup",
-		KeyPageDown:       "pagedown",
-		KeyHome:           "home",
-		KeyEnd:            "end",
-		KeyCapsLock:       "caps",
-		KeyScrollLock:     "scroll",
-		KeyNumLock:        "num",
-		KeyPrintScreen:    "print",
-		KeyPause:          "pause",
-		KeyF1:             "F1",
-		KeyF2:             "F2",
-		KeyF3:             "F3",
-		KeyF4:             "F4",
-		KeyF5:             "F5",
-		KeyF6:             "F6",
-		KeyF7:             "F7",
-		KeyF8:             "F8",
-		KeyF9:             "F9",
-		KeyF10:            "F10",
-		KeyF11:            "F11",
-		KeyF12:            "F12",
-		KeyF13:            "F13",
-		KeyF14:            "F14",
-		KeyF15:            "F15",
-		KeyF16:            "F16",
-		KeyF17:            "F17",
-		KeyF18:            "F18",
-		KeyF19:            "F19",
-		KeyF20:            "F20",
-		KeyF21:            "F21",
-		KeyF22:            "F22",
-		KeyF23:            "F23",
-		KeyF24:            "F24",
-		KeyF25:            "F25",
+		KeySpace:        "space",
+		KeyApostrophe:   "'",
+		KeyComma:        ",",
+		KeyMinus:        "-",
+		KeyPeriod:       ".",
+		KeySlash:        "/",
+		Key0:            "0",
+		Key1:            "1",
+		Key2:            "2",
+		Key3:            "3",
+		Key4:            "4",
+		Key5:            "5",
+		Key6:            "6",
+		Key7:            "7",
+		Key8:            "8",
+		Key9:            "9",
+		KeySemiColon:    ";",
+		KeyEqual:        "=",
+		KeyA:            "A",
+		KeyB:            "B",
+		KeyC:            "C",
+		KeyD:            "D",
+		KeyE:            "E",
+		KeyF:            "F",
+		KeyG:            "G",
+		KeyH:            "H",
+		KeyI:            "I",
+		KeyJ:            "J",
+		KeyK:            "K",
+		KeyL:            "L",
+		KeyM:            "M",
+		KeyN:            "N",
+		KeyO:            "O",
+		KeyP:            "P",
+		KeyQ:            "Q",
+		KeyR:            "R",
+		KeyS:            "S",
+		KeyT:            "T",
+		KeyU:            "U",
+		KeyV:            "V",
+		KeyW:            "W",
+		KeyX:            "X",
+		KeyY:            "Y",
+		KeyZ:            "Z",
+		KeyOpenBracket:  "[",
+		KeyBackslash:    "\\",
+		KeyCloseBracket: "]",
+		KeyBackQuote:    "`",
+		KeyWorld1:       "world1",
+		KeyWorld2:       "world2",
+		KeyEscape:       "escape",
+		KeyReturn:       "return",
+		KeyTab:          "tab",
+		KeyBackspace:    "backspace",
+		KeyInsert:       "insert",
+		KeyDelete:       "delete",
+		KeyRight:        "right",
+		KeyLeft:         "left",
+		KeyDown:         "down",
+		KeyUp:           "up",
+		KeyPageUp:       "pageup",
+		KeyPageDown:     "pagedown",
+		KeyHome:         "home",
+		KeyEnd:          "end",
+		KeyCapsLock:     "caps",
+		KeyScrollLock:   "scroll",
+		KeyNumLock:      "num",
+		KeyPrintScreen:  "print",
+		KeyPause:        "pause",
+		KeyF1:           "F1",
+		KeyF2:           "F2",
+		KeyF3:           "F3",
+		KeyF4:           "F4",
+		KeyF5:           "F5",
+		KeyF6:           "F6",
+		KeyF7:           "F7",
+		KeyF8:           "F8",
+		KeyF9:           "F9",
+		KeyF10:          "F10",
+		KeyF11:          "F11",
+		KeyF12:          "F12",
+		KeyF13:          "F13",
+		KeyF14:          "F14",
+		KeyF15:          "F15",
+		KeyF16:          "F16",
+		KeyF17:          "F17",
+		KeyF18:          "F18",
+		KeyF19:          "F19",
+		KeyF20:          "F20",
+		KeyF21:          "F21",
+		KeyF22:          "F22",
+		KeyF23:          "F23",
+		KeyF24:          "F24",
+		// KeyF25:            "F25",
 		KeyNumPad0:        "numpad0",
 		KeyNumPad1:        "numpad1",
 		KeyNumPad2:        "numpad2",
@@ -304,9 +305,8 @@ func KeyCodeFromKey(key string) KeyCode {
 		return v
 	}
 	if strings.HasPrefix(key, "#") {
-		if v, err := strconv.Atoi(key[1:]); err == nil {
-			return KeyCode(v)
-		}
+		v := mylog.Check2(strconv.Atoi(key[1:]))
+		return KeyCode(v)
 	}
 	return KeyNone
 }
@@ -513,8 +513,8 @@ func (k KeyCode) String() string {
 		return "F23"
 	case KeyF24:
 		return "F24"
-	case KeyF25:
-		return "F25"
+	// case KeyF25:
+	// 	return "F25"
 	case KeyNumPad0:
 		return i18n.Text("NumPad-0")
 	case KeyNumPad1:

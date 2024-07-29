@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -16,8 +16,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/richardwilkes/toolbox/errs"
-	"github.com/richardwilkes/toolbox/fatal"
+	"github.com/ddkwork/golibrary/mylog"
 )
 
 var _ Drawable = &DrawableSVG{}
@@ -89,27 +88,23 @@ type DrawableSVG struct {
 
 // SVG holds an SVG.
 type SVG struct {
+	size          Size
 	unscaledPath  *Path
 	scaledPathMap map[Size]*Path
-	size          Size
 }
 
 // MustSVG creates a new SVG the given svg path string (the contents of a single "d" attribute from an SVG "path"
 // element) and panics if an error would be generated. The 'size' should be gotten from the original SVG's 'viewBox'
 // parameter.
 func MustSVG(size Size, svg string) *SVG {
-	s, err := NewSVG(size, svg)
-	fatal.IfErr(err)
-	return s
+	return mylog.Check2(NewSVG(size, svg))
 }
 
 // NewSVG creates a new SVG the given svg path string (the contents of a single "d" attribute from an SVG "path"
 // element). The 'size' should be gotten from the original SVG's 'viewBox' parameter.
 func NewSVG(size Size, svg string) (*SVG, error) {
-	unscaledPath, err := NewPathFromSVGString(svg)
-	if err != nil {
-		return nil, err
-	}
+	unscaledPath := mylog.Check2(NewPathFromSVGString(svg))
+
 	return &SVG{
 		size:          size,
 		unscaledPath:  unscaledPath,
@@ -121,9 +116,7 @@ func NewSVG(size Size, svg string) (*SVG, error) {
 // valid SVG file data. Note that this only reads a very small subset of an SVG currently. Specifically, the "viewBox"
 // attribute and any "d" attributes from enclosed SVG "path" elements.
 func MustSVGFromContentString(content string) *SVG {
-	s, err := NewSVGFromContentString(content)
-	fatal.IfErr(err)
-	return s
+	return mylog.Check2(NewSVGFromContentString(content))
 }
 
 // NewSVGFromContentString creates a new SVG. The content should contain valid SVG file data. Note that this only reads
@@ -137,9 +130,7 @@ func NewSVGFromContentString(content string) (*SVG, error) {
 // file data. Note that this only reads a very small subset of an SVG currently. Specifically, the "viewBox" attribute
 // and any "d" attributes from enclosed SVG "path" elements.
 func MustSVGFromReader(r io.Reader) *SVG {
-	s, err := NewSVGFromReader(r)
-	fatal.IfErr(err)
-	return s
+	return mylog.Check2(NewSVGFromReader(r))
 }
 
 // NewSVGFromReader creates a new SVG. The reader should contain valid SVG file data. Note that this only reads a very
@@ -152,30 +143,25 @@ func NewSVGFromReader(r io.Reader) (*SVG, error) {
 			Path string `xml:"d,attr"`
 		} `xml:"path"`
 	}
-	if err := xml.NewDecoder(r).Decode(&svgXML); err != nil {
-		return nil, errs.NewWithCause("unable to decode SVG", err)
-	}
+	mylog.Check(xml.NewDecoder(r).Decode(&svgXML))
 	svg := &SVG{scaledPathMap: make(map[Size]*Path)}
 	var width, height string
 	if parts := strings.Split(svgXML.ViewBox, " "); len(parts) == 4 {
 		width = parts[2]
 		height = parts[3]
 	}
-	v, err := strconv.ParseFloat(width, 64)
-	if err != nil || v < 1 || v > 4096 {
-		return nil, errs.NewWithCause("unable to determine SVG width", err)
+	v := mylog.Check2(strconv.ParseFloat(width, 64))
+	if v < 1 || v > 4096 {
+		mylog.Check("unable to determine SVG width")
 	}
 	svg.size.Width = float32(v)
-	v, err = strconv.ParseFloat(height, 64)
-	if err != nil || v < 1 || v > 4096 {
-		return nil, errs.NewWithCause("unable to determine SVG height", err)
+	v = mylog.Check2(strconv.ParseFloat(height, 64))
+	if v < 1 || v > 4096 {
+		mylog.Check("unable to determine SVG height")
 	}
 	svg.size.Height = float32(v)
-	for i, svgPath := range svgXML.Paths {
-		var p *Path
-		if p, err = NewPathFromSVGString(svgPath.Path); err != nil {
-			return nil, errs.NewWithCausef(err, "unable to decode SVG: path element #%d", i)
-		}
+	for _, svgPath := range svgXML.Paths {
+		p := mylog.Check2(NewPathFromSVGString(svgPath.Path))
 		if svg.unscaledPath == nil {
 			svg.unscaledPath = p
 		} else {
@@ -194,7 +180,7 @@ func (s *SVG) Size() Size {
 // size.
 func (s *SVG) OffsetToCenterWithinScaledSize(size Size) Point {
 	scale := min(size.Width/s.size.Width, size.Height/s.size.Height)
-	return Point{X: (size.Width - s.size.Width*scale) / 2, Y: (size.Height - s.size.Height*scale) / 2}
+	return NewPoint((size.Width-s.size.Width*scale)/2, (size.Height-s.size.Height*scale)/2)
 }
 
 // PathScaledTo returns the path with the specified scaling. You should not modify this path, as it is cached.
@@ -202,7 +188,7 @@ func (s *SVG) PathScaledTo(scale float32) *Path {
 	if scale == 1 {
 		return s.unscaledPath
 	}
-	scaledSize := Size{Width: scale, Height: scale}
+	scaledSize := NewSize(scale, scale)
 	p, ok := s.scaledPathMap[scaledSize]
 	if !ok {
 		p = s.unscaledPath.NewScaled(scale, scale)

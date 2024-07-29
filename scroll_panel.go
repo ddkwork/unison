@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -9,21 +9,27 @@
 
 package unison
 
-import (
-	"github.com/richardwilkes/unison/enums/behavior"
-	"github.com/richardwilkes/unison/enums/paintstyle"
-)
-
 var (
 	_ Layout = &ScrollPanel{}
 	// MouseWheelMultiplier is used by the default theme to multiply incoming mouse wheel event deltas.
 	MouseWheelMultiplier = float32(16)
 )
 
+// Possible ways to handle auto-sizing of the scroll content's preferred size.
+const (
+	UnmodifiedBehavior Behavior = iota
+	FillBehavior                // If the content is smaller than the available space, expand it
+	FollowBehavior              // Fix the content to the view size
+	HintedFillBehavior          // Uses hints to try and fix the content to the view size, but if the resulting content is smaller than the available space, expands it
+)
+
+// Behavior controls how auto-sizing of the scroll content's preferred size is handled.
+type Behavior uint8
+
 // DefaultScrollPanelTheme holds the default ScrollPanelTheme values for ScrollPanels. Modifying this data will not
 // alter existing ScrollPanels, but will alter any ScrollPanels created in the future.
 var DefaultScrollPanelTheme = ScrollPanelTheme{
-	BackgroundInk:        ThemeSurface,
+	BackgroundInk:        BackgroundColor,
 	MouseWheelMultiplier: func() float32 { return MouseWheelMultiplier },
 }
 
@@ -35,6 +41,8 @@ type ScrollPanelTheme struct {
 
 // ScrollPanel provides a scrollable area.
 type ScrollPanel struct {
+	Panel
+	ScrollPanelTheme
 	horizontalBar    *ScrollBar
 	verticalBar      *ScrollBar
 	columnHeaderView *Panel
@@ -43,11 +51,9 @@ type ScrollPanel struct {
 	rowHeader        Paneler
 	contentView      *Panel
 	content          Paneler
-	ScrollPanelTheme
-	Panel
-	widthBehavior  behavior.Enum
-	heightBehavior behavior.Enum
-	syncing        bool
+	widthBehavior    Behavior
+	heightBehavior   Behavior
+	syncing          bool
 }
 
 // NewScrollPanel creates a new scrollable area.
@@ -152,7 +158,7 @@ func (s *ScrollPanel) Content() Paneler {
 }
 
 // SetContent sets the content panel.
-func (s *ScrollPanel) SetContent(p Paneler, widthBehavior, heightBehavior behavior.Enum) {
+func (s *ScrollPanel) SetContent(p Paneler, widthBehavior, heightBehavior Behavior) {
 	if s.content != nil {
 		s.content.AsPanel().RemoveFromParent()
 	}
@@ -190,7 +196,7 @@ func (s *ScrollPanel) SetPosition(h, v float32) {
 // DefaultDraw provides the default drawing.
 func (s *ScrollPanel) DefaultDraw(canvas *Canvas, _ Rect) {
 	r := s.ContentRect(true)
-	canvas.DrawRect(r, s.BackgroundInk.Paint(canvas, r, paintstyle.Fill))
+	canvas.DrawRect(r, s.BackgroundInk.Paint(canvas, r, Fill))
 }
 
 // Sync the headers and content with the current scroll state.
@@ -365,14 +371,14 @@ func (s *ScrollPanel) LayoutSizes(_ *Panel, hint Size) (minSize, prefSize, maxSi
 		}
 	}
 	if border := s.contentView.Border(); border != nil {
-		insets := border.Insets().Size()
-		minSize = minSize.Add(insets)
-		prefSize = prefSize.Add(insets)
+		insets := border.Insets()
+		minSize.AddInsets(insets)
+		prefSize.AddInsets(insets)
 	}
 	if border := s.Border(); border != nil {
-		insets := border.Insets().Size()
-		minSize = minSize.Add(insets)
-		prefSize = prefSize.Add(insets)
+		insets := border.Insets()
+		minSize.AddInsets(insets)
+		prefSize.AddInsets(insets)
 	}
 	return minSize, prefSize, MaxSize(prefSize)
 }
@@ -395,7 +401,7 @@ func (s *ScrollPanel) PerformLayout(_ *Panel) {
 	}
 	if s.rowHeaderView != nil {
 		_, p, _ := s.rowHeader.AsPanel().Sizes(Size{Height: r.Height})
-		row := r
+		row := NewRect(r.X, r.Y, 0, r.Height)
 		row.Width = min(r.Width, p.Width)
 		if border := s.rowHeaderView.Border(); border != nil {
 			insets := border.Insets()
@@ -407,9 +413,7 @@ func (s *ScrollPanel) PerformLayout(_ *Panel) {
 	}
 	if s.columnHeaderView != nil {
 		_, p, _ := s.columnHeader.AsPanel().Sizes(Size{Width: r.Width})
-		col := r
-		col.Y = columnHeaderTop
-		col.Height = min(r.Height, p.Height)
+		col := NewRect(r.X, columnHeaderTop, r.Width, min(r.Height, p.Height))
 		if border := s.columnHeaderView.Border(); border != nil {
 			insets := border.Insets()
 			col.Height += insets.Height()
@@ -418,32 +422,32 @@ func (s *ScrollPanel) PerformLayout(_ *Panel) {
 	}
 	viewContent := r
 	if border := s.contentView.Border(); border != nil {
-		viewContent = viewContent.Inset(border.Insets())
+		viewContent.Inset(border.Insets())
 	}
 	var contentSize Size
 	if s.content != nil {
 		var hint Size
-		if s.widthBehavior == behavior.Follow || s.widthBehavior == behavior.HintedFill {
+		if s.widthBehavior == FollowBehavior || s.widthBehavior == HintedFillBehavior {
 			hint.Width = viewContent.Width
 		}
-		if s.heightBehavior == behavior.Follow || s.heightBehavior == behavior.HintedFill {
+		if s.heightBehavior == FollowBehavior || s.heightBehavior == HintedFillBehavior {
 			hint.Height = viewContent.Height
 		}
 		_, contentSize, _ = s.content.AsPanel().Sizes(hint)
 		switch s.widthBehavior {
-		case behavior.Fill, behavior.HintedFill:
+		case FillBehavior, HintedFillBehavior:
 			if contentSize.Width < viewContent.Width {
 				contentSize.Width = viewContent.Width
 			}
-		case behavior.Follow:
+		case FollowBehavior:
 			contentSize.Width = viewContent.Width
 		}
 		switch s.heightBehavior {
-		case behavior.Fill, behavior.HintedFill:
+		case FillBehavior, HintedFillBehavior:
 			if contentSize.Height < viewContent.Height {
 				contentSize.Height = viewContent.Height
 			}
-		case behavior.Follow:
+		case FollowBehavior:
 			contentSize.Height = viewContent.Height
 		}
 		cr := s.content.AsPanel().FrameRect()
@@ -466,14 +470,8 @@ func (s *ScrollPanel) PerformLayout(_ *Panel) {
 		width -= s.verticalBar.MinimumThickness
 		height -= s.horizontalBar.MinimumThickness
 	}
-	s.verticalBar.SetFrameRect(Rect{
-		Point: Point{X: viewContent.Right() - s.verticalBar.MinimumThickness, Y: viewContent.Y},
-		Size:  Size{Width: s.verticalBar.MinimumThickness, Height: height},
-	})
-	s.horizontalBar.SetFrameRect(Rect{
-		Point: Point{X: viewContent.X, Y: viewContent.Bottom() - s.horizontalBar.MinimumThickness},
-		Size:  Size{Width: width, Height: s.horizontalBar.MinimumThickness},
-	})
+	s.verticalBar.SetFrameRect(NewRect(viewContent.Right()-s.verticalBar.MinimumThickness, viewContent.Y, s.verticalBar.MinimumThickness, height))
+	s.horizontalBar.SetFrameRect(NewRect(viewContent.X, viewContent.Bottom()-s.horizontalBar.MinimumThickness, width, s.horizontalBar.MinimumThickness))
 	s.contentView.SetFrameRect(r)
 	if s.columnHeaderView != nil {
 		vr := s.columnHeaderView.FrameRect()

@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -13,57 +13,53 @@ import (
 	"time"
 
 	"github.com/richardwilkes/toolbox/xmath"
-	"github.com/richardwilkes/unison/enums/align"
-	"github.com/richardwilkes/unison/enums/check"
-	"github.com/richardwilkes/unison/enums/paintstyle"
-	"github.com/richardwilkes/unison/enums/side"
 )
 
 // DefaultCheckBoxTheme holds the default CheckBoxTheme values for CheckBoxes. Modifying this data will not alter
 // existing CheckBoxes, but will alter any CheckBoxes created in the future.
 var DefaultCheckBoxTheme = CheckBoxTheme{
-	TextDecoration: TextDecoration{
-		Font:            SystemFont,
-		OnBackgroundInk: ThemeOnSurface,
-	},
-	EdgeInk:            ThemeSurfaceEdge,
-	SelectionInk:       ThemeFocus,
-	OnSelectionInk:     ThemeOnFocus,
-	ControlInk:         ThemeAboveSurface,
-	OnControlInk:       ThemeOnAboveSurface,
+	Font:               SystemFont,
+	OnBackgroundInk:    OnBackgroundColor,
+	EdgeInk:            ControlEdgeColor,
+	SelectionInk:       SelectionColor,
+	OnSelectionInk:     OnSelectionColor,
+	ControlInk:         ControlColor,
+	OnControlInk:       OnControlColor,
 	Gap:                3,
 	CornerRadius:       4,
 	ClickAnimationTime: 100 * time.Millisecond,
-	HAlign:             align.Start,
-	VAlign:             align.Middle,
-	Side:               side.Left,
+	HAlign:             StartAlignment,
+	VAlign:             MiddleAlignment,
+	Side:               LeftSide,
 }
 
 // CheckBoxTheme holds theming data for a CheckBox.
 type CheckBoxTheme struct {
-	EdgeInk        Ink
-	SelectionInk   Ink
-	OnSelectionInk Ink
-	ControlInk     Ink
-	OnControlInk   Ink
-	TextDecoration
+	Font               Font
+	OnBackgroundInk    Ink
+	EdgeInk            Ink
+	SelectionInk       Ink
+	OnSelectionInk     Ink
+	ControlInk         Ink
+	OnControlInk       Ink
 	Gap                float32
 	CornerRadius       float32
 	ClickAnimationTime time.Duration
-	HAlign             align.Enum
-	VAlign             align.Enum
-	Side               side.Enum
+	HAlign             Alignment
+	VAlign             Alignment
+	Side               Side
 }
 
 // CheckBox represents a clickable checkbox with an optional label.
 type CheckBox struct {
+	Panel
+	CheckBoxTheme
 	ClickCallback func()
 	Drawable      Drawable
-	Text          *Text
-	CheckBoxTheme
-	Panel
-	State   check.Enum
-	Pressed bool
+	Text          string
+	textCache     TextCache
+	State         CheckState
+	Pressed       bool
 }
 
 // NewCheckBox creates a new checkbox.
@@ -83,13 +79,6 @@ func NewCheckBox() *CheckBox {
 	return c
 }
 
-// SetTitle sets the text of the checkbox to the specified text. The theme's TextDecoration will be used, so any
-// changes you want to make to it should be done before calling this method. Alternatively, you can directly set the
-// .Text field.
-func (c *CheckBox) SetTitle(text string) {
-	c.Text = NewText(text, &c.TextDecoration)
-}
-
 // DefaultFocusGained provides the default focus gained handling.
 func (c *CheckBox) DefaultFocusGained() {
 	c.ScrollIntoView()
@@ -100,18 +89,19 @@ func (c *CheckBox) DefaultFocusGained() {
 func (c *CheckBox) DefaultSizes(hint Size) (minSize, prefSize, maxSize Size) {
 	prefSize = c.boxAndLabelSize()
 	if border := c.Border(); border != nil {
-		prefSize = prefSize.Add(border.Insets().Size())
+		prefSize.AddInsets(border.Insets())
 	}
-	prefSize = prefSize.Ceil().ConstrainForHint(hint)
+	prefSize.GrowToInteger()
+	prefSize.ConstrainForHint(hint)
 	return prefSize, prefSize, MaxSize(prefSize)
 }
 
 func (c *CheckBox) boxAndLabelSize() Size {
 	boxSize := c.boxSize()
-	if c.Drawable == nil && c.Text.Empty() {
+	if c.Drawable == nil && c.Text == "" {
 		return Size{Width: boxSize, Height: boxSize}
 	}
-	size, _ := LabelContentSizes(c.Text, c.Drawable, c.Font, c.Side, c.Gap)
+	size := LabelSize(c.textCache.Text(c.Text, c.Font), c.Drawable, c.Side, c.Gap)
 	size.Width += c.Gap + boxSize
 	if size.Height < boxSize {
 		size.Height = boxSize
@@ -129,27 +119,27 @@ func (c *CheckBox) DefaultDraw(canvas *Canvas, _ Rect) {
 	rect := contentRect
 	size := c.boxAndLabelSize()
 	switch c.HAlign {
-	case align.Middle, align.Fill:
+	case MiddleAlignment, FillAlignment:
 		rect.X = xmath.Floor(rect.X + (rect.Width-size.Width)/2)
-	case align.End:
+	case EndAlignment:
 		rect.X += rect.Width - size.Width
-	default: // align.Start
+	default: // StartAlignment
 	}
 	switch c.VAlign {
-	case align.Middle, align.Fill:
+	case MiddleAlignment, FillAlignment:
 		rect.Y = xmath.Floor(rect.Y + (rect.Height-size.Height)/2)
-	case align.End:
+	case EndAlignment:
 		rect.Y += rect.Height - size.Height
-	default: // align.Start
+	default: // StartAlignment
 	}
 	rect.Size = size
 	boxSize := c.boxSize()
-	if c.Drawable != nil || !c.Text.Empty() {
+	if c.Drawable != nil || c.Text != "" {
 		r := rect
 		r.X += boxSize + c.Gap
 		r.Width -= boxSize + c.Gap
-		DrawLabel(canvas, r, c.HAlign, c.VAlign, c.Font, c.Text, c.OnBackgroundInk, nil, c.Drawable, c.Side, c.Gap,
-			!c.Enabled())
+		DrawLabel(canvas, r, c.HAlign, c.VAlign, c.textCache.Text(c.Text, c.Font), c.OnBackgroundInk, c.Drawable,
+			c.Side, c.Gap, !c.Enabled())
 	}
 	if rect.Height > boxSize {
 		rect.Y += xmath.Floor((rect.Height - boxSize) / 2)
@@ -165,23 +155,21 @@ func (c *CheckBox) DefaultDraw(canvas *Canvas, _ Rect) {
 		bg = c.ControlInk
 		fg = c.OnControlInk
 	}
-	edge := c.EdgeInk
 	thickness := float32(1)
 	if c.Focused() {
 		thickness++
-		edge = c.SelectionInk
 	}
-	DrawRoundedRectBase(canvas, rect, c.CornerRadius, thickness, bg, edge)
-	rect = rect.Inset(NewUniformInsets(0.5))
-	if c.State == check.Off {
+	DrawRoundedRectBase(canvas, rect, c.CornerRadius, thickness, bg, c.EdgeInk)
+	rect.InsetUniform(0.5)
+	if c.State == OffCheckState {
 		return
 	}
-	paint := fg.Paint(canvas, contentRect, paintstyle.Stroke)
+	paint := fg.Paint(canvas, contentRect, Stroke)
 	paint.SetStrokeWidth(2)
 	if !c.Enabled() {
 		paint.SetColorFilter(Grayscale30Filter())
 	}
-	if c.State == check.On {
+	if c.State == OnCheckState {
 		path := NewPath()
 		path.MoveTo(rect.X+rect.Width*0.25, rect.Y+rect.Height*0.55)
 		path.LineTo(rect.X+rect.Width*0.45, rect.Y+rect.Height*0.7)
@@ -209,10 +197,10 @@ func (c *CheckBox) Click() {
 }
 
 func (c *CheckBox) updateState() {
-	if c.State == check.On {
-		c.State = check.Off
+	if c.State == OnCheckState {
+		c.State = OffCheckState
 	} else {
-		c.State = check.On
+		c.State = OnCheckState
 	}
 }
 
@@ -225,7 +213,9 @@ func (c *CheckBox) DefaultMouseDown(_ Point, _, _ int, _ Modifiers) bool {
 
 // DefaultMouseDrag provides the default mouse drag handling.
 func (c *CheckBox) DefaultMouseDrag(where Point, _ int, _ Modifiers) bool {
-	if pressed := where.In(c.ContentRect(false)); pressed != c.Pressed {
+	rect := c.ContentRect(false)
+	pressed := rect.ContainsPoint(where)
+	if c.Pressed != pressed {
 		c.Pressed = pressed
 		c.MarkForRedraw()
 	}
@@ -236,7 +226,8 @@ func (c *CheckBox) DefaultMouseDrag(where Point, _ int, _ Modifiers) bool {
 func (c *CheckBox) DefaultMouseUp(where Point, _ int, _ Modifiers) bool {
 	c.Pressed = false
 	c.MarkForRedraw()
-	if where.In(c.ContentRect(false)) {
+	rect := c.ContentRect(false)
+	if rect.ContainsPoint(where) {
 		c.updateState()
 		if c.ClickCallback != nil {
 			c.ClickCallback()
@@ -256,8 +247,5 @@ func (c *CheckBox) DefaultKeyDown(keyCode KeyCode, mod Modifiers, _ bool) bool {
 
 // DefaultUpdateCursor provides the default cursor for check boxes.
 func (c *CheckBox) DefaultUpdateCursor(_ Point) *Cursor {
-	if !c.Enabled() {
-		return ArrowCursor()
-	}
 	return PointingCursor()
 }

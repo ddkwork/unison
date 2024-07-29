@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -9,7 +9,7 @@
 
 package unison
 
-import "github.com/go-gl/glfw/v3.3/glfw"
+import "github.com/richardwilkes/unison/internal/glfw"
 
 func (w *Window) frameRect() Rect {
 	if w.IsValid() {
@@ -69,7 +69,7 @@ func (w *Window) convertMouseLocation(x, y float64) Point {
 	return Point{}
 }
 
-func (w *Window) keyCallbackForGLFW(_ *glfw.Window, key glfw.Key, _ int, action glfw.Action, mods glfw.ModifierKey) {
+func (w *Window) keyCallbackForGLFW(_ *glfw.Window, key glfw.Key, code int, action glfw.Action, mods glfw.ModifierKey) {
 	if w.okToProcess() {
 		w.commonKeyCallbackForGLFW(key, action, mods)
 	}

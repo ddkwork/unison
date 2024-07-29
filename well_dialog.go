@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -13,11 +13,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/richardwilkes/toolbox/errs"
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/toolbox/i18n"
-	"github.com/richardwilkes/unison/enums/align"
-	"github.com/richardwilkes/unison/enums/imgfmt"
-	"github.com/richardwilkes/unison/enums/paintstyle"
 )
 
 type wellDialog struct {
@@ -71,8 +68,8 @@ func showWellDialog(w *Well) {
 		VSpacing: StdVSpacing,
 	})
 	right.SetLayoutData(&FlexLayoutData{
-		HAlign: align.Fill,
-		VAlign: align.Middle,
+		HAlign: FillAlignment,
+		VAlign: MiddleAlignment,
 		HGrab:  true,
 	})
 	d.panel.AddChild(right)
@@ -84,12 +81,8 @@ func showWellDialog(w *Well) {
 		d.addColorSelector(right)
 	}
 
-	var err error
-	d.dialog, err = NewDialog(nil, nil, d.panel, []*DialogButtonInfo{NewCancelButtonInfo(), NewOKButtonInfo()})
-	if err != nil {
-		errs.Log(err)
-		return
-	}
+	d.dialog = mylog.Check2(NewDialog(nil, nil, d.panel, []*DialogButtonInfo{NewCancelButtonInfo(), NewOKButtonInfo()}))
+
 	d.dialog.Window().SetTitle(i18n.Text("Choose an ink"))
 	if d.dialog.RunModal() == ModalResponseOK {
 		w.SetInk(d.ink)
@@ -98,15 +91,15 @@ func showWellDialog(w *Well) {
 
 func (d *wellDialog) addPatternSelector(parent *Panel) {
 	b := NewButton()
-	b.SetTitle(i18n.Text("Select Image…"))
+	b.Text = i18n.Text("Select Image…")
 	b.SetLayoutData(&FlexLayoutData{
 		HSpan:  2,
-		HAlign: align.Middle,
-		VAlign: align.Middle,
+		HAlign: MiddleAlignment,
+		VAlign: MiddleAlignment,
 	})
 	b.ClickCallback = func() {
 		openDialog := NewOpenDialog()
-		openDialog.SetAllowedExtensions(imgfmt.AllReadableExtensions()...)
+		openDialog.SetAllowedExtensions(KnownImageFormatExtensions...)
 		if openDialog.RunModal() {
 			unable := i18n.Text("Unable to load image")
 			paths := openDialog.Paths()
@@ -114,16 +107,13 @@ func (d *wellDialog) addPatternSelector(parent *Panel) {
 				ErrorDialogWithMessage(unable, "Invalid path")
 				return
 			}
-			imageSpec := imgfmt.Distill(paths[0])
+			imageSpec := DistillImageSpecFor(paths[0])
 			if imageSpec == "" {
 				ErrorDialogWithMessage(unable, "Invalid image file")
 				return
 			}
-			img, err := d.well.loadImage(imageSpec)
-			if err != nil {
-				ErrorDialogWithError(unable, err)
-				return
-			}
+			img := mylog.Check2(d.well.loadImage(imageSpec))
+
 			if d.well.ValidateImageCallback != nil {
 				img = d.well.ValidateImageCallback(img)
 			}
@@ -158,7 +148,7 @@ func (d *wellDialog) addColorSelector(parent *Panel) {
 		VSpacing: StdVSpacing,
 	})
 	left.SetLayoutData(&FlexLayoutData{
-		HAlign: align.Fill,
+		HAlign: FillAlignment,
 		HGrab:  true,
 	})
 	parent.AddChild(left)
@@ -184,7 +174,7 @@ func (d *wellDialog) addColorSelector(parent *Panel) {
 		VSpacing: StdVSpacing,
 	})
 	right.SetLayoutData(&FlexLayoutData{
-		HAlign: align.Fill,
+		HAlign: FillAlignment,
 		HGrab:  true,
 	})
 	parent.AddChild(right)
@@ -206,7 +196,7 @@ func (d *wellDialog) addColorSelector(parent *Panel) {
 	})
 	bottom.SetLayoutData(&FlexLayoutData{
 		HSpan:  2,
-		HAlign: align.Fill,
+		HAlign: FillAlignment,
 		HGrab:  true,
 	})
 	parent.AddChild(bottom)
@@ -216,11 +206,11 @@ func (d *wellDialog) addColorSelector(parent *Panel) {
 
 func (d *wellDialog) addChannelField(parent *Panel, title string, value int, adjuster func(value int, color Color) Color) *Field {
 	l := NewLabel()
-	l.SetTitle(title)
-	l.HAlign = align.End
+	l.Text = title
+	l.HAlign = EndAlignment
 	l.SetLayoutData(&FlexLayoutData{
-		HAlign: align.End,
-		VAlign: align.Middle,
+		HAlign: EndAlignment,
+		VAlign: MiddleAlignment,
 	})
 	parent.AddChild(l)
 	field := NewField()
@@ -228,8 +218,8 @@ func (d *wellDialog) addChannelField(parent *Panel, title string, value int, adj
 	field.Watermark = "0"
 	field.SetMinimumTextWidthUsing("255", "100%")
 	field.SetLayoutData(&FlexLayoutData{
-		HAlign: align.Fill,
-		VAlign: align.Middle,
+		HAlign: FillAlignment,
+		VAlign: MiddleAlignment,
 		HGrab:  true,
 	})
 	field.ValidateCallback = func() bool {
@@ -239,14 +229,11 @@ func (d *wellDialog) addChannelField(parent *Panel, title string, value int, adj
 		}
 		var v int
 		if strings.HasSuffix(text, "%") {
-			percentage, err := extractColorPercentage(text)
-			if err != nil {
-				return false
-			}
+			percentage := mylog.Check2(extractColorPercentage(text))
+
 			v = clamp0To1AndScale255(percentage)
 		} else {
-			var err error
-			if v, err = strconv.Atoi(text); err != nil || v < 0 || v > 255 {
+			if v = mylog.Check2(strconv.Atoi(text)); v < 0 || v > 255 {
 				return false
 			}
 		}
@@ -262,10 +249,10 @@ func (d *wellDialog) addChannelField(parent *Panel, title string, value int, adj
 	}
 	parent.AddChild(field)
 	l = NewLabel()
-	l.SetTitle(i18n.Text("0-255 or 0-100%"))
+	l.Text = i18n.Text("0-255 or 0-100%")
 	l.SetEnabled(false)
 	l.SetLayoutData(&FlexLayoutData{
-		VAlign: align.Middle,
+		VAlign: MiddleAlignment,
 	})
 	parent.AddChild(l)
 	return field
@@ -273,11 +260,11 @@ func (d *wellDialog) addChannelField(parent *Panel, title string, value int, adj
 
 func (d *wellDialog) addHueField(parent *Panel, color Color) *Field {
 	l := NewLabel()
-	l.SetTitle(i18n.Text("Hue:"))
-	l.HAlign = align.End
+	l.Text = i18n.Text("Hue:")
+	l.HAlign = EndAlignment
 	l.SetLayoutData(&FlexLayoutData{
-		HAlign: align.End,
-		VAlign: align.Middle,
+		HAlign: EndAlignment,
+		VAlign: MiddleAlignment,
 	})
 	parent.AddChild(l)
 	field := NewField()
@@ -285,8 +272,8 @@ func (d *wellDialog) addHueField(parent *Panel, color Color) *Field {
 	field.Watermark = "0"
 	field.SetMinimumTextWidthUsing("360", "100%")
 	field.SetLayoutData(&FlexLayoutData{
-		HAlign: align.Fill,
-		VAlign: align.Middle,
+		HAlign: FillAlignment,
+		VAlign: MiddleAlignment,
 		HGrab:  true,
 	})
 	field.ValidateCallback = func() bool {
@@ -296,13 +283,10 @@ func (d *wellDialog) addHueField(parent *Panel, color Color) *Field {
 		}
 		var percentage float32
 		if strings.HasSuffix(text, "%") {
-			var err error
-			if percentage, err = extractColorPercentage(text); err != nil {
-				return false
-			}
+			percentage = mylog.Check2(extractColorPercentage(text))
 		} else {
-			v, err := strconv.Atoi(text)
-			if err != nil || v < 0 || v > 360 {
+			v := mylog.Check2(strconv.Atoi(text))
+			if v < 0 || v > 360 {
 				return false
 			}
 			percentage = float32(v) / 360
@@ -319,10 +303,10 @@ func (d *wellDialog) addHueField(parent *Panel, color Color) *Field {
 	}
 	parent.AddChild(field)
 	l = NewLabel()
-	l.SetTitle(i18n.Text("0-360 or 0-100%"))
+	l.Text = i18n.Text("0-360 or 0-100%")
 	l.SetEnabled(false)
 	l.SetLayoutData(&FlexLayoutData{
-		VAlign: align.Middle,
+		VAlign: MiddleAlignment,
 	})
 	parent.AddChild(l)
 	return field
@@ -330,11 +314,11 @@ func (d *wellDialog) addHueField(parent *Panel, color Color) *Field {
 
 func (d *wellDialog) addPercentageField(parent *Panel, title string, value float32, adjuster func(value float32, color Color) Color) *Field {
 	l := NewLabel()
-	l.SetTitle(title)
-	l.HAlign = align.End
+	l.Text = title
+	l.HAlign = EndAlignment
 	l.SetLayoutData(&FlexLayoutData{
-		HAlign: align.End,
-		VAlign: align.Middle,
+		HAlign: EndAlignment,
+		VAlign: MiddleAlignment,
 	})
 	parent.AddChild(l)
 	field := NewField()
@@ -342,8 +326,8 @@ func (d *wellDialog) addPercentageField(parent *Panel, title string, value float
 	field.Watermark = "0%"
 	field.SetMinimumTextWidthUsing("100%")
 	field.SetLayoutData(&FlexLayoutData{
-		HAlign: align.Fill,
-		VAlign: align.Middle,
+		HAlign: FillAlignment,
+		VAlign: MiddleAlignment,
 		HGrab:  true,
 	})
 	field.ValidateCallback = func() bool {
@@ -354,10 +338,8 @@ func (d *wellDialog) addPercentageField(parent *Panel, title string, value float
 		if !strings.HasSuffix(text, "%") {
 			text += "%"
 		}
-		percentage, err := extractColorPercentage(text)
-		if err != nil {
-			return false
-		}
+		percentage := mylog.Check2(extractColorPercentage(text))
+
 		if !d.syncing {
 			color, ok := d.ink.(Color)
 			if !ok {
@@ -370,10 +352,10 @@ func (d *wellDialog) addPercentageField(parent *Panel, title string, value float
 	}
 	parent.AddChild(field)
 	l = NewLabel()
-	l.SetTitle(i18n.Text("0-100%"))
+	l.Text = i18n.Text("0-100%")
 	l.SetEnabled(false)
 	l.SetLayoutData(&FlexLayoutData{
-		VAlign: align.Middle,
+		VAlign: MiddleAlignment,
 	})
 	parent.AddChild(l)
 	return field
@@ -381,27 +363,25 @@ func (d *wellDialog) addPercentageField(parent *Panel, title string, value float
 
 func (d *wellDialog) addCSSField(parent *Panel, color Color) *Field {
 	l := NewLabel()
-	l.SetTitle(i18n.Text("CSS:"))
-	l.HAlign = align.End
+	l.Text = i18n.Text("CSS:")
+	l.HAlign = EndAlignment
 	l.SetLayoutData(&FlexLayoutData{
-		HAlign: align.End,
-		VAlign: align.Middle,
+		HAlign: EndAlignment,
+		VAlign: MiddleAlignment,
 	})
 	parent.AddChild(l)
 	field := NewField()
 	field.SetText(color.String())
 	field.Watermark = "CSS"
 	field.SetLayoutData(&FlexLayoutData{
-		HAlign: align.Fill,
-		VAlign: align.Middle,
+		HAlign: FillAlignment,
+		VAlign: MiddleAlignment,
 		HGrab:  true,
 	})
 	field.ValidateCallback = func() bool {
 		if !d.syncing {
-			adjustedColor, err := ColorDecode(field.Text())
-			if err != nil {
-				return false
-			}
+			adjustedColor := mylog.Check2(ColorDecode(field.Text()))
+
 			d.ink = adjustedColor
 			d.sync()
 		}
@@ -419,11 +399,11 @@ func (d *wellDialog) addCSSField(parent *Panel, color Color) *Field {
 	} {
 		parent.AddChild(NewLabel())
 		l = NewLabel()
-		l.SetTitle(txt)
+		l.Text = txt
 		l.SetEnabled(false)
 		l.SetBorder(NewEmptyBorder(Insets{Left: StdHSpacing}))
 		l.SetLayoutData(&FlexLayoutData{
-			VAlign: align.Middle,
+			VAlign: MiddleAlignment,
 		})
 		parent.AddChild(l)
 	}
@@ -455,11 +435,11 @@ func (d *wellDialog) syncText(field *Field, text string) {
 
 func (d *wellDialog) addPreviewBlock(parent *Panel, title string, spaceBefore float32, inkRetriever func() Ink) {
 	label := NewLabel()
-	label.SetTitle(title)
-	label.HAlign = align.Middle
+	label.Text = title
+	label.HAlign = MiddleAlignment
 	label.SetLayoutData(&FlexLayoutData{
-		HAlign: align.Middle,
-		VAlign: align.Middle,
+		HAlign: MiddleAlignment,
+		VAlign: MiddleAlignment,
 	})
 	if spaceBefore > 0 {
 		label.SetBorder(NewEmptyBorder(Insets{Top: spaceBefore}))
@@ -467,12 +447,10 @@ func (d *wellDialog) addPreviewBlock(parent *Panel, title string, spaceBefore fl
 	parent.AddChild(label)
 
 	preview := NewPanel()
-	preview.SetBorder(NewCompoundBorder(
-		NewLineBorder(ThemeOnSurface, 0, NewUniformInsets(1), false),
-		NewLineBorder(ThemeSurface, 0, NewUniformInsets(1), false),
-	))
+	preview.SetBorder(NewCompoundBorder(NewLineBorder(OnBackgroundColor, 0, NewUniformInsets(1), false),
+		NewLineBorder(BackgroundColor, 0, NewUniformInsets(1), false)))
 	preview.SetLayoutData(&FlexLayoutData{
-		SizeHint: Size{Width: 64, Height: 64},
+		SizeHint: NewSize(64, 64),
 	})
 	preview.DrawCallback = func(canvas *Canvas, _ Rect) {
 		r := preview.ContentRect(false)
@@ -480,7 +458,7 @@ func (d *wellDialog) addPreviewBlock(parent *Panel, title string, spaceBefore fl
 		if pattern, ok := ink.(*Pattern); ok {
 			canvas.DrawImageInRect(pattern.Image, r, nil, nil)
 		} else {
-			canvas.DrawRect(r, ink.Paint(canvas, r, paintstyle.Fill))
+			canvas.DrawRect(r, ink.Paint(canvas, r, Fill))
 		}
 	}
 	parent.AddChild(preview)

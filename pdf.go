@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -37,9 +37,9 @@ func CreatePDF(s Stream, md *PDFMetaData, pageProvider PageProvider) error {
 	for pageProvider.HasPage(pageNumber) {
 		size := pageProvider.PageSize()
 		canvas := &Canvas{canvas: skia.DocumentBeginPage(d, size.Width, size.Height)}
-		if err := pageProvider.DrawPage(canvas, pageNumber); err != nil {
+		if e := (pageProvider.DrawPage(canvas, pageNumber)); e != nil {
 			skia.DocumentAbort(d)
-			return errs.Wrap(err)
+			return errs.Wrap(e)
 		}
 		skia.DocumentEndPage(d)
 		pageNumber++

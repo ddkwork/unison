@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -10,19 +10,16 @@
 package unison
 
 import (
-	"github.com/go-gl/glfw/v3.3/glfw"
+	"github.com/richardwilkes/unison/internal/glfw"
 	"github.com/richardwilkes/unison/internal/ns"
 )
 
 func (w *Window) frameRect() Rect {
 	if w.IsValid() {
 		left, top, right, bottom := w.wnd.GetFrameSize()
-		return Rect{
-			Point: Point{X: float32(left), Y: float32(top)},
-			Size:  Size{Width: float32(right - left), Height: float32(bottom - top)},
-		}
+		return NewRect(float32(left), float32(top), float32(right-left), float32(bottom-top))
 	}
-	return Rect{Size: Size{Width: 1, Height: 1}}
+	return NewRect(0, 0, 1, 1)
 }
 
 // ContentRect returns the boundaries in display coordinates of the window's content area.
@@ -30,12 +27,9 @@ func (w *Window) ContentRect() Rect {
 	if w.IsValid() {
 		x, y := w.wnd.GetPos()
 		width, height := w.wnd.GetSize()
-		return Rect{
-			Point: Point{X: float32(x), Y: float32(y)},
-			Size:  Size{Width: float32(width), Height: float32(height)},
-		}
+		return NewRect(float32(x), float32(y), float32(width), float32(height))
 	}
-	return Rect{Size: Size{Width: 1, Height: 1}}
+	return NewRect(0, 0, 1, 1)
 }
 
 // SetContentRect sets the boundaries of the frame of this window by converting the content rect into a suitable frame

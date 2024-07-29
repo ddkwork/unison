@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -12,7 +12,7 @@ package demo
 import (
 	"fmt"
 
-	"github.com/richardwilkes/toolbox/errs"
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/unison"
 )
 
@@ -22,8 +22,6 @@ const (
 	NewWindowActionID
 	NewTableWindowActionID
 	NewDockWindowActionID
-	NewMarkdownWindowActionID
-	ShowColorsWindowActionID
 	OpenActionID
 )
 
@@ -34,10 +32,6 @@ var (
 	NewTableWindowAction *unison.Action
 	// NewDockWindowAction opens a new demo dock window when triggered.
 	NewDockWindowAction *unison.Action
-	// NewMarkdownWindowAction opens a new demo markdown window when triggered.
-	NewMarkdownWindowAction *unison.Action
-	// ShowColorsWindowAction opens a demo colors window when triggered.
-	ShowColorsWindowAction *unison.Action
 	// OpenAction presents a file open dialog and then prints any selected files onto the console.
 	OpenAction *unison.Action
 )
@@ -48,9 +42,14 @@ func init() {
 		Title:      "New Demo Window",
 		KeyBinding: unison.KeyBinding{KeyCode: unison.KeyN, Modifiers: unison.OSMenuCmdModifier()},
 		ExecuteCallback: func(_ *unison.Action, _ any) {
-			if _, err := NewDemoWindow(initialWindowLocation()); err != nil {
-				errs.Log(err)
+			// Try to position the new window to the right of the currently active window
+			var pt unison.Point
+			if w := unison.ActiveWindow(); w != nil {
+				r := w.FrameRect()
+				pt.X = r.X + r.Width
+				pt.Y = r.Y
 			}
+			mylog.Check2(NewDemoWindow(pt))
 		},
 	}
 
@@ -59,9 +58,14 @@ func init() {
 		Title:      "New Demo Table Window",
 		KeyBinding: unison.KeyBinding{KeyCode: unison.KeyT, Modifiers: unison.OSMenuCmdModifier()},
 		ExecuteCallback: func(_ *unison.Action, _ any) {
-			if _, err := NewDemoTableWindow(initialWindowLocation()); err != nil {
-				errs.Log(err)
+			// Try to position the new window to the right of the currently active window
+			var pt unison.Point
+			if w := unison.ActiveWindow(); w != nil {
+				r := w.FrameRect()
+				pt.X = r.X + r.Width
+				pt.Y = r.Y
 			}
+			mylog.Check2(NewDemoTableWindow(pt))
 		},
 	}
 
@@ -70,31 +74,14 @@ func init() {
 		Title:      "New Demo Dock Window",
 		KeyBinding: unison.KeyBinding{KeyCode: unison.KeyD, Modifiers: unison.OSMenuCmdModifier()},
 		ExecuteCallback: func(_ *unison.Action, _ any) {
-			if _, err := NewDemoDockWindow(initialWindowLocation()); err != nil {
-				errs.Log(err)
+			// Try to position the new window to the right of the currently active window
+			var pt unison.Point
+			if w := unison.ActiveWindow(); w != nil {
+				r := w.FrameRect()
+				pt.X = r.X + r.Width
+				pt.Y = r.Y
 			}
-		},
-	}
-
-	NewMarkdownWindowAction = &unison.Action{
-		ID:         NewMarkdownWindowActionID,
-		Title:      "New Demo Markdown Window",
-		KeyBinding: unison.KeyBinding{KeyCode: unison.KeyK, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
-		ExecuteCallback: func(_ *unison.Action, _ any) {
-			if _, err := NewDemoMarkdownWindow(initialWindowLocation()); err != nil {
-				errs.Log(err)
-			}
-		},
-	}
-
-	ShowColorsWindowAction = &unison.Action{
-		ID:         ShowColorsWindowActionID,
-		Title:      "Show Colors",
-		KeyBinding: unison.KeyBinding{KeyCode: unison.KeyK, Modifiers: unison.OSMenuCmdModifier()},
-		ExecuteCallback: func(_ *unison.Action, _ any) {
-			if _, err := NewDemoColorsWindow(initialWindowLocation()); err != nil {
-				errs.Log(err)
-			}
+			mylog.Check2(NewDemoDockWindow(pt))
 		},
 	}
 
@@ -113,15 +100,4 @@ func init() {
 			}
 		},
 	}
-}
-
-func initialWindowLocation() unison.Point {
-	// Try to position the new window to the right of the currently active window
-	var pt unison.Point
-	if w := unison.ActiveWindow(); w != nil {
-		r := w.FrameRect()
-		pt.X = r.X + r.Width
-		pt.Y = r.Y
-	}
-	return pt
 }

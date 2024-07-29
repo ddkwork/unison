@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -20,6 +20,38 @@ const (
 	// StdVSpacing is the typical spacing between rows.
 	StdVSpacing = 4
 )
+
+// Alignment constants.
+const (
+	StartAlignment Alignment = iota
+	MiddleAlignment
+	EndAlignment
+	FillAlignment
+)
+
+// Alignment specifies how to align an object within its available space.
+type Alignment uint8
+
+// Side constants.
+const (
+	TopSide Side = iota
+	LeftSide
+	BottomSide
+	RightSide
+)
+
+// Side specifies which side an object should be on.
+type Side uint8
+
+// Horizontal returns true if the side is to the left or right.
+func (s Side) Horizontal() bool {
+	return s == LeftSide || s == RightSide
+}
+
+// Vertical returns true if the side is to the top or bottom.
+func (s Side) Vertical() bool {
+	return s == TopSide || s == BottomSide
+}
 
 // Sizer returns minimum, preferred, and maximum sizes. The hint will contain
 // values other than zero for a dimension that has already been determined.

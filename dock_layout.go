@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -9,10 +9,7 @@
 
 package unison
 
-import (
-	"github.com/richardwilkes/toolbox"
-	"github.com/richardwilkes/unison/enums/side"
-)
+import "github.com/ddkwork/golibrary/mylog"
 
 // TODO: Fix scaling for docks, too
 
@@ -49,7 +46,7 @@ func (d *DockLayout) forEachDockContainer(f func(*DockContainer) bool) bool {
 		switch c := node.(type) {
 		case *DockContainer:
 			stop := false
-			toolbox.Call(func() { stop = f(c) })
+			mylog.Call(func() { stop = f(c) })
 			if stop {
 				return true
 			}
@@ -115,7 +112,7 @@ func (d *DockLayout) Contains(node DockLayoutNode) bool {
 
 // DockTo docks a DockContainer within this DockLayout. If the DockContainer already exists in this DockLayout, it will
 // be moved to the new location.
-func (d *DockLayout) DockTo(dc *DockContainer, target DockLayoutNode, side side.Enum) {
+func (d *DockLayout) DockTo(dc *DockContainer, target DockLayoutNode, side Side) {
 	// Does the container already exist in our hierarchy?
 	if existingLayout := d.FindLayout(dc); existingLayout != nil {
 		// Yes. Is it the same layout?
@@ -149,7 +146,7 @@ func (d *DockLayout) DockTo(dc *DockContainer, target DockLayoutNode, side side.
 	}
 }
 
-func (d *DockLayout) dockWithin(dc *DockContainer, side side.Enum) {
+func (d *DockLayout) dockWithin(dc *DockContainer, side Side) {
 	p1, p2 := dockOrder(side)
 	if d.nodes[p1] != nil {
 		if d.nodes[p2] == nil {
@@ -179,7 +176,7 @@ func (d *DockLayout) pushDown() *DockLayout {
 	return layout
 }
 
-func (d *DockLayout) dockWithContainer(dc *DockContainer, target DockLayoutNode, side side.Enum) {
+func (d *DockLayout) dockWithContainer(dc *DockContainer, target DockLayoutNode, side Side) {
 	p1, p2 := dockOrder(side)
 	if d.nodes[p1] != nil {
 		if d.nodes[p2] == nil {
@@ -211,8 +208,8 @@ func (d *DockLayout) dockWithContainer(dc *DockContainer, target DockLayoutNode,
 	}
 }
 
-func dockOrder(s side.Enum) (p1, p2 int) {
-	if s == side.Top || s == side.Left {
+func dockOrder(side Side) (p1, p2 int) {
+	if side == TopSide || side == LeftSide {
 		return 0, 1
 	}
 	return 1, 0
@@ -345,7 +342,7 @@ func (d *DockLayout) LayoutSizes(_ *Panel, _ Size) (minSize, prefSize, maxSize S
 		prefSize = d.nodes[0].PreferredSize()
 	}
 	if d.nodes[1] != nil {
-		prefSize = prefSize.Max(d.nodes[1].PreferredSize())
+		prefSize.Max(d.nodes[1].PreferredSize())
 	}
 	if d.Full() {
 		if d.Horizontal {
@@ -371,7 +368,7 @@ func (d *DockLayout) PerformLayout(_ *Panel) {
 			dc.Hidden = dc != d.dock.MaximizedContainer
 			return false
 		})
-		d.dock.MaximizedContainer.AsPanel().SetFrameRect(Rect{Point: d.frame.Point, Size: size})
+		d.dock.MaximizedContainer.AsPanel().SetFrameRect(NewRect(d.frame.X, d.frame.Y, size.Width, size.Height))
 	case d.Full():
 		available := size.Height
 		if d.Horizontal {
@@ -392,21 +389,15 @@ func (d *DockLayout) PerformLayout(_ *Panel) {
 			primary = d.divider
 		}
 		if d.Horizontal {
-			d.nodes[0].SetFrameRect(Rect{Point: d.frame.Point, Size: Size{Width: primary, Height: size.Height}})
-			d.nodes[1].SetFrameRect(Rect{
-				Point: Point{X: d.frame.X + primary + dividerSize, Y: d.frame.Y},
-				Size:  Size{Width: available - primary, Height: size.Height},
-			})
+			d.nodes[0].SetFrameRect(NewRect(d.frame.X, d.frame.Y, primary, size.Height))
+			d.nodes[1].SetFrameRect(NewRect(d.frame.X+primary+dividerSize, d.frame.Y, available-primary, size.Height))
 		} else {
-			d.nodes[0].SetFrameRect(Rect{Point: d.frame.Point, Size: Size{Width: size.Width, Height: primary}})
-			d.nodes[1].SetFrameRect(Rect{
-				Point: Point{X: d.frame.X, Y: d.frame.Y + primary + dividerSize},
-				Size:  Size{Width: size.Width, Height: available - primary},
-			})
+			d.nodes[0].SetFrameRect(NewRect(d.frame.X, d.frame.Y, size.Width, primary))
+			d.nodes[1].SetFrameRect(NewRect(d.frame.X, d.frame.Y+primary+dividerSize, size.Width, available-primary))
 		}
 	case d.nodes[0] != nil:
-		d.nodes[0].SetFrameRect(Rect{Point: d.frame.Point, Size: size})
+		d.nodes[0].SetFrameRect(NewRect(d.frame.X, d.frame.Y, size.Width, size.Height))
 	case d.nodes[1] != nil:
-		d.nodes[1].SetFrameRect(Rect{Point: d.frame.Point, Size: size})
+		d.nodes[1].SetFrameRect(NewRect(d.frame.X, d.frame.Y, size.Width, size.Height))
 	}
 }

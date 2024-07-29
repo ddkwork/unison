@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -16,14 +16,12 @@ import (
 	"math"
 	"strconv"
 	"sync"
-	"unsafe"
 
 	"github.com/cespare/xxhash/v2"
-	"github.com/richardwilkes/toolbox"
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/softref"
 	"github.com/richardwilkes/toolbox/xio"
-	"github.com/richardwilkes/toolbox/xmath"
 	"github.com/richardwilkes/unison/internal/skia"
 )
 
@@ -44,10 +42,8 @@ func NewImageFromFilePathOrURL(filePathOrURL string, scale float32) (*Image, err
 // NewImageFromFilePathOrURLWithContext creates a new image from data retrieved from the file path or URL. The
 // http.DefaultClient will be used if the data is remote.
 func NewImageFromFilePathOrURLWithContext(ctx context.Context, filePathOrURL string, scale float32) (*Image, error) {
-	data, err := xio.RetrieveDataWithContext(ctx, filePathOrURL)
-	if err != nil {
-		return nil, errs.NewWithCause(filePathOrURL, err)
-	}
+	data := mylog.Check2(xio.RetrieveDataWithContext(ctx, filePathOrURL))
+
 	return NewImageFromBytes(data, scale)
 }
 
@@ -65,10 +61,8 @@ func NewImageFromBytes(buffer []byte, scale float32) (*Image, error) {
 	if img == nil {
 		return nil, errs.New("unable to decode image data")
 	}
-	hash, err := hashImageData(skia.ImageGetWidth(img), skia.ImageGetHeight(img), scale, buffer)
-	if err != nil {
-		return nil, errs.Wrap(err)
-	}
+	hash := mylog.Check2(hashImageData(skia.ImageGetWidth(img), skia.ImageGetHeight(img), scale, buffer))
+
 	return newImage(img, scale, hash)
 }
 
@@ -92,10 +86,8 @@ func NewImageFromPixels(width, height int, pixels []byte, scale float32) (*Image
 	if img == nil {
 		return nil, errs.New("unable to create image")
 	}
-	hash, err := hashImageData(width, height, scale, pixels)
-	if err != nil {
-		return nil, errs.Wrap(err)
-	}
+	hash := mylog.Check2(hashImageData(width, height, scale, pixels))
+
 	return newImage(img, scale, hash)
 }
 
@@ -104,14 +96,7 @@ func NewImageFromPixels(width, height int, pixels []byte, scale float32) (*Image
 func NewImageFromDrawing(width, height, ppi int, draw func(*Canvas)) (*Image, error) {
 	scale := float32(ppi) / 72
 	s := &surface{
-		context: skia.ContextMakeGL(defaultSkiaGL()),
-		surface: skia.SurfaceMakeRasterN32PreMul(&skia.ImageInfo{
-			Colorspace: skiaColorspace,
-			Width:      int32(xmath.Ceil(float32(width) * scale)),
-			Height:     int32(xmath.Ceil(float32(height) * scale)),
-			ColorType:  skia.ColorTypeRGBA8888,
-			AlphaType:  skia.AlphaTypeUnPreMul,
-		}, defaultSurfaceProps()),
+		surface: skia.SurfaceMakeRasterN32PreMul(int(float32(width)*scale), int(float32(height)*scale), defaultSurfaceProps()),
 	}
 	c := &Canvas{
 		canvas:  skia.SurfaceGetCanvas(s.surface),
@@ -120,7 +105,7 @@ func NewImageFromDrawing(width, height, ppi int, draw func(*Canvas)) (*Image, er
 	c.RestoreToCount(1)
 	c.SetMatrix(NewScaleMatrix(scale, scale))
 	c.Save()
-	toolbox.Call(func() { draw(c) })
+	mylog.Call(func() { draw(c) })
 	c.Restore()
 	c.Flush()
 	defer s.dispose()
@@ -199,7 +184,7 @@ func (img *Image) ToNRGBA() (*image.NRGBA, error) {
 		Height:     int32(height),
 		ColorType:  skia.ColorTypeRGBA8888,
 		AlphaType:  skia.ImageGetAlphaType(imgData),
-	}, pixels, width*4, 0, 0, skia.ImageCachingHintDisallow) {
+	}, pixels, width*4, 0, 0, skia.ImageCachingHintAllow) {
 		return nil, errs.New("unable to read raw pixels from image")
 	}
 	return &image.NRGBA{
@@ -209,39 +194,33 @@ func (img *Image) ToNRGBA() (*image.NRGBA, error) {
 	}, nil
 }
 
-// ToPNG creates PNG data from the image. 'compressionLevel' should in the range 0-9 and is equivalent to
-// the zlib compression level. A typical compression level is 6 and is equivalent to the zlib default.
-func (img *Image) ToPNG(compressionLevel int) ([]byte, error) {
-	data := skia.EncodePNG(nil, img.ref().img, compressionLevel)
-	if data == nil {
-		return nil, errs.New("unable to create PNG from image")
-	}
-	buffer := make([]byte, skia.DataGetSize(data))
-	copy(buffer, unsafe.Slice((*byte)(skia.DataGetData(data)), len(buffer)))
-	skia.DataUnref(data)
-	return buffer, nil
+// ToPNG creates PNG data from the image.
+func (img *Image) ToPNG() ([]byte, error) {
+	return img.encode(PNG, 100)
 }
 
 // ToJPEG creates JPEG data from the image. quality should be greater than 0 and equal to or less than 100.
 func (img *Image) ToJPEG(quality int) ([]byte, error) {
-	data := skia.EncodeJPEG(nil, img.ref().img, quality)
-	if data == nil {
-		return nil, errs.New("unable to create JPEG from image")
-	}
-	buffer := make([]byte, skia.DataGetSize(data))
-	copy(buffer, unsafe.Slice((*byte)(skia.DataGetData(data)), len(buffer)))
-	skia.DataUnref(data)
-	return buffer, nil
+	return img.encode(JPEG, quality)
 }
 
 // ToWebp creates Webp data from the image. quality should be greater than 0 and equal to or less than 100.
-func (img *Image) ToWebp(quality float32, lossy bool) ([]byte, error) {
-	data := skia.EncodeWebp(nil, img.ref().img, quality, lossy)
+func (img *Image) ToWebp(quality int) ([]byte, error) {
+	return img.encode(WEBP, quality)
+}
+
+func (img *Image) encode(format EncodedImageFormat, quality int) ([]byte, error) {
+	if quality < 1 {
+		quality = 1
+	} else if quality > 100 {
+		quality = 100
+	}
+	data := skia.ImageEncodeSpecific(img.ref().img, skia.EncodedImageFormat(format), quality)
 	if data == nil {
-		return nil, errs.New("unable to create WEBP from image")
+		return nil, errs.Newf("unable to create %s from image", format)
 	}
 	buffer := make([]byte, skia.DataGetSize(data))
-	copy(buffer, unsafe.Slice((*byte)(skia.DataGetData(data)), len(buffer)))
+	copy(buffer, ((*[1 << 30]byte)(skia.DataGetData(data)))[:len(buffer)])
 	skia.DataUnref(data)
 	return buffer, nil
 }
@@ -261,9 +240,9 @@ var (
 )
 
 type imageRef struct {
-	img   skia.Image
-	key   string
 	hash  uint64
+	key   string
+	img   skia.Image
 	scale float32
 }
 
@@ -284,7 +263,7 @@ func (ref *imageRef) contextImg(s *surface) skia.Image {
 		if ctx == nil {
 			i = skia.ImageMakeNonTextureImage(ref.img)
 		} else {
-			i = skia.ImageTextureFromImage(ctx, ref.img, false, true)
+			i = skia.ImageMakeTextureImage(ref.img, ctx, false)
 		}
 		if i != nil {
 			m[ref.hash] = i
@@ -326,11 +305,7 @@ func hashImageData(width, height int, scale float32, data []byte) (uint64, error
 	binary.LittleEndian.PutUint32(buffer[:4], math.Float32bits(scale))
 	binary.LittleEndian.PutUint32(buffer[4:8], uint32(width))
 	binary.LittleEndian.PutUint32(buffer[8:12], uint32(height))
-	if _, err := s.Write(buffer[:]); err != nil {
-		return 0, errs.Wrap(err)
-	}
-	if _, err := s.Write(data); err != nil {
-		return 0, errs.Wrap(err)
-	}
+	mylog.Check2(s.Write(buffer[:]))
+	mylog.Check2(s.Write(data))
 	return s.Sum64(), nil
 }

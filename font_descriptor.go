@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -14,12 +14,10 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/fatal"
 	"github.com/richardwilkes/toolbox/txt"
-	"github.com/richardwilkes/unison/enums/slant"
-	"github.com/richardwilkes/unison/enums/spacing"
-	"github.com/richardwilkes/unison/enums/weight"
 )
 
 // FontDescriptor holds information necessary to construct a Font. The Size field is the value that was passed to
@@ -60,11 +58,11 @@ func (fd *FontDescriptor) UnmarshalText(text []byte) error {
 	if len(parts) < 5 {
 		return errs.Newf("invalid font descriptor: %s", string(text))
 	}
-	fd.Slant = slant.Extract(parts[len(parts)-1])
-	fd.Spacing = spacing.Extract(parts[len(parts)-2])
-	fd.Weight = weight.Extract(parts[len(parts)-3])
-	size, err := strconv.ParseFloat(parts[len(parts)-4], 32)
-	if err != nil || size <= 0 {
+	fd.Slant = SlantFromString(parts[len(parts)-1])
+	fd.Spacing = SpacingFromString(parts[len(parts)-2])
+	fd.Weight = WeightFromString(parts[len(parts)-3])
+	size := mylog.Check2(strconv.ParseFloat(parts[len(parts)-4], 32))
+	if size <= 0 {
 		return errs.Newf("invalid font descriptor: %s", string(text))
 	}
 	fd.Size = float32(size)

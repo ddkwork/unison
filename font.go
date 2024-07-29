@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -16,10 +16,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/toolbox/errs"
-	"github.com/richardwilkes/unison/enums/slant"
-	"github.com/richardwilkes/unison/enums/spacing"
-	"github.com/richardwilkes/unison/enums/weight"
 	"github.com/richardwilkes/unison/internal/skia"
 )
 
@@ -41,12 +39,14 @@ var (
 
 // Pre-defined fonts
 var (
-	SystemFont           = &IndirectFont{}
-	EmphasizedSystemFont = &IndirectFont{}
-	LabelFont            = &IndirectFont{}
-	FieldFont            = &IndirectFont{}
-	KeyboardFont         = &IndirectFont{}
-	MonospacedFont       = &IndirectFont{}
+	SystemFont                = &IndirectFont{}
+	EmphasizedSystemFont      = &IndirectFont{}
+	SmallSystemFont           = &IndirectFont{}
+	EmphasizedSmallSystemFont = &IndirectFont{}
+	LabelFont                 = &IndirectFont{}
+	FieldFont                 = &IndirectFont{}
+	KeyboardFont              = &IndirectFont{}
+	MonospacedFont            = &IndirectFont{}
 )
 
 // Font holds a realized FontFace of a specific size that can be used to render text.
@@ -85,6 +85,17 @@ type internalFont struct {
 	faces  []*FontFace
 }
 
+// FontHinting holds the type of font hinting to use.
+type FontHinting byte
+
+// Possible values for FontHinting.
+const (
+	FontHintingNone FontHinting = iota
+	FontHintingSlight
+	FontHintingNormal
+	FontHintingFull
+)
+
 // FontMetrics flags
 const (
 	UnderlineThicknessIsValidFontMetricsFlag = 1 << iota
@@ -98,10 +109,10 @@ const (
 type FontMetrics = skia.FontMetrics
 
 type fontImpl struct {
+	size    float32
 	face    *FontFace
 	font    skia.Font
 	metrics FontMetrics
-	size    float32
 }
 
 func (f *fontImpl) Face() *FontFace {
@@ -166,13 +177,13 @@ func (f *fontImpl) skiaFont() skia.Font {
 }
 
 func (f *fontImpl) Descriptor() FontDescriptor {
-	w, sp, sl := f.face.Style()
+	weight, spacing, slant := f.face.Style()
 	return FontDescriptor{
 		FontFaceDescriptor: FontFaceDescriptor{
 			Family:  f.face.Family(),
-			Weight:  w,
-			Spacing: sp,
-			Slant:   sl,
+			Weight:  weight,
+			Spacing: spacing,
+			Slant:   slant,
 		},
 		Size: f.size,
 	}
@@ -182,7 +193,7 @@ func init() {
 	const fontDir = "resources/fonts"
 	entries, err := fontFS.ReadDir(fontDir)
 	if err != nil {
-		errs.Log(errs.NewWithCause("unable to read embedded file system", err), "path", fontDir)
+		mylog.Check(err)
 		return
 	}
 	for _, entry := range entries {
@@ -201,12 +212,14 @@ func init() {
 	}
 
 	baseSize := float32(10)
-	SystemFont.Font = MatchFontFace(DefaultSystemFamilyName, weight.Medium, spacing.Standard, slant.Upright).Font(baseSize)
-	EmphasizedSystemFont.Font = MatchFontFace(DefaultSystemFamilyName, weight.Bold, spacing.Standard, slant.Upright).Font(baseSize)
-	LabelFont.Font = MatchFontFace(DefaultSystemFamilyName, weight.Regular, spacing.Standard, slant.Upright).Font(baseSize)
-	FieldFont.Font = MatchFontFace(DefaultSystemFamilyName, weight.Regular, spacing.Standard, slant.Upright).Font(baseSize)
-	KeyboardFont.Font = MatchFontFace(DefaultSystemFamilyName, weight.Medium, spacing.Standard, slant.Upright).Font(baseSize)
-	MonospacedFont.Font = MatchFontFace(DefaultMonospacedFamilyName, weight.Regular, spacing.Standard, slant.Upright).Font(baseSize)
+	SystemFont.Font = MatchFontFace(DefaultSystemFamilyName, MediumFontWeight, StandardSpacing, NoSlant).Font(baseSize)
+	EmphasizedSystemFont.Font = MatchFontFace(DefaultSystemFamilyName, BoldFontWeight, StandardSpacing, NoSlant).Font(baseSize)
+	SmallSystemFont.Font = MatchFontFace(DefaultSystemFamilyName, MediumFontWeight, StandardSpacing, NoSlant).Font(baseSize - 1)
+	EmphasizedSmallSystemFont.Font = MatchFontFace(DefaultSystemFamilyName, BoldFontWeight, StandardSpacing, NoSlant).Font(baseSize - 1)
+	LabelFont.Font = MatchFontFace(DefaultSystemFamilyName, NormalFontWeight, StandardSpacing, NoSlant).Font(baseSize)
+	FieldFont.Font = MatchFontFace(DefaultSystemFamilyName, NormalFontWeight, StandardSpacing, NoSlant).Font(baseSize)
+	KeyboardFont.Font = MatchFontFace(DefaultSystemFamilyName, MediumFontWeight, StandardSpacing, NoSlant).Font(baseSize)
+	MonospacedFont.Font = MatchFontFace(DefaultMonospacedFamilyName, NormalFontWeight, StandardSpacing, NoSlant).Font(baseSize)
 }
 
 // RegisterFont registers a font with the font manager.
@@ -216,18 +229,18 @@ func RegisterFont(data []byte) (FontFaceDescriptor, error) {
 	if f == nil {
 		return ffd, errs.New("unable to load font")
 	}
-	w, sp, sl := f.Style()
+	weight, spacing, slant := f.Style()
 	ffd.Family = f.Family()
-	ffd.Weight = w
-	ffd.Spacing = sp
-	ffd.Slant = sl
+	ffd.Weight = weight
+	ffd.Spacing = spacing
+	ffd.Slant = slant
 	internalFontLock.Lock()
 	defer internalFontLock.Unlock()
 	if info, ok := internalFonts[ffd.Family]; ok {
 		add := true
 		for _, one := range info.faces {
-			w2, sp2, sl2 := one.Style()
-			if w == w2 && sp == sp2 && sl == sl2 {
+			weight2, spacing2, slant2 := one.Style()
+			if weight == weight2 && spacing == spacing2 && slant == slant2 {
 				add = false
 				break
 			}

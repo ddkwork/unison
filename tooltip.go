@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -12,18 +12,14 @@ package unison
 import (
 	"strings"
 	"time"
-
-	"github.com/richardwilkes/unison/enums/paintstyle"
 )
 
 // DefaultTooltipTheme holds the default TooltipTheme values for Tooltips. Modifying this data will not alter existing
 // Tooltips, but will alter any Tooltips created in the future.
 var DefaultTooltipTheme = TooltipTheme{
-	BackgroundInk: ThemeTooltip,
-	BaseBorder: NewCompoundBorder(
-		NewLineBorder(ThemeTooltipEdge, 0, NewUniformInsets(1), false),
-		NewEmptyBorder(StdInsets()),
-	),
+	BackgroundInk: TooltipColor,
+	BaseBorder: NewCompoundBorder(NewLineBorder(ControlEdgeColor, 0, NewUniformInsets(1), false),
+		NewEmptyBorder(StdInsets())),
 	Label:     defaultToolTipLabelTheme(),
 	Delay:     1500 * time.Millisecond,
 	Dismissal: 5 * time.Second,
@@ -32,7 +28,7 @@ var DefaultTooltipTheme = TooltipTheme{
 func defaultToolTipLabelTheme() LabelTheme {
 	theme := DefaultLabelTheme
 	theme.Font = FieldFont
-	theme.OnBackgroundInk = ThemeOnTooltip
+	theme.OnBackgroundInk = OnTooltipColor
 	return theme
 }
 
@@ -58,7 +54,7 @@ func NewTooltipBase() *Panel {
 	tip.SetBorder(DefaultTooltipTheme.BaseBorder)
 	tip.DrawCallback = func(canvas *Canvas, _ Rect) {
 		r := tip.ContentRect(true)
-		canvas.DrawRect(r, DefaultTooltipTheme.BackgroundInk.Paint(canvas, r, paintstyle.Fill))
+		canvas.DrawRect(r, DefaultTooltipTheme.BackgroundInk.Paint(canvas, r, Fill))
 	}
 	return tip
 }
@@ -74,7 +70,7 @@ func NewTooltipWithText(text string) *Panel {
 	for _, str := range strings.Split(text, "\n") {
 		l := NewLabel()
 		l.LabelTheme = DefaultTooltipTheme.Label
-		l.SetTitle(str)
+		l.Text = str
 		tip.AddChild(l)
 	}
 	return tip
@@ -91,7 +87,7 @@ func NewTooltipWithSecondaryText(primary, secondary string) *Panel {
 			desc := DefaultTooltipTheme.Label.Font.Descriptor()
 			desc.Size--
 			l.LabelTheme.Font = desc.Font()
-			l.SetTitle(str)
+			l.Text = str
 			tip.AddChild(l)
 		}
 	}

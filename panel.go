@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -11,11 +11,11 @@ package unison
 
 import (
 	"reflect"
-	"slices"
 	"strings"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/toolbox"
-	"github.com/richardwilkes/unison/enums/pathop"
+	"github.com/richardwilkes/toolbox/collection/slice"
 )
 
 var _ Paneler = &Panel{}
@@ -30,10 +30,6 @@ type Paneler interface {
 type Panel struct {
 	InputCallbacks
 	Self                                any
-	layoutData                          any
-	layout                              Layout
-	sizer                               Sizer
-	border                              Border
 	DrawCallback                        func(gc *Canvas, rect Rect)
 	DrawOverCallback                    func(gc *Canvas, rect Rect)
 	UpdateCursorCallback                func(where Point) *Cursor
@@ -54,12 +50,16 @@ type Panel struct {
 	DataDragDropCallback func(where Point, data map[string]any)
 	Tooltip              *Panel
 	parent               *Panel
+	frame                Rect
+	border               Border
+	sizer                Sizer
+	layout               Layout
+	layoutData           any
+	children             []*Panel
 	canPerformMap        map[int]func(any) bool
 	performMap           map[int]func(any)
 	data                 map[string]any
 	RefKey               string
-	children             []*Panel
-	frame                Rect
 	scale                float32
 	NeedsLayout          bool
 	focusable            bool
@@ -82,7 +82,7 @@ func (p *Panel) AsPanel() *Panel {
 
 // Is returns true if this panel is the other panel.
 func (p *Panel) Is(other Paneler) bool {
-	if p != nil && !toolbox.IsNil(other) {
+	if p != nil && other != nil {
 		p2 := other.AsPanel()
 		return p2 != nil && p.Self == p2.Self
 	}
@@ -188,7 +188,7 @@ func (p *Panel) RemoveChildAtIndex(index int) {
 	if index >= 0 && index < len(p.children) {
 		child := p.children[index]
 		child.parent = nil
-		p.children = slices.Delete(p.children, index, index+1)
+		p.children = slice.ZeroedDelete(p.children, index, index+1)
 		p.NeedsLayout = true
 		if child.ParentChangedCallback != nil {
 			child.ParentChangedCallback()
@@ -283,11 +283,11 @@ func (p *Panel) SetFrameRect(rect Rect) {
 
 // ContentRect returns the location and size of the panel in local coordinates.
 func (p *Panel) ContentRect(includeBorder bool) Rect {
-	r := Rect{Size: p.frame.Size}
+	rect := p.frame.CopyAndZeroLocation()
 	if !includeBorder && p.border != nil {
-		r = r.Inset(p.border.Insets())
+		rect.Inset(p.border.Insets())
 	}
-	return r
+	return rect
 }
 
 // Border returns the border for this panel, if any.
@@ -298,11 +298,7 @@ func (p *Panel) Border() Border {
 // SetBorder sets the border for this panel. May be nil.
 func (p *Panel) SetBorder(b Border) {
 	if p.border != b {
-		if toolbox.IsNil(b) {
-			p.border = nil
-		} else {
-			p.border = b
-		}
+		p.border = b
 		p.MarkForLayoutAndRedraw()
 	}
 }
@@ -428,12 +424,12 @@ func (p *Panel) Draw(gc *Canvas, rect Rect) {
 	if p.Hidden {
 		return
 	}
-	rect = rect.Intersect(Rect{Size: p.frame.Size})
-	if !rect.Empty() {
+	rect.Intersect(p.frame.CopyAndZeroLocation())
+	if !rect.IsEmpty() {
 		gc.Save()
 		scale := p.Scale()
 		gc.Scale(scale, scale)
-		gc.ClipRect(rect, pathop.Intersect, false)
+		gc.ClipRect(rect, IntersectClipOp, false)
 		if p.DrawCallback != nil {
 			gc.Save()
 			p.DrawCallback(gc, rect)
@@ -442,13 +438,18 @@ func (p *Panel) Draw(gc *Canvas, rect Rect) {
 		// Drawn from last to first, to get correct ordering in case of overlap
 		for i := len(p.children) - 1; i >= 0; i-- {
 			if child := p.children[i]; !child.Hidden {
+				adjusted := rect
 				childFrame := child.FrameRect()
-				if adjusted := rect.Intersect(childFrame); !adjusted.Empty() {
+				adjusted.Intersect(childFrame)
+				if !adjusted.IsEmpty() {
 					gc.Save()
 					gc.Translate(childFrame.X, childFrame.Y)
+					adjusted.Point.Subtract(childFrame.Point)
 					scale = child.Scale()
-					adjusted.Point = adjusted.Point.Sub(childFrame.Point).Div(scale)
-					adjusted.Size = adjusted.Size.Div(scale)
+					adjusted.X /= scale
+					adjusted.Y /= scale
+					adjusted.Width /= scale
+					adjusted.Height /= scale
 					child.Draw(gc, adjusted)
 					gc.Restore()
 				}
@@ -537,9 +538,12 @@ func (p *Panel) LastFocusableChild() *Panel {
 func (p *Panel) PanelAt(pt Point) *Panel {
 	for _, child := range p.children {
 		if !child.Hidden {
-			if r := child.FrameRect(); pt.In(r) {
+			if r := child.FrameRect(); r.ContainsPoint(pt) {
+				pt.Subtract(r.Point)
 				scale := child.Scale()
-				return child.PanelAt(pt.Sub(r.Point).Div(scale))
+				pt.X /= scale
+				pt.Y /= scale
+				return child.PanelAt(pt)
 			}
 		}
 	}
@@ -549,10 +553,13 @@ func (p *Panel) PanelAt(pt Point) *Panel {
 // PointToRoot converts panel-local coordinates into root coordinates, which when rooted within a window, will be
 // window-local coordinates.
 func (p *Panel) PointToRoot(pt Point) Point {
-	panel := p
-	for panel != nil {
-		pt = pt.Mul(panel.Scale()).Add(panel.frame.Point)
-		panel = panel.parent
+	one := p
+	for one != nil {
+		scale := one.Scale()
+		pt.X *= scale
+		pt.Y *= scale
+		pt.Add(one.frame.Point)
+		one = one.parent
 	}
 	return pt
 }
@@ -561,14 +568,17 @@ func (p *Panel) PointToRoot(pt Point) Point {
 // coordinates.
 func (p *Panel) PointFromRoot(pt Point) Point {
 	list := make([]*Panel, 0, 32)
-	panel := p
-	for panel != nil {
-		list = append(list, panel)
-		panel = panel.parent
+	one := p
+	for one != nil {
+		list = append(list, one)
+		one = one.parent
 	}
 	for i := len(list) - 1; i >= 0; i-- {
-		panel = list[i]
-		pt = pt.Sub(panel.frame.Point).Div(panel.Scale())
+		one = list[i]
+		pt.Subtract(one.frame.Point)
+		scale := one.Scale()
+		pt.X /= scale
+		pt.Y /= scale
 	}
 	return pt
 }
@@ -618,12 +628,14 @@ func (p *Panel) ScrollRectIntoView(rect Rect) {
 				return
 			}
 		}
+		x := rect.Right()
+		y := rect.Bottom()
 		scale := look.Scale()
-		pt := rect.BottomRight().Mul(scale)
-		rect.Point = rect.Point.Mul(scale)
-		rect.Width = pt.X - rect.X
-		rect.Height = pt.Y - rect.Y
-		rect.Point = rect.Point.Add(look.frame.Point)
+		rect.X *= scale
+		rect.Y *= scale
+		rect.Width = x*scale - rect.X
+		rect.Height = y*scale - rect.Y
+		rect.Point.Add(look.frame.Point)
 		look = look.parent
 	}
 }
@@ -706,7 +718,7 @@ func (p *Panel) CanPerformCmd(src any, id int) bool {
 	for current != nil {
 		if f, ok := current.canPerformMap[id]; ok {
 			enabled := false
-			toolbox.Call(func() { enabled = f(src) })
+			mylog.Call(func() { enabled = f(src) })
 			return enabled
 		}
 		current = current.parent
@@ -721,7 +733,7 @@ func (p *Panel) PerformCmd(src any, id int) {
 		current := p
 		for current != nil {
 			if f, ok := current.performMap[id]; ok {
-				toolbox.Call(func() { f(src) })
+				mylog.Call(func() { f(src) })
 				return
 			}
 			current = current.parent

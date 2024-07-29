@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -18,6 +18,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/xio/fs"
 )
@@ -59,15 +60,13 @@ func (d *linuxSaveDialog) Path() string {
 }
 
 func (d *linuxSaveDialog) RunModal() bool {
-	kdialog, err := exec.LookPath("kdialog")
-	if err != nil {
-		kdialog = ""
-	}
+	kdialog := mylog.Check2(exec.LookPath("kdialog"))
+
 	if os.Getenv("KDE_FULL_SESSION") != "" && kdialog != "" {
 		return d.runKDialog(kdialog)
 	}
 	var zenity string
-	if zenity, err = exec.LookPath("zenity"); err != nil {
+	if zenity = mylog.Check2(exec.LookPath("zenity")); err != nil {
 		zenity = ""
 	}
 	if zenity != "" {
@@ -91,11 +90,8 @@ func (d *linuxSaveDialog) runKDialog(kdialog string) bool {
 
 func (d *linuxSaveDialog) runZenity(zenity string) bool {
 	cmd := exec.Command(zenity, "--help-file-selection")
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		errs.Log(err, "cmd", cmd.String())
-		return false
-	}
+	output := mylog.Check2(cmd.CombinedOutput())
+
 	cmd = exec.Command(zenity, "--file-selection", "--save")
 	if bytes.Contains(output, []byte("confirm-overwrite")) {
 		cmd.Args = append(cmd.Args, "--confirm-overwrite")
@@ -123,10 +119,8 @@ func (d *linuxSaveDialog) prepExt() (string, []string) {
 }
 
 func (d *linuxSaveDialog) runModal(cmd *exec.Cmd, splitOn string) bool {
-	wnd, err := NewWindow("", FloatingWindowOption(), UndecoratedWindowOption(), NotResizableWindowOption())
-	if err != nil {
-		errs.Log(err)
-	}
+	wnd := mylog.Check2(NewWindow("", FloatingWindowOption(), UndecoratedWindowOption(), NotResizableWindowOption()))
+
 	wnd.SetFrameRect(NewRect(-10000, -10000, 1, 1))
 	InvokeTaskAfter(func() { go d.runCmd(wnd, cmd, splitOn) }, time.Millisecond)
 	return wnd.RunModal() == ModalResponseOK
@@ -135,15 +129,8 @@ func (d *linuxSaveDialog) runModal(cmd *exec.Cmd, splitOn string) bool {
 func (d *linuxSaveDialog) runCmd(wnd *Window, cmd *exec.Cmd, splitOn string) {
 	code := ModalResponseCancel
 	defer func() { InvokeTask(func() { wnd.StopModal(code) }) }()
-	out, err := cmd.Output()
-	if err != nil {
-		var exitErr *exec.ExitError
-		if errors.As(err, &exitErr) && exitErr.ExitCode() == 1 {
-			return
-		}
-		errs.Log(err, "cmd", cmd.String())
-		return
-	}
+	out := mylog.Check2(cmd.Output())
+
 	if cmd.ProcessState.ExitCode() != 0 {
 		return
 	}

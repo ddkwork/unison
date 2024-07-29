@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -16,9 +16,6 @@ import (
 
 	"github.com/richardwilkes/toolbox/txt"
 	"github.com/richardwilkes/toolbox/xmath"
-	"github.com/richardwilkes/unison/enums/slant"
-	"github.com/richardwilkes/unison/enums/spacing"
-	"github.com/richardwilkes/unison/enums/weight"
 	"github.com/richardwilkes/unison/internal/skia"
 )
 
@@ -55,12 +52,12 @@ func AllFontFaces() (all, monospaced []FontFaceDescriptor) {
 			count := ff.Count()
 			for i := 0; i < count; i++ {
 				face := ff.Face(i)
-				w, sp, sl := face.Style()
+				weight, spacing, slant := face.Style()
 				ffd := FontFaceDescriptor{
 					Family:  family,
-					Weight:  w,
-					Spacing: sp,
-					Slant:   sl,
+					Weight:  weight,
+					Spacing: spacing,
+					Slant:   slant,
 				}
 				if _, exists := ma[ffd]; !exists {
 					all = append(all, ffd)
@@ -83,15 +80,15 @@ func AllFontFaces() (all, monospaced []FontFaceDescriptor) {
 
 // MatchFontFace attempts to locate the FontFace with the given family and style. Will return nil if nothing suitable
 // can be found.
-func MatchFontFace(family string, weightValue weight.Enum, spacingValue spacing.Enum, slantValue slant.Enum) *FontFace {
+func MatchFontFace(family string, weight FontWeight, spacing FontSpacing, slant FontSlant) *FontFace {
 	internalFontLock.Lock()
 	_, exists := internalFonts[family]
 	internalFontLock.Unlock()
 	if exists {
 		fam := MatchFontFamily(family)
-		return fam.MatchStyle(weightValue, spacingValue, slantValue)
+		return fam.MatchStyle(weight, spacing, slant)
 	}
-	style := skia.FontStyleNew(skia.FontWeight(weightValue), skia.FontSpacing(spacingValue), skia.FontSlant(slantValue))
+	style := skia.FontStyleNew(skia.FontWeight(weight), skia.FontSpacing(spacing), skia.FontSlant(slant))
 	defer skia.FontStyleDelete(style)
 	return newFace(skia.FontMgrMatchFamilyStyle(skia.FontMgrRefDefault(), family, style))
 }
@@ -105,13 +102,13 @@ func CreateFontFace(data []byte) *FontFace {
 
 // Font returns a Font of the given size for this FontFace.
 func (f *FontFace) Font(capHeightSizeInLogicalPixels float32) Font {
-	w, sp, sl := f.Style()
+	weight, spacing, slant := f.Style()
 	fd := FontDescriptor{
 		FontFaceDescriptor: FontFaceDescriptor{
 			Family:  f.Family(),
-			Weight:  w,
-			Spacing: sp,
-			Slant:   sl,
+			Weight:  weight,
+			Spacing: spacing,
+			Slant:   slant,
 		},
 		Size: capHeightSizeInLogicalPixels,
 	}
@@ -163,8 +160,8 @@ func (f *FontFace) createFontWithSkiaSize(skiaSize float32) *fontImpl {
 	skia.FontSetSubPixel(font.font, true)
 	skia.FontSetForceAutoHinting(font.font, true)
 	// Using hinting on some platforms (Linux, for example) was resulting in bad placement of the text. Carefully test
-	// any changes away from no font hinting (0) on all supported platforms.
-	skia.FontSetHinting(font.font, 0)
+	// any changes away from FontHintingNone on all supported platforms.
+	skia.FontSetHinting(font.font, skia.FontHinting(FontHintingNone))
 	skia.FontGetMetrics(font.font, &font.metrics)
 	runtime.SetFinalizer(font, func(obj *fontImpl) {
 		ReleaseOnUIThread(func() {
@@ -175,11 +172,11 @@ func (f *FontFace) createFontWithSkiaSize(skiaSize float32) *fontImpl {
 }
 
 // Style returns the style information for this FontFace.
-func (f *FontFace) Style() (weightValue weight.Enum, spacingValue spacing.Enum, slantValue slant.Enum) {
+func (f *FontFace) Style() (weight FontWeight, spacing FontSpacing, slant FontSlant) {
 	style := skia.TypeFaceGetFontStyle(f.face)
 	defer skia.FontStyleDelete(style)
-	return weight.Enum(skia.FontStyleGetWeight(style)), spacing.Enum(skia.FontStyleGetWidth(style)),
-		slant.Enum(skia.FontStyleGetSlant(style))
+	return FontWeight(skia.FontStyleGetWeight(style)), FontSpacing(skia.FontStyleGetWidth(style)),
+		FontSlant(skia.FontStyleGetSlant(style))
 }
 
 // Monospaced returns true if this FontFace has been marked as having a fixed width for every character.

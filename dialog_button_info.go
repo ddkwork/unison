@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -11,26 +11,25 @@ package unison
 
 import (
 	"github.com/richardwilkes/toolbox/i18n"
-	"github.com/richardwilkes/unison/enums/align"
 )
 
 // DialogButtonInfo holds information for constructing the dialog button panel.
 type DialogButtonInfo struct {
 	Title        string
-	KeyCodes     []KeyCode
 	ResponseCode int
+	KeyCodes     []KeyCode
 }
 
 // NewButton creates a new button for the dialog.
 func (bi *DialogButtonInfo) NewButton(d *Dialog) *Button {
 	b := NewButton()
-	b.SetTitle(bi.Title)
+	b.Text = bi.Title
 	b.ClickCallback = func() { d.StopModal(bi.ResponseCode) }
 	b.SetLayoutData(&FlexLayoutData{
 		HSpan:  1,
 		VSpan:  1,
-		HAlign: align.Fill,
-		VAlign: align.Middle,
+		HAlign: FillAlignment,
+		VAlign: MiddleAlignment,
 	})
 	return b
 }

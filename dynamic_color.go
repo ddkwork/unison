@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -10,10 +10,8 @@
 package unison
 
 import (
-	"slices"
-
-	"github.com/richardwilkes/toolbox"
-	"github.com/richardwilkes/unison/enums/paintstyle"
+	"github.com/ddkwork/golibrary/mylog"
+	"github.com/richardwilkes/toolbox/collection/slice"
 )
 
 var (
@@ -24,8 +22,8 @@ var (
 
 // DynamicColor holds a color that may be changed.
 type DynamicColor struct {
-	Rebuilder func() Color
 	Color     Color
+	Rebuilder func() Color
 }
 
 // NewDynamicColor creates a new DynamicColor and registers it for theme updates. If your color relies on another
@@ -43,7 +41,7 @@ func (c *DynamicColor) GetColor() Color {
 }
 
 // Paint returns a Paint for this DynamicColor. Here to satisfy the Ink interface.
-func (c *DynamicColor) Paint(canvas *Canvas, rect Rect, style paintstyle.Enum) *Paint {
+func (c *DynamicColor) Paint(canvas *Canvas, rect Rect, style PaintStyle) *Paint {
 	return c.Color.Paint(canvas, rect, style)
 }
 
@@ -51,7 +49,7 @@ func (c *DynamicColor) Paint(canvas *Canvas, rect Rect, style paintstyle.Enum) *
 func (c *DynamicColor) Unregister() {
 	for i, other := range dynamicColors {
 		if c == other {
-			dynamicColors = slices.Delete(dynamicColors, i, i+1)
+			dynamicColors = slice.ZeroedDelete(dynamicColors, i, i+1)
 			break
 		}
 	}
@@ -69,7 +67,7 @@ func RebuildDynamicColors() {
 	if needDynamicColorUpdate {
 		needDynamicColorUpdate = false
 		for _, color := range dynamicColors {
-			toolbox.Call(func() { color.Color = color.Rebuilder() })
+			mylog.Call(func() { color.Color = color.Rebuilder() })
 		}
 	}
 }

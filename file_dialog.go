@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -15,11 +15,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/richardwilkes/toolbox/errs"
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xio/fs"
-	"github.com/richardwilkes/unison/enums/align"
-	"github.com/richardwilkes/unison/enums/behavior"
 )
 
 const pathSeparator = string(os.PathSeparator)
@@ -43,18 +41,18 @@ type FileDialog interface {
 }
 
 type fileDialog struct {
+	fileCommon
+	currentDir     string
+	currentExt     string
+	readable       []string
+	dirEntries     []os.DirEntry
 	dialog         *Dialog
 	parentDirPopup *PopupMenu[*parentDirItem]
 	fileNameField  *Field
 	scroller       *ScrollPanel
 	fileList       *List[*fileListItem]
 	filterPopup    *PopupMenu[string]
-	readable       []string
-	dirEntries     []os.DirEntry
-	currentDir     string
-	currentExt     string
-	fileCommon
-	forOpen bool
+	forOpen        bool
 }
 
 // NewCommonSaveDialog creates a new SaveDialog. This is the fallback Go-only version of the SaveDialog used when
@@ -86,14 +84,11 @@ func (d *fileDialog) RunModal() bool {
 		dialogTitle = i18n.Text("Save…")
 		okTitle = i18n.Text("Save")
 	}
-	dlg, err := NewDialog(nil, nil, d.createContent(), []*DialogButtonInfo{
+	dlg := mylog.Check2(NewDialog(nil, nil, d.createContent(), []*DialogButtonInfo{
 		NewCancelButtonInfo(),
 		NewOKButtonInfoWithTitle(okTitle),
-	})
-	if err != nil {
-		ErrorDialogWithError(i18n.Text("Unable to create file dialog."), err)
-		return false
-	}
+	}))
+
 	dlg.Window().SetTitle(dialogTitle)
 	d.dialog = dlg
 	d.dialog.Button(ModalResponseOK).SetEnabled(false)
@@ -141,8 +136,8 @@ func (d *fileDialog) createContent() *Panel {
 	d.parentDirPopup.SetLayoutData(&FlexLayoutData{
 		HSpan:  1,
 		VSpan:  1,
-		HAlign: align.Middle,
-		VAlign: align.Middle,
+		HAlign: MiddleAlignment,
+		VAlign: MiddleAlignment,
 		HGrab:  true,
 	})
 
@@ -155,8 +150,8 @@ func (d *fileDialog) createContent() *Panel {
 		d.fileNameField.SetLayoutData(&FlexLayoutData{
 			HSpan:  1,
 			VSpan:  1,
-			HAlign: align.Fill,
-			VAlign: align.Middle,
+			HAlign: FillAlignment,
+			VAlign: MiddleAlignment,
 			HGrab:  true,
 		})
 	}
@@ -166,15 +161,15 @@ func (d *fileDialog) createContent() *Panel {
 	d.fileList.DoubleClickCallback = d.fileListDoubleClickHandler
 	d.rebuildFileList()
 	d.scroller = NewScrollPanel()
-	d.scroller.SetBorder(NewLineBorder(ThemeSurfaceEdge, 0, NewUniformInsets(1), false))
-	d.scroller.SetContent(d.fileList, behavior.Follow, behavior.Fill)
+	d.scroller.SetBorder(NewLineBorder(ControlEdgeColor, 0, NewUniformInsets(1), false))
+	d.scroller.SetContent(d.fileList, FollowBehavior, FillBehavior)
 	content.AddChild(d.scroller)
 	d.scroller.SetLayoutData(&FlexLayoutData{
-		MinSize: Size{Width: 300, Height: 200},
+		MinSize: NewSize(300, 200),
 		HSpan:   1,
 		VSpan:   1,
-		HAlign:  align.Fill,
-		VAlign:  align.Fill,
+		HAlign:  FillAlignment,
+		VAlign:  FillAlignment,
 		HGrab:   true,
 		VGrab:   true,
 	})
@@ -195,8 +190,8 @@ func (d *fileDialog) createContent() *Panel {
 		d.filterPopup.SetLayoutData(&FlexLayoutData{
 			HSpan:  1,
 			VSpan:  1,
-			HAlign: align.Middle,
-			VAlign: align.Middle,
+			HAlign: MiddleAlignment,
+			VAlign: MiddleAlignment,
 			HGrab:  true,
 		})
 	}
@@ -383,10 +378,7 @@ func (d *fileDialog) filterHandler(popup *PopupMenu[string]) {
 
 func (d *fileDialog) prepareCurrentDir(dir string) {
 	d.currentDir = resolveToAcceptableAbsDir(dir)
-	var err error
-	if d.dirEntries, err = os.ReadDir(d.currentDir); err != nil {
-		errs.Log(err, "path", d.currentDir)
-	}
+	d.dirEntries = mylog.Check2(os.ReadDir(d.currentDir))
 }
 
 type fileCommon struct {
@@ -514,12 +506,12 @@ func resolveToAcceptableAbsDir(dir string) string {
 	if d := dirToAbsDirOnly("."); d != "" {
 		return d
 	}
-	if d, err := os.UserHomeDir(); err == nil {
+	if d, e := (os.UserHomeDir()); e == nil {
 		if d = dirToAbsDirOnly(d); d != "" {
 			return d
 		}
 	}
-	if u, err := user.Current(); err == nil {
+	if u, e := (user.Current()); e == nil {
 		if d := dirToAbsDirOnly(u.HomeDir); d != "" {
 			return d
 		}
@@ -528,7 +520,7 @@ func resolveToAcceptableAbsDir(dir string) string {
 }
 
 func dirToAbsDirOnly(dir string) string {
-	if d, err := filepath.Abs(dir); err == nil && fs.IsDir(d) {
+	if d, e := (filepath.Abs(dir)); e == nil && fs.IsDir(d) {
 		return d
 	}
 	return ""

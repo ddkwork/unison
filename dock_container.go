@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -29,10 +29,10 @@ type Dockable interface {
 
 // DockContainer holds one or more Dockable panels.
 type DockContainer struct {
+	Panel
 	Dock    *Dock
 	header  *dockHeader
 	content *dockContainerContent
-	Panel
 }
 
 // NewDockContainer creates a new DockContainer.
@@ -154,22 +154,6 @@ func (d *DockContainer) Stack(dockable Dockable, index int) {
 	d.AcquireFocus()
 }
 
-// AttemptCloseAll attempts to close all Dockables within this DockContainer. Returns true if all Dockables are closed.
-func (d *DockContainer) AttemptCloseAll() bool {
-	return d.AttemptCloseAllExcept(nil)
-}
-
-// AttemptCloseAllExcept attempts to close all Dockables within this DockContainer except for the specified Dockable.
-// Returns true if all Dockables except for the specified Dockable are closed.
-func (d *DockContainer) AttemptCloseAllExcept(dockable Dockable) bool {
-	for _, one := range d.Dockables() {
-		if one != dockable && !d.AttemptClose(one) {
-			return false
-		}
-	}
-	return true
-}
-
 // AttemptClose attempts to close a Dockable within this DockContainer. This only has an affect if the Dockable is
 // contained by this DockContainer and implements the TabCloser interface. Note that the TabCloser must call this
 // DockContainer's Close(Dockable) method to actually close the tab. Returns true if dockable is closed.
@@ -247,7 +231,10 @@ func (d *DockContainer) LayoutSizes(target *Panel, hint Size) (minSize, prefSize
 	minSize, prefSize, maxSize = d.header.Sizes(Size{Width: hint.Width})
 	minSize.Height = prefSize.Height
 	maxSize.Height = prefSize.Height
-	min2, pref2, max2 := d.content.Sizes(Size{Width: hint.Width, Height: max(hint.Height-prefSize.Height, 0)})
+	min2, pref2, max2 := d.content.Sizes(Size{
+		Width:  hint.Width,
+		Height: max(hint.Height-prefSize.Height, 0),
+	})
 	minSize.Width = min2.Width
 	prefSize.Width = pref2.Width
 	maxSize.Width = max2.Width
@@ -255,7 +242,7 @@ func (d *DockContainer) LayoutSizes(target *Panel, hint Size) (minSize, prefSize
 	prefSize.Height += pref2.Height
 	maxSize.Height += max2.Height
 	if b := target.Border(); b != nil {
-		prefSize = prefSize.Add(b.Insets().Size())
+		prefSize.AddInsets(b.Insets())
 	}
 	return minSize, prefSize, maxSize
 }
@@ -264,11 +251,6 @@ func (d *DockContainer) LayoutSizes(target *Panel, hint Size) (minSize, prefSize
 func (d *DockContainer) PerformLayout(_ *Panel) {
 	r := d.ContentRect(false)
 	_, pref, _ := d.header.Sizes(Size{Width: r.Width})
-	hr := r
-	hr.Height = pref.Height
-	d.header.SetFrameRect(hr)
-	fr := r
-	fr.Y += pref.Height
-	fr.Height = max(r.Height-pref.Height, 0)
-	d.content.SetFrameRect(fr)
+	d.header.SetFrameRect(NewRect(r.X, r.Y, r.Width, pref.Height))
+	d.content.SetFrameRect(NewRect(r.X, r.Y+pref.Height, r.Width, max(r.Height-pref.Height, 0)))
 }

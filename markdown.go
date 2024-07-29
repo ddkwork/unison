@@ -1,11 +1,13 @@
-// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
-//
-// This Source Code Form is subject to the terms of the Mozilla Public
-// License, version 2.0. If a copy of the MPL was not distributed with
-// this file, You can obtain one at http://mozilla.org/MPL/2.0/.
-//
-// This Source Code Form is "Incompatible With Secondary Licenses", as
-// defined by the Mozilla Public License, version 2.0.
+/*
+ * Copyright ©1998-2022 by Richard A. Wilkes. All rights reserved.
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, version 2.0. If a copy of the MPL was not distributed with
+ * this file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ *
+ * This Source Code Form is "Incompatible With Secondary Licenses", as
+ * defined by the Mozilla Public License, version 2.0.
+ */
 
 package unison
 
@@ -19,16 +21,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/toolbox"
 	"github.com/richardwilkes/toolbox/desktop"
 	"github.com/richardwilkes/toolbox/errs"
-	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/txt"
 	"github.com/richardwilkes/toolbox/xmath"
-	"github.com/richardwilkes/unison/enums/align"
-	"github.com/richardwilkes/unison/enums/paintstyle"
-	"github.com/richardwilkes/unison/enums/slant"
-	"github.com/richardwilkes/unison/enums/weight"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/extension"
@@ -47,8 +45,8 @@ var DefaultMarkdownTheme MarkdownTheme
 func init() {
 	DefaultMarkdownTheme = MarkdownTheme{
 		TextDecoration: TextDecoration{
-			Font:            DefaultLabelTheme.Font,
-			OnBackgroundInk: DefaultLabelTheme.OnBackgroundInk,
+			Font:       LabelFont,
+			Foreground: OnBackgroundColor,
 		},
 		HeadingFont: [6]Font{
 			&DynamicFont{Resolver: func() FontDescriptor { return DeriveMarkdownHeadingFont(nil, 1) }},
@@ -59,11 +57,12 @@ func init() {
 			&DynamicFont{Resolver: func() FontDescriptor { return DeriveMarkdownHeadingFont(nil, 6) }},
 		},
 		CodeBlockFont:       &DynamicFont{Resolver: func() FontDescriptor { return DeriveMarkdownCodeBlockFont(nil) }},
-		CodeBackground:      ThemeAboveSurface,
-		OnCodeBackground:    ThemeOnAboveSurface,
-		QuoteBarColor:       ThemeFocus,
-		LinkInk:             DefaultLinkTheme.OnBackgroundInk,
-		LinkOnPressedInk:    DefaultLinkTheme.OnPressedInk,
+		CodeBackground:      ContentColor,
+		OnCodeBackground:    OnContentColor,
+		QuoteBarColor:       AccentColor,
+		LinkInk:             LinkColor,
+		LinkRolloverInk:     LinkRolloverColor,
+		LinkPressedInk:      LinkPressedColor,
 		LinkHandler:         DefaultMarkdownLinkHandler,
 		VSpacing:            10,
 		QuoteBarThickness:   2,
@@ -81,7 +80,7 @@ func DeriveMarkdownHeadingFont(font Font, level int) FontDescriptor {
 	} else {
 		fd = font.Descriptor()
 	}
-	fd.Weight = weight.Black
+	fd.Weight = BlackFontWeight
 	switch level {
 	case 1:
 		fd.Size *= 2.5
@@ -120,7 +119,8 @@ type MarkdownTheme struct {
 	OnCodeBackground    Ink
 	QuoteBarColor       Ink
 	LinkInk             Ink
-	LinkOnPressedInk    Ink
+	LinkRolloverInk     Ink
+	LinkPressedInk      Ink
 	LinkHandler         func(Paneler, string)
 	WorkingDirProvider  func(Paneler) string
 	AltLinkPrefixes     []string
@@ -142,24 +142,24 @@ func HasAnyPrefix(prefixes []string, target string) bool {
 
 // Markdown provides markdown display widget.
 type Markdown struct {
+	Panel
+	MarkdownTheme
 	lastParent                 *Panel
+	chainedFrameChangeCallback func()
+	node                       ast.Node
+	content                    []byte
 	block                      *Panel
 	textRow                    *Panel
 	text                       *Text
 	decoration                 *TextDecoration
-	node                       ast.Node
-	chainedFrameChangeCallback func()
-	content                    []byte
-	columnWidths               []int
 	imgCache                   map[string]*Image
-	MarkdownTheme
-	Panel
-	index        int
-	columnIndex  int
-	maxWidth     float32
-	maxLineWidth float32
-	ordered      bool
-	isHeader     bool
+	index                      int
+	columnIndex                int
+	columnWidths               []int
+	maxWidth                   float32
+	maxLineWidth               float32
+	ordered                    bool
+	isHeader                   bool
 }
 
 // NewMarkdown creates a new markdown widget. If autoSizingFromParent is true, then the Markdown will attempt to keep
@@ -248,15 +248,6 @@ func (m *Markdown) SetContentBytes(content []byte, maxWidth float32) {
 	m.node = goldmark.New(goldmark.WithExtensions(extension.GFM)).Parser().Parse(text.NewReader(m.content))
 	m.walk(m.node)
 	m.MarkForLayoutAndRedraw()
-}
-
-// Rebuild rebuilds the markdown content. This is useful if the theme has been changed.
-func (m *Markdown) Rebuild() {
-	maxWidth := m.maxWidth
-	m.maxWidth = -1
-	content := m.content
-	m.content = nil
-	m.SetContentBytes(content, maxWidth)
 }
 
 func (m *Markdown) walk(node ast.Node) {
@@ -357,8 +348,8 @@ func (m *Markdown) processThematicBreak() {
 	hr := NewSeparator()
 	hr.SetLayoutData(&FlexLayoutData{
 		HGrab:  true,
-		HAlign: align.Fill,
-		VAlign: align.Middle,
+		HAlign: FillAlignment,
+		VAlign: MiddleAlignment,
 	})
 	m.block.AddChild(hr)
 }
@@ -369,16 +360,16 @@ func (m *Markdown) processCodeBlock() {
 	saveMaxLineWidth := m.maxLineWidth
 	m.decoration = m.decoration.Clone()
 	m.decoration.Font = m.CodeBlockFont
-	m.decoration.OnBackgroundInk = m.OnCodeBackground
+	m.decoration.Foreground = m.OnCodeBackground
 	m.maxLineWidth -= m.CodeAndQuotePadding * 2
 
 	p := NewPanel()
 	p.DrawCallback = func(gc *Canvas, rect Rect) {
-		gc.DrawRect(rect, m.CodeBackground.Paint(gc, rect, paintstyle.Fill))
+		gc.DrawRect(rect, m.CodeBackground.Paint(gc, rect, Fill))
 	}
 	p.SetLayout(&FlexLayout{Columns: 1})
 	p.SetLayoutData(&FlexLayoutData{
-		HAlign: align.Fill,
+		HAlign: FillAlignment,
 		HGrab:  true,
 	})
 	p.SetBorder(NewEmptyBorder(NewUniformInsets(m.CodeAndQuotePadding)))
@@ -388,7 +379,7 @@ func (m *Markdown) processCodeBlock() {
 	count := lines.Len()
 	for i := 0; i < count; i++ {
 		segment := lines.At(i)
-		label := NewLabel()
+		label := NewRichLabel()
 		label.Text = NewText(string(bytes.TrimRight(segment.Value(m.content), "\n")), m.decoration)
 		p.AddChild(label)
 	}
@@ -404,25 +395,24 @@ func (m *Markdown) processBlockquote() {
 	saveBlock := m.block
 	saveMaxLineWidth := m.maxLineWidth
 	m.decoration = m.decoration.Clone()
-	m.decoration.OnBackgroundInk = m.OnCodeBackground
+	m.decoration.Foreground = m.OnCodeBackground
 	m.maxLineWidth -= m.QuoteBarThickness + m.CodeAndQuotePadding*2
 
 	p := NewPanel()
 	p.DrawCallback = func(gc *Canvas, rect Rect) {
-		gc.DrawRect(rect, m.CodeBackground.Paint(gc, rect, paintstyle.Fill))
+		gc.DrawRect(rect, m.CodeBackground.Paint(gc, rect, Fill))
 	}
 	p.SetLayout(&FlexLayout{
 		Columns:  1,
 		VSpacing: m.VSpacing,
 	})
 	p.SetLayoutData(&FlexLayoutData{
-		HAlign: align.Fill,
+		HAlign: FillAlignment,
 		HGrab:  true,
 	})
-	p.SetBorder(NewCompoundBorder(
-		NewLineBorder(m.QuoteBarColor, 0, Insets{Left: m.QuoteBarThickness}, false),
-		NewEmptyBorder(NewUniformInsets(m.CodeAndQuotePadding)),
-	))
+	p.SetBorder(NewCompoundBorder(NewLineBorder(m.QuoteBarColor, 0,
+		Insets{Left: m.QuoteBarThickness}, false),
+		NewEmptyBorder(NewUniformInsets(m.CodeAndQuotePadding))))
 	m.block.AddChild(p)
 	m.block = p
 	m.text = NewText("", m.decoration)
@@ -446,7 +436,7 @@ func (m *Markdown) processList() {
 			HSpacing: m.decoration.Font.SimpleWidth(" "),
 		})
 		p.SetLayoutData(&FlexLayoutData{
-			HAlign: align.Fill,
+			HAlign: FillAlignment,
 			HGrab:  true,
 		})
 		m.block.AddChild(p)
@@ -469,16 +459,16 @@ func (m *Markdown) processListItem() {
 		bullet = "•"
 		m.maxLineWidth -= m.decoration.Font.SimpleWidth("• ")
 	}
-	label := NewLabel()
+	label := NewRichLabel()
 	label.Text = NewText(bullet, m.decoration)
-	label.SetLayoutData(&FlexLayoutData{HAlign: align.End})
+	label.SetLayoutData(&FlexLayoutData{HAlign: EndAlignment})
 	m.block.AddChild(label)
 
 	saveBlock := m.block
 	p := NewPanel()
 	p.SetLayout(&FlexLayout{Columns: 1})
 	p.SetLayoutData(&FlexLayoutData{
-		HAlign: align.Fill,
+		HAlign: FillAlignment,
 		HGrab:  true,
 	})
 	m.block.AddChild(p)
@@ -497,7 +487,7 @@ func (m *Markdown) processTable() {
 				m.columnWidths[i] = int(xmath.Floor(m.maxLineWidth))
 			}
 			p := NewPanel()
-			p.SetBorder(NewLineBorder(ThemeSurfaceEdge, 0, NewUniformInsets(1), false))
+			p.SetBorder(NewLineBorder(DividerColor, 0, NewUniformInsets(1), false))
 			p.SetLayout(&FlexLayout{Columns: len(table.Alignments)})
 			m.block.AddChild(p)
 			m.block = p
@@ -622,23 +612,23 @@ func (m *Markdown) processTableCell() {
 	if cell, ok := m.node.(*astex.TableCell); ok {
 		saveDec := m.decoration
 		saveBlock := m.block
-		hAlign := m.alignment(cell.Alignment)
+		align := m.alignment(cell.Alignment)
 		m.decoration = m.decoration.Clone()
 		if m.isHeader {
 			m.decoration.Font = m.HeadingFont[5]
-			if hAlign != align.End {
-				hAlign = align.Middle
+			if align != EndAlignment {
+				align = MiddleAlignment
 			}
 		}
 		p := NewPanel()
-		p.SetBorder(NewLineBorder(ThemeSurfaceEdge, 0, NewUniformInsets(1), false))
+		p.SetBorder(NewLineBorder(DividerColor, 0, NewUniformInsets(1), false))
 		p.SetLayout(&FlexLayout{
 			Columns: 1,
-			HAlign:  hAlign,
+			HAlign:  align,
 		})
 		p.SetLayoutData(&FlexLayoutData{
-			HAlign: align.Fill,
-			VAlign: align.Fill,
+			HAlign: FillAlignment,
+			VAlign: FillAlignment,
 			VGrab:  true,
 		})
 		m.block.AddChild(p)
@@ -647,10 +637,10 @@ func (m *Markdown) processTableCell() {
 		inner.SetBorder(NewEmptyBorder(StdInsets()))
 		inner.SetLayout(&FlexLayout{
 			Columns: 1,
-			HAlign:  hAlign,
+			HAlign:  align,
 		})
 		inner.SetLayoutData(&FlexLayoutData{
-			HAlign: hAlign,
+			HAlign: align,
 		})
 		p.AddChild(inner)
 
@@ -670,16 +660,16 @@ func (m *Markdown) processTableCell() {
 	}
 }
 
-func (m *Markdown) alignment(alignment astex.Alignment) align.Enum {
+func (m *Markdown) alignment(alignment astex.Alignment) Alignment {
 	switch alignment {
 	case astex.AlignLeft:
-		return align.Start
+		return StartAlignment
 	case astex.AlignRight:
-		return align.End
+		return EndAlignment
 	case astex.AlignCenter:
-		return align.Middle
+		return MiddleAlignment
 	default:
-		return align.Start
+		return StartAlignment
 	}
 }
 
@@ -705,9 +695,9 @@ func (m *Markdown) processEmphasis() {
 		m.decoration = save.Clone()
 		fd := m.decoration.Font.Descriptor()
 		if emphasis.Level == 1 {
-			fd.Slant = slant.Italic
+			fd.Slant = ItalicSlant
 		} else {
-			fd.Weight = weight.Black
+			fd.Weight = BlackFontWeight
 		}
 		m.decoration.Font = fd.Font()
 		m.processChildren()
@@ -718,8 +708,8 @@ func (m *Markdown) processEmphasis() {
 func (m *Markdown) processCodeSpan() {
 	save := m.decoration
 	m.decoration = save.Clone()
-	m.decoration.OnBackgroundInk = m.OnCodeBackground
-	m.decoration.BackgroundInk = m.CodeBackground
+	m.decoration.Foreground = m.OnCodeBackground
+	m.decoration.Background = m.CodeBackground
 	m.decoration.Font = m.CodeBlockFont
 	m.processChildren()
 	m.decoration = save
@@ -772,15 +762,14 @@ func (m *Markdown) processLink() {
 	}
 }
 
-func (m *Markdown) createLink(label, target, tooltip string) *Label {
+func (m *Markdown) createLink(label, target, tooltip string) *RichLabel {
 	theme := LinkTheme{
-		LabelTheme: LabelTheme{
-			TextDecoration: *m.decoration.Clone(),
-		},
-		PressedInk:   m.LinkInk,
-		OnPressedInk: m.LinkOnPressedInk,
+		TextDecoration: *m.decoration.Clone(),
+		RolloverInk:    m.LinkRolloverInk,
+		PressedInk:     m.LinkPressedInk,
 	}
-	theme.OnBackgroundInk = m.LinkInk
+	theme.Foreground = m.LinkInk
+	theme.Underline = true
 	if tooltip == "" && target != "" {
 		tooltip = target
 	}
@@ -797,19 +786,15 @@ func ReviseTarget(workingDir, target string, altLinkPrefixes []string) (string, 
 	if HasURLPrefix(target) {
 		return target, nil
 	}
-	revised, err := url.PathUnescape(target)
-	if err != nil {
-		return target, errs.Wrap(err)
-	}
+	revised := mylog.Check2(url.PathUnescape(target))
+
 	if HasAnyPrefix(altLinkPrefixes, revised) {
 		return revised, nil
 	}
 	if workingDir == "" {
 		workingDir = "."
 	}
-	if revised, err = filepath.Abs(filepath.Join(workingDir, revised)); err != nil {
-		return target, errs.Wrap(err)
-	}
+	revised = mylog.Check2(filepath.Abs(filepath.Join(workingDir, revised)))
 	return revised, nil
 }
 
@@ -822,11 +807,8 @@ func (m *Markdown) retrieveImage(target string, label *Label) *Image {
 	if m.WorkingDirProvider != nil {
 		workingDir = m.WorkingDirProvider(m)
 	}
-	revisedTarget, err := ReviseTarget(workingDir, target, m.AltLinkPrefixes)
-	if err != nil {
-		errs.Log(err, "workingDir", workingDir, "target", target, "altLinkPrefixes", m.AltLinkPrefixes)
-		return nil
-	}
+	revisedTarget := mylog.Check2(ReviseTarget(workingDir, target, m.AltLinkPrefixes))
+
 	img, ok := m.imgCache[revisedTarget]
 	if !ok {
 		result := make(chan *Image, 1)
@@ -834,9 +816,9 @@ func (m *Markdown) retrieveImage(target string, label *Label) *Image {
 			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 			defer cancel()
 			scale := 1 / PrimaryDisplay().ScaleX
-			if img, err = NewImageFromFilePathOrURLWithContext(ctx, revisedTarget, scale); err != nil {
+			if img, e := (NewImageFromFilePathOrURLWithContext(ctx, revisedTarget, scale)); e != nil {
 				result <- nil
-				errs.Log(err, "path", revisedTarget, "scale", scale)
+				errs.Log(e, "path", revisedTarget, "scale", scale)
 			} else {
 				result <- img
 				InvokeTask(func() {
@@ -888,7 +870,7 @@ func (m *Markdown) processImage() {
 			size := max(m.decoration.Font.Size(), 24)
 			label.Drawable = &DrawableSVG{
 				SVG:  BrokenImageSVG,
-				Size: Size{Width: size, Height: size},
+				Size: NewSize(size, size),
 			}
 		} else {
 			label.Drawable = m.constrainImage(img)
@@ -924,7 +906,7 @@ func (m *Markdown) addToTextRow(p Paneler) {
 		m.textRow = NewPanel()
 		m.textRow.SetLayout(&FlowLayout{})
 		m.textRow.SetLayoutData(&FlexLayoutData{
-			HAlign: align.Fill,
+			HAlign: FillAlignment,
 			HGrab:  true,
 		})
 		m.block.AddChild(m.textRow)
@@ -933,7 +915,7 @@ func (m *Markdown) addToTextRow(p Paneler) {
 }
 
 func (m *Markdown) addLabelToTextRow(t *Text) {
-	label := NewLabel()
+	label := NewRichLabel()
 	label.Text = t
 	m.addToTextRow(label)
 }
@@ -949,8 +931,8 @@ func (m *Markdown) issueLineBreak() {
 		children = m.textRow.Children()
 	}
 	if len(children) == 0 {
-		m.addToTextRow(NewLabel())
-	} else if child, ok := children[len(children)-1].Self.(*Label); ok {
+		m.addToTextRow(NewRichLabel())
+	} else if child, ok := children[len(children)-1].Self.(*RichLabel); ok {
 		if r := child.Text.Runes(); len(r) > 1 && r[len(r)-1] == ' ' {
 			child.Text = child.Text.Slice(0, len(r)-1)
 		}
@@ -1003,8 +985,6 @@ func (m *Markdown) finishTextRow() {
 // links.
 func DefaultMarkdownLinkHandler(_ Paneler, target string) {
 	if HasURLPrefix(target) {
-		if err := desktop.Open(target); err != nil {
-			ErrorDialogWithError(i18n.Text("Opening the link failed"), err)
-		}
+		mylog.Check(desktop.Open(target))
 	}
 }

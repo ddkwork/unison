@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -12,9 +12,9 @@ package demo
 import (
 	"strconv"
 
+	"github.com/google/uuid"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/fatal"
-	"github.com/richardwilkes/toolbox/tid"
 	"github.com/richardwilkes/unison"
 )
 
@@ -23,11 +23,11 @@ var _ unison.TableRowData[*demoRow] = &demoRow{}
 type demoRow struct {
 	table        *unison.Table[*demoRow]
 	parent       *demoRow
-	checkbox     *unison.CheckBox
+	id           uuid.UUID
 	text         string
 	text2        string
-	id           tid.TID
 	children     []*demoRow
+	checkbox     *unison.CheckBox
 	container    bool
 	open         bool
 	doubleHeight bool
@@ -41,11 +41,11 @@ func (d *demoRow) CloneForTarget(target unison.Paneler, newParent *demoRow) *dem
 	clone := *d
 	clone.table = table
 	clone.parent = newParent
-	clone.id = tid.MustNewTID('a')
+	clone.id = uuid.New()
 	return &clone
 }
 
-func (d *demoRow) ID() tid.TID {
+func (d *demoRow) UUID() uuid.UUID {
 	return d.id
 }
 
@@ -103,7 +103,7 @@ func (d *demoRow) ColumnCell(row, col int, foreground, _ unison.Ink, _, _, _ boo
 			addWrappedText(wrapper, "A little note…", foreground,
 				unison.LabelFont.Face().Font(unison.LabelFont.Size()-1), width)
 		}
-		wrapper.UpdateTooltipCallback = func(_ unison.Point, _ unison.Rect) unison.Rect {
+		wrapper.UpdateTooltipCallback = func(where unison.Point, suggestedAvoidInRoot unison.Rect) unison.Rect {
 			wrapper.Tooltip = unison.NewTooltipWithText("A tooltip for the cell")
 			return wrapper.RectToRoot(wrapper.ContentRect(true))
 		}
@@ -136,9 +136,9 @@ func addWrappedText(parent *unison.Panel, text string, ink unison.Ink, font unis
 	}
 	for _, line := range lines {
 		label := unison.NewLabel()
+		label.Text = line.String()
 		label.Font = font
 		label.LabelTheme.OnBackgroundInk = ink
-		label.SetTitle(line.String())
 		parent.AddChild(label)
 	}
 }

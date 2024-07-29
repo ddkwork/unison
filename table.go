@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -12,11 +12,13 @@ package unison
 import (
 	"time"
 
-	"github.com/richardwilkes/toolbox"
-	"github.com/richardwilkes/toolbox/tid"
+	"github.com/ddkwork/golibrary/mylog"
+	"github.com/google/uuid"
 	"github.com/richardwilkes/toolbox/xmath"
-	"github.com/richardwilkes/unison/enums/paintstyle"
+	"github.com/richardwilkes/toolbox/xmath/geom"
 )
+
+var zeroUUID = uuid.UUID{}
 
 // TableDragData holds the data from a table row drag.
 type TableDragData[T TableRowConstraint[T]] struct {
@@ -42,28 +44,29 @@ type tableCache[T TableRowConstraint[T]] struct {
 }
 
 type tableHitRect struct {
-	handler func()
 	Rect
+	handler func()
 }
 
 // DefaultTableTheme holds the default TableTheme values for Tables. Modifying this data will not alter existing Tables,
 // but will alter any Tables created in the future.
 var DefaultTableTheme = TableTheme{
-	BackgroundInk:          ThemeBelowSurface,
-	OnBackgroundInk:        ThemeOnBelowSurface,
-	BandingInk:             ThemeSurface,
-	OnBandingInk:           ThemeOnSurface,
-	InteriorDividerInk:     ThemeAboveSurface,
-	SelectionInk:           ThemeFocus,
-	OnSelectionInk:         ThemeOnFocus,
-	InactiveSelectionInk:   ThemeDeepFocus,
-	OnInactiveSelectionInk: ThemeOnDeepFocus,
-	IndirectSelectionInk:   ThemeDeeperFocus,
-	OnIndirectSelectionInk: ThemeOnDeeperFocus,
+	BackgroundInk:          ContentColor,
+	OnBackgroundInk:        OnContentColor,
+	BandingInk:             BandingColor,
+	OnBandingInk:           OnBandingColor,
+	InteriorDividerInk:     InteriorDividerColor,
+	SelectionInk:           SelectionColor,
+	OnSelectionInk:         OnSelectionColor,
+	InactiveSelectionInk:   InactiveSelectionColor,
+	OnInactiveSelectionInk: OnInactiveSelectionColor,
+	IndirectSelectionInk:   IndirectSelectionColor,
+	OnIndirectSelectionInk: OnIndirectSelectionColor,
 	Padding:                NewUniformInsets(4),
 	HierarchyIndent:        16,
 	MinimumRowHeight:       16,
 	ColumnResizeSlop:       4,
+	ShowRowDivider:         true,
 	ShowColumnDivider:      true,
 }
 
@@ -91,6 +94,8 @@ type TableTheme struct {
 
 // Table provides a control that can display data in columns and rows.
 type Table[T TableRowConstraint[T]] struct {
+	Panel
+	TableTheme
 	SelectionChangedCallback func()
 	DoubleClickCallback      func()
 	DragRemovedRowsCallback  func() // Called whenever a drag removes one or more rows from a model, but only if the source and destination tables were different.
@@ -99,15 +104,13 @@ type Table[T TableRowConstraint[T]] struct {
 	Model                    TableModel[T]
 	filteredRows             []T // Note that we use the difference between nil and an empty slice here
 	header                   *TableHeader[T]
-	selMap                   map[tid.TID]bool
-	selAnchor                tid.TID
-	lastSel                  tid.TID
+	selMap                   map[uuid.UUID]bool
+	selAnchor                uuid.UUID
+	lastSel                  uuid.UUID
 	hitRects                 []tableHitRect
 	rowCache                 []tableCache[T]
 	lastMouseEnterCellPanel  *Panel
 	lastMouseDownCellPanel   *Panel
-	TableTheme
-	Panel
 	interactionRow           int
 	interactionColumn        int
 	lastMouseMotionRow       int
@@ -130,7 +133,7 @@ func NewTable[T TableRowConstraint[T]](model TableModel[T]) *Table[T] {
 	t := &Table[T]{
 		TableTheme:            DefaultTableTheme,
 		Model:                 model,
-		selMap:                make(map[tid.TID]bool),
+		selMap:                make(map[uuid.UUID]bool),
 		interactionRow:        -1,
 		interactionColumn:     -1,
 		lastMouseMotionRow:    -1,
@@ -194,7 +197,7 @@ func (t *Table[T]) DefaultDraw(canvas *Canvas, dirty Rect) {
 		selectionInk = t.InactiveSelectionInk
 	}
 
-	canvas.DrawRect(dirty, t.BackgroundInk.Paint(canvas, dirty, paintstyle.Fill))
+	canvas.DrawRect(dirty, t.BackgroundInk.Paint(canvas, dirty, Fill))
 
 	var insets Insets
 	if border := t.Border(); border != nil {
@@ -236,17 +239,17 @@ func (t *Table[T]) DefaultDraw(canvas *Canvas, dirty Rect) {
 		rect.Height = t.rowCache[r].height
 		if t.IsRowOrAnyParentSelected(r) {
 			if t.IsRowSelected(r) {
-				canvas.DrawRect(rect, selectionInk.Paint(canvas, rect, paintstyle.Fill))
+				canvas.DrawRect(rect, selectionInk.Paint(canvas, rect, Fill))
 			} else {
-				canvas.DrawRect(rect, t.IndirectSelectionInk.Paint(canvas, rect, paintstyle.Fill))
+				canvas.DrawRect(rect, t.IndirectSelectionInk.Paint(canvas, rect, Fill))
 			}
 		} else if r%2 == 1 {
-			canvas.DrawRect(rect, t.BandingInk.Paint(canvas, rect, paintstyle.Fill))
+			canvas.DrawRect(rect, t.BandingInk.Paint(canvas, rect, Fill))
 		}
 		rect.Y += t.rowCache[r].height
 		if t.ShowRowDivider && r != endBeforeRow-1 {
 			rect.Height = 1
-			canvas.DrawRect(rect, t.InteriorDividerInk.Paint(canvas, rect, paintstyle.Fill))
+			canvas.DrawRect(rect, t.InteriorDividerInk.Paint(canvas, rect, Fill))
 			rect.Y++
 		}
 	}
@@ -257,7 +260,7 @@ func (t *Table[T]) DefaultDraw(canvas *Canvas, dirty Rect) {
 		rect.Width = 1
 		for c := firstCol; c < len(t.Columns)-1; c++ {
 			rect.X += t.Columns[c].Current
-			canvas.DrawRect(rect, t.InteriorDividerInk.Paint(canvas, rect, paintstyle.Fill))
+			canvas.DrawRect(rect, t.InteriorDividerInk.Paint(canvas, rect, Fill))
 			rect.X++
 		}
 	}
@@ -272,7 +275,8 @@ func (t *Table[T]) DefaultDraw(canvas *Canvas, dirty Rect) {
 		for c := firstCol; c < len(t.Columns) && rect.X < lastX; c++ {
 			fg, bg, selected, indirectlySelected, focused := t.cellParams(r, c)
 			rect.Width = t.Columns[c].Current
-			cellRect := rect.Inset(t.Padding)
+			cellRect := rect
+			cellRect.Inset(t.Padding)
 			row := t.rowCache[r].row
 			if t.Columns[c].ID == t.HierarchyColumnID {
 				if row.CanHaveChildren() {
@@ -281,9 +285,8 @@ func (t *Table[T]) DefaultDraw(canvas *Canvas, dirty Rect) {
 					canvas.Save()
 					left := cellRect.X + t.HierarchyIndent*float32(t.rowCache[r].depth) + disclosureIndent
 					top := cellRect.Y + (t.MinimumRowHeight-disclosureSize)/2
-					dSize := Size{Width: disclosureSize, Height: disclosureSize}
-					t.hitRects = append(t.hitRects,
-						t.newTableHitRect(Rect{Point: Point{X: left, Y: top}, Size: dSize}, row))
+					t.hitRects = append(t.hitRects, t.newTableHitRect(NewRect(left, top, disclosureSize,
+						disclosureSize), row))
 					canvas.Translate(left, top)
 					if row.IsOpen() {
 						offset := disclosureSize / 2
@@ -291,8 +294,8 @@ func (t *Table[T]) DefaultDraw(canvas *Canvas, dirty Rect) {
 						canvas.Rotate(90)
 						canvas.Translate(-offset, -offset)
 					}
-					canvas.DrawPath(CircledChevronRightSVG.PathForSize(dSize),
-						fg.Paint(canvas, cellRect, paintstyle.Fill))
+					canvas.DrawPath(CircledChevronRightSVG.PathForSize(NewSize(disclosureSize, disclosureSize)),
+						fg.Paint(canvas, cellRect, Fill))
 					canvas.Restore()
 				}
 				indent := t.HierarchyIndent*float32(t.rowCache[r].depth+1) + t.Padding.Left
@@ -494,10 +497,8 @@ func (t *Table[T]) CellFrame(row, col int) Rect {
 			y++
 		}
 	}
-	rect := Rect{
-		Point: Point{X: x, Y: y},
-		Size:  Size{Width: t.Columns[col].Current, Height: t.rowCache[row].height},
-	}.Inset(t.Padding)
+	rect := NewRect(x, y, t.Columns[col].Current, t.rowCache[row].height)
+	rect.Inset(t.Padding)
 	if t.Columns[col].ID == t.HierarchyColumnID {
 		indent := t.HierarchyIndent*float32(t.rowCache[row].depth+1) + t.Padding.Left
 		rect.X += indent
@@ -568,13 +569,13 @@ func (t *Table[T]) DefaultUpdateCursorCallback(where Point) *Cursor {
 				var cursor *Cursor
 				rect := t.CellFrame(row, col)
 				t.installCell(cell, rect)
-				where = where.Sub(rect.Point)
+				where.Subtract(rect.Point)
 				target := cell.PanelAt(where)
 				for target != t.AsPanel() {
 					if target.UpdateCursorCallback == nil {
 						target = target.parent
 					} else {
-						toolbox.Call(func() { cursor = target.UpdateCursorCallback(cell.PointTo(where, target)) })
+						mylog.Call(func() { cursor = target.UpdateCursorCallback(cell.PointTo(where, target)) })
 						break
 					}
 				}
@@ -594,14 +595,15 @@ func (t *Table[T]) DefaultUpdateTooltipCallback(where Point, avoid Rect) Rect {
 			if cell.HasInSelfOrDescendants(func(p *Panel) bool { return p.UpdateTooltipCallback != nil || p.Tooltip != nil }) {
 				rect := t.CellFrame(row, col)
 				t.installCell(cell, rect)
-				where = where.Sub(rect.Point)
+				where.Subtract(rect.Point)
 				target := cell.PanelAt(where)
 				t.Tooltip = nil
 				t.TooltipImmediate = false
 				for target != t.AsPanel() {
-					avoid = target.RectToRoot(target.ContentRect(true)).Align()
+					avoid = target.RectToRoot(target.ContentRect(true))
+					avoid.Align()
 					if target.UpdateTooltipCallback != nil {
-						toolbox.Call(func() { avoid = target.UpdateTooltipCallback(cell.PointTo(where, target), avoid) })
+						mylog.Call(func() { avoid = target.UpdateTooltipCallback(cell.PointTo(where, target), avoid) })
 					}
 					if target.Tooltip != nil {
 						t.Tooltip = target.Tooltip
@@ -616,7 +618,9 @@ func (t *Table[T]) DefaultUpdateTooltipCallback(where Point, avoid Rect) Rect {
 			if cell.Tooltip != nil {
 				t.Tooltip = cell.Tooltip
 				t.TooltipImmediate = cell.TooltipImmediate
-				return t.RectToRoot(t.CellFrame(row, col)).Align()
+				avoid = t.RectToRoot(t.CellFrame(row, col))
+				avoid.Align()
+				return avoid
 			}
 		}
 	}
@@ -637,7 +641,7 @@ func (t *Table[T]) DefaultMouseEnter(where Point, mod Modifiers) bool {
 		cell := t.cell(row, col)
 		rect := t.CellFrame(row, col)
 		t.installCell(cell, rect)
-		where = where.Sub(rect.Point)
+		where.Subtract(rect.Point)
 		target := cell.PanelAt(where)
 		if target != t.lastMouseEnterCellPanel && t.lastMouseEnterCellPanel != nil {
 			t.DefaultMouseExit()
@@ -645,7 +649,7 @@ func (t *Table[T]) DefaultMouseEnter(where Point, mod Modifiers) bool {
 			t.lastMouseMotionColumn = col
 		}
 		if target.MouseEnterCallback != nil {
-			toolbox.Call(func() { target.MouseEnterCallback(cell.PointTo(where, target), mod) })
+			mylog.Call(func() { target.MouseEnterCallback(cell.PointTo(where, target), mod) })
 		}
 		t.uninstallCell(cell)
 		t.lastMouseEnterCellPanel = target
@@ -662,9 +666,9 @@ func (t *Table[T]) DefaultMouseMove(where Point, mod Modifiers) bool {
 		cell := t.cell(row, col)
 		rect := t.CellFrame(row, col)
 		t.installCell(cell, rect)
-		where = where.Sub(rect.Point)
+		where.Subtract(rect.Point)
 		if target := cell.PanelAt(where); target.MouseMoveCallback != nil {
-			toolbox.Call(func() { target.MouseMoveCallback(cell.PointTo(where, target), mod) })
+			mylog.Call(func() { target.MouseMoveCallback(cell.PointTo(where, target), mod) })
 		}
 		t.uninstallCell(cell)
 	}
@@ -678,7 +682,7 @@ func (t *Table[T]) DefaultMouseExit() bool {
 		cell := t.cell(t.lastMouseMotionRow, t.lastMouseMotionColumn)
 		rect := t.CellFrame(t.lastMouseMotionRow, t.lastMouseMotionColumn)
 		t.installCell(cell, rect)
-		toolbox.Call(func() { t.lastMouseEnterCellPanel.MouseExitCallback() })
+		mylog.Call(func() { t.lastMouseEnterCellPanel.MouseExitCallback() })
 		t.uninstallCell(cell)
 	}
 	t.lastMouseEnterCellPanel = nil
@@ -695,7 +699,7 @@ func (t *Table[T]) DefaultMouseDown(where Point, button, clickCount int, mod Mod
 	t.RequestFocus()
 	t.wasDragged = false
 	t.dividerDrag = false
-	t.lastSel = ""
+	t.lastSel = zeroUUID
 
 	t.interactionRow = -1
 	t.interactionColumn = -1
@@ -727,7 +731,7 @@ func (t *Table[T]) DefaultMouseDown(where Point, button, clickCount int, mod Mod
 			}
 		}
 		for _, one := range t.hitRects {
-			if where.In(one.Rect) {
+			if one.ContainsPoint(where) {
 				return true
 			}
 		}
@@ -740,11 +744,11 @@ func (t *Table[T]) DefaultMouseDown(where Point, button, clickCount int, mod Mod
 				t.interactionColumn = col
 				rect := t.CellFrame(row, col)
 				t.installCell(cell, rect)
-				where = where.Sub(rect.Point)
+				where.Subtract(rect.Point)
 				stop := false
 				if target := cell.PanelAt(where); target.MouseDownCallback != nil {
 					t.lastMouseDownCellPanel = target
-					toolbox.Call(func() {
+					mylog.Call(func() {
 						stop = target.MouseDownCallback(cell.PointTo(where, target), button,
 							clickCount, mod)
 					})
@@ -756,13 +760,13 @@ func (t *Table[T]) DefaultMouseDown(where Point, button, clickCount int, mod Mod
 			}
 		}
 		rowData := t.rowCache[row].row
-		id := rowData.ID()
+		id := rowData.UUID()
 		switch {
 		case mod&ShiftModifier != 0: // Extend selection from anchor
 			selAnchorIndex := -1
-			if t.selAnchor != "" {
+			if t.selAnchor != zeroUUID {
 				for i, c := range t.rowCache {
-					if c.row.ID() == t.selAnchor {
+					if c.row.UUID() == t.selAnchor {
 						selAnchorIndex = i
 						break
 					}
@@ -771,11 +775,11 @@ func (t *Table[T]) DefaultMouseDown(where Point, button, clickCount int, mod Mod
 			if selAnchorIndex != -1 {
 				last := max(selAnchorIndex, row)
 				for i := min(selAnchorIndex, row); i <= last; i++ {
-					t.selMap[t.rowCache[i].row.ID()] = true
+					t.selMap[t.rowCache[i].row.UUID()] = true
 				}
 				t.notifyOfSelectionChange()
 			} else if !t.selMap[id] { // No anchor, so behave like a regular click
-				t.selMap = make(map[tid.TID]bool)
+				t.selMap = make(map[uuid.UUID]bool)
 				t.selMap[id] = true
 				t.selAnchor = id
 				t.notifyOfSelectionChange()
@@ -790,14 +794,14 @@ func (t *Table[T]) DefaultMouseDown(where Point, button, clickCount int, mod Mod
 		case t.selMap[id]: // Sets lastClick so that on mouse up, we can treat a click and click and hold differently
 			t.lastSel = id
 		default: // If not already selected, replace selection with current row and make it the anchor
-			t.selMap = make(map[tid.TID]bool)
+			t.selMap = make(map[uuid.UUID]bool)
 			t.selMap[id] = true
 			t.selAnchor = id
 			t.notifyOfSelectionChange()
 		}
 		t.MarkForRedraw()
 		if button == ButtonLeft && clickCount == 2 && t.DoubleClickCallback != nil && len(t.selMap) != 0 {
-			toolbox.Call(t.DoubleClickCallback)
+			mylog.Call(t.DoubleClickCallback)
 		}
 	}
 	return true
@@ -805,7 +809,7 @@ func (t *Table[T]) DefaultMouseDown(where Point, button, clickCount int, mod Mod
 
 func (t *Table[T]) notifyOfSelectionChange() {
 	if t.SelectionChangedCallback != nil {
-		toolbox.Call(t.SelectionChangedCallback)
+		mylog.Call(t.SelectionChangedCallback)
 	}
 }
 
@@ -841,8 +845,8 @@ func (t *Table[T]) DefaultMouseDrag(where Point, button int, mod Modifiers) bool
 			cell := t.cell(t.interactionRow, t.interactionColumn)
 			rect := t.CellFrame(t.interactionRow, t.interactionColumn)
 			t.installCell(cell, rect)
-			where = where.Sub(rect.Point)
-			toolbox.Call(func() {
+			where.Subtract(rect.Point)
+			mylog.Call(func() {
 				stop = t.lastMouseDownCellPanel.MouseDragCallback(cell.PointTo(where, t.lastMouseDownCellPanel), button, mod)
 			})
 			t.uninstallCell(cell)
@@ -856,7 +860,7 @@ func (t *Table[T]) DefaultMouseUp(where Point, button int, mod Modifiers) bool {
 	stop := false
 	if !t.dividerDrag && button == ButtonLeft {
 		for _, one := range t.hitRects {
-			if where.In(one.Rect) {
+			if one.ContainsPoint(where) {
 				one.handler()
 				stop = true
 				break
@@ -864,7 +868,7 @@ func (t *Table[T]) DefaultMouseUp(where Point, button int, mod Modifiers) bool {
 		}
 	}
 
-	if !t.wasDragged && t.lastSel != "" {
+	if !t.wasDragged && t.lastSel != zeroUUID {
 		t.ClearSelection()
 		t.selMap[t.lastSel] = true
 		t.selAnchor = t.lastSel
@@ -877,14 +881,13 @@ func (t *Table[T]) DefaultMouseUp(where Point, button int, mod Modifiers) bool {
 		cell := t.cell(t.interactionRow, t.interactionColumn)
 		rect := t.CellFrame(t.interactionRow, t.interactionColumn)
 		t.installCell(cell, rect)
-		where = where.Sub(rect.Point)
-		toolbox.Call(func() {
+		where.Subtract(rect.Point)
+		mylog.Call(func() {
 			stop = t.lastMouseDownCellPanel.MouseUpCallback(cell.PointTo(where, t.lastMouseDownCellPanel), button, mod)
 		})
 		t.uninstallCell(cell)
 	}
 	t.lastMouseDownCellPanel = nil
-	t.interactionRow = -1
 	return stop
 }
 
@@ -892,7 +895,7 @@ func (t *Table[T]) DefaultMouseUp(where Point, button int, mod Modifiers) bool {
 func (t *Table[T]) DefaultKeyDown(keyCode KeyCode, mod Modifiers, _ bool) bool {
 	if IsControlAction(keyCode, mod) {
 		if t.DoubleClickCallback != nil && len(t.selMap) != 0 {
-			toolbox.Call(t.DoubleClickCallback)
+			mylog.Call(t.DoubleClickCallback)
 		}
 		return true
 	}
@@ -976,9 +979,9 @@ func (t *Table[T]) PruneSelectionOfUndisclosedNodes() {
 		return
 	}
 	needsNotify := false
-	selMap := make(map[tid.TID]bool, len(t.selMap))
+	selMap := make(map[uuid.UUID]bool, len(t.selMap))
 	for _, entry := range t.rowCache {
-		id := entry.row.ID()
+		id := entry.row.UUID()
 		if t.selMap[id] {
 			selMap[id] = true
 		} else {
@@ -997,7 +1000,7 @@ func (t *Table[T]) FirstSelectedRowIndex() int {
 		return -1
 	}
 	for i, entry := range t.rowCache {
-		if t.selMap[entry.row.ID()] {
+		if t.selMap[entry.row.UUID()] {
 			return i
 		}
 	}
@@ -1010,7 +1013,7 @@ func (t *Table[T]) LastSelectedRowIndex() int {
 		return -1
 	}
 	for i := len(t.rowCache) - 1; i >= 0; i-- {
-		if t.selMap[t.rowCache[i].row.ID()] {
+		if t.selMap[t.rowCache[i].row.UUID()] {
 			return i
 		}
 	}
@@ -1023,7 +1026,7 @@ func (t *Table[T]) IsRowOrAnyParentSelected(index int) bool {
 		return false
 	}
 	for index >= 0 {
-		if t.selMap[t.rowCache[index].row.ID()] {
+		if t.selMap[t.rowCache[index].row.UUID()] {
 			return true
 		}
 		index = t.rowCache[index].parent
@@ -1036,7 +1039,7 @@ func (t *Table[T]) IsRowSelected(index int) bool {
 	if index < 0 || index >= len(t.rowCache) {
 		return false
 	}
-	return t.selMap[t.rowCache[index].row.ID()]
+	return t.selMap[t.rowCache[index].row.UUID()]
 }
 
 // SelectedRows returns the currently selected rows. If 'minimal' is true, then children of selected rows that may also
@@ -1048,7 +1051,7 @@ func (t *Table[T]) SelectedRows(minimal bool) []T {
 	}
 	rows := make([]T, 0, len(t.selMap))
 	for _, entry := range t.rowCache {
-		if t.selMap[entry.row.ID()] && (!minimal || entry.parent == -1 || !t.IsRowOrAnyParentSelected(entry.parent)) {
+		if t.selMap[entry.row.UUID()] && (!minimal || entry.parent == -1 || !t.IsRowOrAnyParentSelected(entry.parent)) {
 			rows = append(rows, entry.row)
 		}
 	}
@@ -1056,21 +1059,21 @@ func (t *Table[T]) SelectedRows(minimal bool) []T {
 }
 
 // CopySelectionMap returns a copy of the current selection map.
-func (t *Table[T]) CopySelectionMap() map[tid.TID]bool {
+func (t *Table[T]) CopySelectionMap() map[uuid.UUID]bool {
 	t.PruneSelectionOfUndisclosedNodes()
 	return copySelMap(t.selMap)
 }
 
 // SetSelectionMap sets the current selection map.
-func (t *Table[T]) SetSelectionMap(selMap map[tid.TID]bool) {
+func (t *Table[T]) SetSelectionMap(selMap map[uuid.UUID]bool) {
 	t.selMap = copySelMap(selMap)
 	t.selNeedsPrune = true
 	t.MarkForRedraw()
 	t.notifyOfSelectionChange()
 }
 
-func copySelMap(selMap map[tid.TID]bool) map[tid.TID]bool {
-	result := make(map[tid.TID]bool, len(selMap))
+func copySelMap(selMap map[uuid.UUID]bool) map[uuid.UUID]bool {
+	result := make(map[uuid.UUID]bool, len(selMap))
 	for k, v := range selMap {
 		result[k] = v
 	}
@@ -1094,22 +1097,22 @@ func (t *Table[T]) ClearSelection() {
 	if len(t.selMap) == 0 {
 		return
 	}
-	t.selMap = make(map[tid.TID]bool)
+	t.selMap = make(map[uuid.UUID]bool)
 	t.selNeedsPrune = false
-	t.selAnchor = ""
+	t.selAnchor = zeroUUID
 	t.MarkForRedraw()
 	t.notifyOfSelectionChange()
 }
 
 // SelectAll selects all rows.
 func (t *Table[T]) SelectAll() {
-	t.selMap = make(map[tid.TID]bool, len(t.rowCache))
+	t.selMap = make(map[uuid.UUID]bool, len(t.rowCache))
 	t.selNeedsPrune = false
-	t.selAnchor = ""
+	t.selAnchor = zeroUUID
 	for _, cache := range t.rowCache {
-		id := cache.row.ID()
+		id := cache.row.UUID()
 		t.selMap[id] = true
-		if t.selAnchor == "" {
+		if t.selAnchor == zeroUUID {
 			t.selAnchor = id
 		}
 	}
@@ -1122,10 +1125,10 @@ func (t *Table[T]) SelectAll() {
 func (t *Table[T]) SelectByIndex(indexes ...int) {
 	for _, index := range indexes {
 		if index >= 0 && index < len(t.rowCache) {
-			id := t.rowCache[index].row.ID()
+			id := t.rowCache[index].row.UUID()
 			t.selMap[id] = true
 			t.selNeedsPrune = true
-			if t.selAnchor == "" {
+			if t.selAnchor == zeroUUID {
 				t.selAnchor = id
 			}
 		}
@@ -1143,10 +1146,10 @@ func (t *Table[T]) SelectRange(start, end int) {
 		return
 	}
 	for i := start; i <= end; i++ {
-		id := t.rowCache[i].row.ID()
+		id := t.rowCache[i].row.UUID()
 		t.selMap[id] = true
 		t.selNeedsPrune = true
-		if t.selAnchor == "" {
+		if t.selAnchor == zeroUUID {
 			t.selAnchor = id
 		}
 	}
@@ -1158,7 +1161,7 @@ func (t *Table[T]) SelectRange(start, end int) {
 func (t *Table[T]) DeselectByIndex(indexes ...int) {
 	for _, index := range indexes {
 		if index >= 0 && index < len(t.rowCache) {
-			delete(t.selMap, t.rowCache[index].row.ID())
+			delete(t.selMap, t.rowCache[index].row.UUID())
 		}
 	}
 	t.MarkForRedraw()
@@ -1173,7 +1176,7 @@ func (t *Table[T]) DeselectRange(start, end int) {
 		return
 	}
 	for i := start; i <= end; i++ {
-		delete(t.selMap, t.rowCache[i].row.ID())
+		delete(t.selMap, t.rowCache[i].row.UUID())
 	}
 	t.MarkForRedraw()
 	t.notifyOfSelectionChange()
@@ -1222,9 +1225,9 @@ func (t *Table[T]) RootRows() []T {
 func (t *Table[T]) SetRootRows(rows []T) {
 	t.filteredRows = nil
 	t.Model.SetRootRows(rows)
-	t.selMap = make(map[tid.TID]bool)
+	t.selMap = make(map[uuid.UUID]bool)
 	t.selNeedsPrune = false
-	t.selAnchor = ""
+	t.selAnchor = zeroUUID
 	t.SyncToModel()
 }
 
@@ -1298,7 +1301,7 @@ func (t *Table[T]) heightForColumns(rowData T, row, depth int) float32 {
 	return max(xmath.Ceil(height), t.MinimumRowHeight)
 }
 
-func (t *Table[T]) cellPrefSize(rowData T, row, col int, widthConstraint float32) Size {
+func (t *Table[T]) cellPrefSize(rowData T, row, col int, widthConstraint float32) geom.Size32 {
 	fg, bg, selected, indirectlySelected, focused := t.cellParams(row, col)
 	cell := rowData.ColumnCell(row, col, fg, bg, selected, indirectlySelected, focused).AsPanel()
 	_, size, _ := cell.Sizes(Size{Width: widthConstraint})
@@ -1479,9 +1482,9 @@ func (t *Table[T]) DefaultSizes(_ Size) (minSize, prefSize, maxSize Size) {
 		prefSize.Height += float32((endBeforeRow - startRow) - 1)
 	}
 	if border := t.Border(); border != nil {
-		prefSize = prefSize.Add(border.Insets().Size())
+		prefSize.AddInsets(border.Insets())
 	}
-	prefSize = prefSize.Ceil()
+	prefSize.GrowToInteger()
 	return prefSize, prefSize, prefSize
 }
 
@@ -1496,9 +1499,9 @@ func (t *Table[T]) RowFromIndex(index int) T {
 
 // RowToIndex returns the row's index within the displayed data, or -1 if it isn't currently in the disclosed rows.
 func (t *Table[T]) RowToIndex(rowData T) int {
-	id := rowData.ID()
+	id := rowData.UUID()
 	for row, data := range t.rowCache {
-		if data.row.ID() == id {
+		if data.row.UUID() == id {
 			return row
 		}
 	}
@@ -1512,14 +1515,14 @@ func (t *Table[T]) LastRowIndex() int {
 
 // ScrollRowIntoView scrolls the row at the given index into view.
 func (t *Table[T]) ScrollRowIntoView(row int) {
-	if frame := t.RowFrame(row); !frame.Empty() {
+	if frame := t.RowFrame(row); !frame.IsEmpty() {
 		t.ScrollRectIntoView(frame)
 	}
 }
 
 // ScrollRowCellIntoView scrolls the cell from the row and column at the given indexes into view.
 func (t *Table[T]) ScrollRowCellIntoView(row, col int) {
-	if frame := t.CellFrame(row, col); !frame.Empty() {
+	if frame := t.CellFrame(row, col); !frame.IsEmpty() {
 		t.ScrollRectIntoView(frame)
 	}
 }

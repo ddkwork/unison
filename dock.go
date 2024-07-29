@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -13,16 +13,14 @@ import (
 	"fmt"
 
 	"github.com/richardwilkes/toolbox"
-	"github.com/richardwilkes/unison/enums/paintstyle"
-	"github.com/richardwilkes/unison/enums/side"
 )
 
 // DefaultDockTheme holds the default DockTheme values for Docks. Modifying this data will not alter existing Docks, but
 // will alter any Docks created in the future.
 var DefaultDockTheme = DockTheme{
-	BackgroundInk: ThemeSurface,
-	GripInk:       ThemeSurfaceEdge,
-	DropAreaInk:   ThemeWarning,
+	BackgroundInk: BackgroundColor,
+	GripInk:       DividerColor,
+	DropAreaInk:   DropAreaColor,
 	GripCount:     5,
 	GripGap:       1,
 	GripWidth:     4,
@@ -57,9 +55,9 @@ func (d *DockTheme) DrawHorizontalGripper(canvas *Canvas, r Rect) {
 	gripLength := d.DockGripLength()
 	x := r.X + (r.Width-d.GripWidth)/2
 	y := r.Y + (r.Height-gripLength)/2
-	paint := d.GripInk.Paint(canvas, r, paintstyle.Fill)
+	paint := d.GripInk.Paint(canvas, r, Fill)
 	for yy := y; yy < y+gripLength; yy += d.GripHeight + d.GripGap {
-		canvas.DrawRect(Rect{Point: Point{X: x, Y: yy}, Size: Size{Width: d.GripWidth, Height: d.GripHeight}}, paint)
+		canvas.DrawRect(NewRect(x, yy, d.GripWidth, d.GripHeight), paint)
 	}
 	x = r.X + 0.5
 	canvas.DrawLine(x, r.Y, x, r.Bottom(), paint)
@@ -72,9 +70,9 @@ func (d *DockTheme) DrawVerticalGripper(canvas *Canvas, r Rect) {
 	gripLength := d.DockGripLength()
 	x := r.X + (r.Width-gripLength)/2
 	y := r.Y + (r.Height-d.GripWidth)/2
-	paint := d.GripInk.Paint(canvas, r, paintstyle.Fill)
+	paint := d.GripInk.Paint(canvas, r, Fill)
 	for xx := x; xx < x+gripLength; xx += d.GripHeight + d.GripGap {
-		canvas.DrawRect(Rect{Point: Point{X: xx, Y: y}, Size: Size{Width: d.GripHeight, Height: d.GripWidth}}, paint)
+		canvas.DrawRect(NewRect(xx, y, d.GripHeight, d.GripWidth), paint)
 	}
 	y = r.Y + 0.5
 	canvas.DrawLine(r.X, y, r.Right(), y, paint)
@@ -84,17 +82,17 @@ func (d *DockTheme) DrawVerticalGripper(canvas *Canvas, r Rect) {
 
 // Dock provides an area where Dockable panels can be displayed and rearranged.
 type Dock struct {
-	layout             *DockLayout
-	MaximizedContainer *DockContainer
-	dragDockable       Dockable
-	dragOverNode       DockLayoutNode
-	dividerDragLayout  *DockLayout
-	DragKey            string
-	DockTheme
 	Panel
+	DockTheme
+	layout                     *DockLayout
+	MaximizedContainer         *DockContainer
+	DragKey                    string
+	dragDockable               Dockable
+	dragOverNode               DockLayoutNode
+	dividerDragLayout          *DockLayout
 	dividerDragInitialPosition float32
 	dividerDragEventPosition   float32
-	dragSide                   side.Enum
+	dragSide                   Side
 	dividerDragIsValid         bool
 }
 
@@ -133,7 +131,7 @@ func (d *Dock) RootDockLayout() *DockLayout {
 
 // DockTo a Dockable within this Dock. If the Dockable already exists in this Dock, it will be moved to the new
 // location. nil may be passed in for the target, in which case the top-most layout is used.
-func (d *Dock) DockTo(dockable Dockable, target DockLayoutNode, side side.Enum) {
+func (d *Dock) DockTo(dockable Dockable, target DockLayoutNode, side Side) {
 	if toolbox.IsNil(target) {
 		target = d.layout
 	}
@@ -189,7 +187,7 @@ func (d *Dock) DockTo(dockable Dockable, target DockLayoutNode, side side.Enum) 
 // DefaultDraw fills in the background.
 func (d *Dock) DefaultDraw(gc *Canvas, _ Rect) {
 	rect := d.ContentRect(true)
-	gc.DrawRect(rect, d.BackgroundInk.Paint(gc, rect, paintstyle.Fill))
+	gc.DrawRect(rect, d.BackgroundInk.Paint(gc, rect, Fill))
 }
 
 // DefaultDrawOver draws the dividers and any drag markers.
@@ -200,11 +198,11 @@ func (d *Dock) DefaultDrawOver(gc *Canvas, dirty Rect) {
 	if d.dragDockable != nil && d.dragOverNode != nil {
 		r := d.dragOverNode.FrameRect()
 		switch d.dragSide {
-		case side.Top:
+		case TopSide:
 			r.Height = max(r.Height/2, 1)
-		case side.Left:
+		case LeftSide:
 			r.Width = max(r.Width/2, 1)
-		case side.Bottom:
+		case BottomSide:
 			half := max(r.Height/2, 1)
 			r.Y += r.Height - half
 			r.Height = half
@@ -213,11 +211,11 @@ func (d *Dock) DefaultDrawOver(gc *Canvas, dirty Rect) {
 			r.X += r.Width - half
 			r.Width = half
 		}
-		paint := d.DropAreaInk.Paint(gc, r, paintstyle.Fill)
+		paint := d.DropAreaInk.Paint(gc, r, Fill)
 		paint.SetColorFilter(Alpha30Filter())
 		gc.DrawRect(r, paint)
-		r = r.Inset(NewUniformInsets(1))
-		p := d.DropAreaInk.Paint(gc, r, paintstyle.Stroke)
+		r.InsetUniform(1)
+		p := d.DropAreaInk.Paint(gc, r, Stroke)
 		p.SetStrokeWidth(2)
 		gc.DrawRect(r, p)
 	}
@@ -225,7 +223,7 @@ func (d *Dock) DefaultDrawOver(gc *Canvas, dirty Rect) {
 
 func (d *Dock) drawDividers(canvas *Canvas, layout *DockLayout, clip Rect) {
 	frame := layout.FrameRect()
-	frame = frame.Inset(NewUniformInsets(1))
+	frame.Inset(NewUniformInsets(1))
 	if clip.Intersects(frame) {
 		if layout.Full() {
 			r := layout.nodes[1].FrameRect()
@@ -315,7 +313,7 @@ func (d *Dock) overNode(node DockLayoutNode, where Point) DockLayoutNode {
 
 func dockLayoutNodeContains(node DockLayoutNode, where Point) bool {
 	if node != nil {
-		return where.In(node.FrameRect())
+		return node.FrameRect().ContainsPoint(where)
 	}
 	return false
 }
@@ -398,18 +396,18 @@ func (d *Dock) updateDragDockable(where Point, data map[string]any) {
 			var extent float32
 			r := d.dragOverNode.FrameRect()
 			if where.X < r.CenterX() {
-				d.dragSide = side.Left
+				d.dragSide = LeftSide
 				extent = where.X - r.X
 			} else {
-				d.dragSide = side.Right
+				d.dragSide = RightSide
 				extent = r.Width - (where.X - r.X)
 			}
 			if where.Y < r.CenterY() {
 				if extent > where.Y-r.Y {
-					d.dragSide = side.Top
+					d.dragSide = TopSide
 				}
 			} else if extent > r.Height-(where.Y-r.Y) {
-				d.dragSide = side.Bottom
+				d.dragSide = BottomSide
 			}
 			d.dragDockable = dockable
 		}

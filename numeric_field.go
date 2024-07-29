@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -14,6 +14,7 @@ import (
 	"strings"
 	"unicode"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xmath"
 )
@@ -81,7 +82,7 @@ func (f *NumericField[T]) DefaultFocusLost() {
 // DefaultRuneTyped is the default implementation for the RuneTypedCallback.
 func (f *NumericField[T]) DefaultRuneTyped(ch rune) bool {
 	if !unicode.IsControl(ch) {
-		if _, err := f.Extract(strings.TrimSpace(string(f.RunesIfPasted([]rune{ch})))); err != nil {
+		if _, e := (f.Extract(strings.TrimSpace(string(f.RunesIfPasted([]rune{ch}))))); e != nil {
 			Beep()
 			return false
 		}
@@ -101,8 +102,8 @@ func (f *NumericField[T]) DefaultValidate() bool {
 
 func (f *NumericField[T]) tooltipTextForValidation() string {
 	s := strings.TrimSpace(f.Text())
-	v, err := f.Extract(s)
-	if err != nil || s == "-" || s == "+" {
+	v := mylog.Check2(f.Extract(s))
+	if s == "-" || s == "+" {
 		return i18n.Text("Invalid value")
 	}
 	if minimum := f.minimum; v < minimum {

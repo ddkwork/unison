@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -16,6 +16,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/grandcat/zeroconf"
 	"github.com/richardwilkes/toolbox/collection/dict"
 	"github.com/richardwilkes/toolbox/errs"
@@ -24,15 +25,15 @@ import (
 
 // PrintManager holds the data needed by the print manager.
 type PrintManager struct {
-	printers map[string]*Printer
 	lock     sync.RWMutex
+	printers map[string]*Printer
 }
 
 // LookupPrinter returns a printer by ID, or nil if it is not in our currently discovered set.
 func (p *PrintManager) LookupPrinter(id PrinterID) *Printer {
 	p.lock.RLock()
 	defer p.lock.RUnlock()
-	return p.printers[id.ID]
+	return p.printers[id.UUID]
 }
 
 // Printers returns the previously discovered available printers, sorted by name.
@@ -44,7 +45,7 @@ func (p *PrintManager) Printers() []*Printer {
 		if result := txt.NaturalCmp(a.Name, b.Name, true); result != 0 {
 			return result
 		}
-		return txt.NaturalCmp(a.ID, b.ID, true)
+		return txt.NaturalCmp(a.UUID, b.UUID, true)
 	})
 	return printers
 }
@@ -56,14 +57,11 @@ func (p *PrintManager) ScanForPrinters(ctx context.Context, printers chan<- *Pri
 	p.lock.Lock()
 	p.printers = make(map[string]*Printer)
 	p.lock.Unlock()
-	resolver, err := zeroconf.NewResolver()
-	if err != nil {
-		errs.Log(errs.NewWithCause("unable to create zeroconf resolver", err))
-		return
-	}
+	resolver := mylog.Check2(zeroconf.NewResolver())
+
 	entries := make(chan *zeroconf.ServiceEntry, 8)
 	go p.collectPrinters(ctx, entries, printers)
-	if err = resolver.Browse(ctx, "_ipp._tcp", "local.", entries); err != nil {
+	if mylog.Check(resolver.Browse(ctx, "_ipp._tcp", "local.", entries)); err != nil {
 		errs.Log(errs.NewWithCause("browsing for printers failed", err))
 	}
 }
@@ -95,7 +93,7 @@ func (p *PrintManager) collectPrinters(ctx context.Context, in <-chan *zeroconf.
 		}
 		printer := &Printer{
 			PrinterID: PrinterID{
-				ID:   id,
+				UUID: id,
 				Name: m["ty"],
 				Host: strings.TrimSuffix(entry.HostName, "."),
 				Port: entry.Port,
@@ -108,7 +106,7 @@ func (p *PrintManager) collectPrinters(ctx context.Context, in <-chan *zeroconf.
 			httpClient:       &http.Client{},
 		}
 		p.lock.Lock()
-		p.printers[printer.ID] = printer
+		p.printers[printer.UUID] = printer
 		p.lock.Unlock()
 		if out != nil {
 			out <- printer

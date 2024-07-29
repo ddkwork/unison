@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -11,7 +11,6 @@ package demo
 
 import (
 	"github.com/richardwilkes/unison"
-	"github.com/richardwilkes/unison/enums/paintstyle"
 )
 
 var (
@@ -21,14 +20,14 @@ var (
 
 // DockablePanel provides a sample dockable panel.
 type DockablePanel struct {
-	Text string
-	Tip  string
 	unison.Panel
-	Color unison.Color
+	Text  string
+	Tip   string
+	Color unison.Ink
 }
 
 // NewDockablePanel creates a new sample dockable panel.
-func NewDockablePanel(title, tip string, background unison.Color) *DockablePanel {
+func NewDockablePanel(title, tip string, background unison.Ink) *DockablePanel {
 	d := &DockablePanel{
 		Text:  title,
 		Tip:   tip,
@@ -49,11 +48,11 @@ func NewDockablePanel(title, tip string, background unison.Color) *DockablePanel
 }
 
 func (d *DockablePanel) draw(gc *unison.Canvas, rect unison.Rect) {
-	gc.DrawRect(rect, d.Color.Paint(gc, rect, paintstyle.Fill))
+	gc.DrawRect(rect, d.Color.Paint(gc, rect, unison.Fill))
 	if d.Focused() {
 		txt := unison.NewText("Focused", &unison.TextDecoration{
-			Font:            unison.EmphasizedSystemFont,
-			OnBackgroundInk: d.Color.On(),
+			Font:       unison.EmphasizedSystemFont,
+			Foreground: unison.Black,
 		})
 		r := d.ContentRect(false)
 		size := txt.Extents()

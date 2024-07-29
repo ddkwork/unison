@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -13,58 +13,57 @@ import (
 	"fmt"
 	"slices"
 
-	"github.com/richardwilkes/toolbox"
+	"github.com/ddkwork/golibrary/mylog"
+	"github.com/richardwilkes/toolbox/collection/slice"
 	"github.com/richardwilkes/toolbox/i18n"
-	"github.com/richardwilkes/unison/enums/align"
-	"github.com/richardwilkes/unison/enums/check"
-	"github.com/richardwilkes/unison/enums/paintstyle"
-	"github.com/richardwilkes/unison/enums/slant"
 )
 
 // DefaultPopupMenuTheme holds the default PopupMenuTheme values for PopupMenus. Modifying this data will not alter
 // existing PopupMenus, but will alter any PopupMenus created in the future.
 var DefaultPopupMenuTheme = PopupMenuTheme{
-	TextDecoration: TextDecoration{
-		Font:            SystemFont,
-		BackgroundInk:   ThemeAboveSurface,
-		OnBackgroundInk: ThemeOnAboveSurface,
-	},
-	EdgeInk:        ThemeSurfaceEdge,
-	SelectionInk:   ThemeFocus,
-	OnSelectionInk: ThemeOnFocus,
-	CornerRadius:   4,
-	HMargin:        8,
-	VMargin:        1,
+	Font:            SystemFont,
+	BackgroundInk:   ControlColor,
+	OnBackgroundInk: OnControlColor,
+	EdgeInk:         ControlEdgeColor,
+	SelectionInk:    SelectionColor,
+	OnSelectionInk:  OnSelectionColor,
+	CornerRadius:    4,
+	HMargin:         8,
+	VMargin:         1,
 }
 
 // PopupMenuTheme holds theming data for a PopupMenu.
 type PopupMenuTheme struct {
-	EdgeInk        Ink
-	SelectionInk   Ink
-	OnSelectionInk Ink
-	TextDecoration
-	CornerRadius float32
-	HMargin      float32
-	VMargin      float32
+	Font            Font
+	BackgroundInk   Ink
+	OnBackgroundInk Ink
+	EdgeInk         Ink
+	SelectionInk    Ink
+	OnSelectionInk  Ink
+	CornerRadius    float32
+	HMargin         float32
+	VMargin         float32
 }
 
 type popupMenuItem[T comparable] struct {
 	item      T
+	textCache TextCache
 	enabled   bool
 	separator bool
 }
 
 // PopupMenu represents a clickable button that displays a menu of choices.
 type PopupMenu[T comparable] struct {
+	Panel
+	PopupMenuTheme
 	MenuFactory              MenuFactory
 	WillShowMenuCallback     func(popup *PopupMenu[T])
 	ChoiceMadeCallback       func(popup *PopupMenu[T], index int, item T)
 	SelectionChangedCallback func(popup *PopupMenu[T])
 	items                    []*popupMenuItem[T]
 	selection                map[int]bool
-	PopupMenuTheme
-	Panel
-	pressed bool
+	textCache                TextCache
+	pressed                  bool
 }
 
 // NewPopupMenu creates a new PopupMenu.
@@ -91,13 +90,10 @@ func NewPopupMenu[T comparable]() *PopupMenu[T] {
 
 // DefaultSizes provides the default sizing.
 func (p *PopupMenu[T]) DefaultSizes(hint Size) (minSize, prefSize, maxSize Size) {
-	prefSize, _ = LabelContentSizes(nil, nil, p.Font, 0, 0)
+	prefSize = LabelSize(p.textCache.Text("M", p.Font), nil, 0, 0)
 	for _, one := range p.items {
 		if !one.separator {
-			size, _ := LabelContentSizes(NewText(fmt.Sprintf("%v", one.item), &TextDecoration{
-				Font:            p.Font,
-				OnBackgroundInk: p.OnBackgroundInk,
-			}), nil, p.Font, 0, 0)
+			size := LabelSize(one.textCache.Text(fmt.Sprintf("%v", one.item), p.Font), nil, 0, 0)
 			if prefSize.Width < size.Width {
 				prefSize.Width = size.Width
 			}
@@ -107,11 +103,12 @@ func (p *PopupMenu[T]) DefaultSizes(hint Size) (minSize, prefSize, maxSize Size)
 		}
 	}
 	if border := p.Border(); border != nil {
-		prefSize = prefSize.Add(border.Insets().Size())
+		prefSize.AddInsets(border.Insets())
 	}
 	prefSize.Height += p.VMargin*2 + 2
 	prefSize.Width += p.HMargin*2 + 2 + prefSize.Height*0.75
-	prefSize = prefSize.Ceil().ConstrainForHint(hint)
+	prefSize.GrowToInteger()
+	prefSize.ConstrainForHint(hint)
 	maxSize.Width = max(DefaultMaxSize, prefSize.Width)
 	maxSize.Height = prefSize.Height
 	return prefSize, prefSize, maxSize
@@ -126,14 +123,12 @@ func (p *PopupMenu[T]) DefaultFocusGained() {
 // DefaultDraw provides the default drawing.
 func (p *PopupMenu[T]) DefaultDraw(canvas *Canvas, _ Rect) {
 	thickness := float32(1)
-	edge := p.EdgeInk
 	if p.Focused() || p.pressed {
 		thickness++
-		edge = p.SelectionInk
 	}
 	rect := p.ContentRect(false)
-	DrawRoundedRectBase(canvas, rect, p.CornerRadius, thickness, p.BackgroundInk, edge)
-	rect = rect.Inset(NewUniformInsets(1.5))
+	DrawRoundedRectBase(canvas, rect, p.CornerRadius, thickness, p.BackgroundInk, p.EdgeInk)
+	rect.InsetUniform(1.5)
 	rect.X += p.HMargin
 	rect.Y += p.VMargin
 	rect.Width -= p.HMargin * 2
@@ -141,15 +136,14 @@ func (p *PopupMenu[T]) DefaultDraw(canvas *Canvas, _ Rect) {
 	triWidth := rect.Height * 0.75
 	triHeight := triWidth / 2
 	rect.Width -= triWidth
-	DrawLabel(canvas, rect, align.Start, align.Middle, p.Font, p.textObj(), p.OnBackgroundInk, nil, nil, 0, 0,
-		!p.Enabled())
+	DrawLabel(canvas, rect, StartAlignment, MiddleAlignment, p.textObj(), p.OnBackgroundInk, nil, 0, 0, !p.Enabled())
 	rect.Width += triWidth + p.HMargin/2
 	path := NewPath()
 	path.MoveTo(rect.Right(), rect.Y+(rect.Height-triHeight)/2)
 	path.LineTo(rect.Right()-triWidth, rect.Y+(rect.Height-triHeight)/2)
 	path.LineTo(rect.Right()-triWidth/2, rect.Y+(rect.Height-triHeight)/2+triHeight)
 	path.Close()
-	paint := p.OnBackgroundInk.Paint(canvas, rect, paintstyle.Fill)
+	paint := p.OnBackgroundInk.Paint(canvas, rect, Fill)
 	if !p.Enabled() {
 		paint.SetColorFilter(Grayscale30Filter())
 	}
@@ -163,17 +157,11 @@ func (p *PopupMenu[T]) textObj() *Text {
 		return nil
 	case 1:
 		one := p.items[indexes[0]]
-		return NewText(fmt.Sprintf("%v", one.item), &TextDecoration{
-			Font:            p.Font,
-			OnBackgroundInk: p.OnBackgroundInk,
-		})
+		return one.textCache.Text(fmt.Sprintf("%v", one.item), p.Font)
 	default:
 		desc := p.Font.Descriptor()
-		desc.Slant = slant.Italic
-		return NewText(i18n.Text("Multiple"), &TextDecoration{
-			Font:            desc.Font(),
-			OnBackgroundInk: p.OnBackgroundInk,
-		})
+		desc.Slant = ItalicSlant
+		return NewText(i18n.Text("Multiple"), &TextDecoration{Font: desc.Font()})
 	}
 }
 
@@ -193,7 +181,7 @@ func (p *PopupMenu[T]) Text() string {
 // Click performs any animation associated with a click and triggers the popup menu to appear.
 func (p *PopupMenu[T]) Click() {
 	if p.WillShowMenuCallback != nil {
-		toolbox.Call(func() { p.WillShowMenuCallback(p) })
+		mylog.Call(func() { p.WillShowMenuCallback(p) })
 	}
 	hasItem := false
 	m := p.MenuFactory.NewMenu(PopupMenuTemporaryBaseID, "", nil)
@@ -217,15 +205,15 @@ func (p *PopupMenu[T]) Click() {
 
 func (p *PopupMenu[T]) createMenuItem(m Menu, index int, entry *popupMenuItem[T]) MenuItem {
 	item := m.Factory().NewItem(PopupMenuTemporaryBaseID+index+1,
-		fmt.Sprintf("%v", entry.item), KeyBinding{}, func(_ MenuItem) bool {
+		fmt.Sprintf("%v", entry.item), KeyBinding{}, func(mi MenuItem) bool {
 			return entry.enabled
-		}, func(_ MenuItem) {
+		}, func(mi MenuItem) {
 			if p.ChoiceMadeCallback != nil {
 				p.ChoiceMadeCallback(p, index, p.items[index].item)
 			}
 		})
 	if p.selection[index] {
-		item.SetCheckState(check.On)
+		item.SetCheckState(OnCheckState)
 	}
 	return item
 }
@@ -290,7 +278,7 @@ func (p *PopupMenu[T]) RemoveItemAt(index int) {
 		length := len(p.items)
 		if index < length {
 			indexes := p.SelectedIndexes()
-			p.items = slices.Delete(p.items, index, index+1)
+			p.items = slice.ZeroedDelete(p.items, index, index+1)
 			for _, one := range indexes {
 				if one >= index {
 					delete(p.selection, one)
@@ -403,7 +391,7 @@ func (p *PopupMenu[T]) DefaultMouseDown(_ Point, _, _ int, _ Modifiers) bool {
 
 // DefaultMouseDrag is the default implementation of the MouseDragCallback.
 func (p *PopupMenu[T]) DefaultMouseDrag(where Point, _ int, _ Modifiers) bool {
-	if p.pressed != where.In(p.ContentRect(true)) {
+	if p.pressed != p.ContentRect(true).ContainsPoint(where) {
 		p.pressed = !p.pressed
 		p.MarkForRedraw()
 	}
@@ -412,7 +400,7 @@ func (p *PopupMenu[T]) DefaultMouseDrag(where Point, _ int, _ Modifiers) bool {
 
 // DefaultMouseUp is the default implementation of the MouseUpCallback.
 func (p *PopupMenu[T]) DefaultMouseUp(where Point, _ int, _ Modifiers) bool {
-	if where.In(p.ContentRect(true)) {
+	if p.ContentRect(true).ContainsPoint(where) {
 		p.Click()
 	}
 	p.pressed = false
@@ -431,8 +419,5 @@ func (p *PopupMenu[T]) DefaultKeyDown(keyCode KeyCode, mod Modifiers, _ bool) bo
 
 // DefaultUpdateCursor provides the default cursor for popup menus.
 func (p *PopupMenu[T]) DefaultUpdateCursor(_ Point) *Cursor {
-	if !p.Enabled() {
-		return ArrowCursor()
-	}
 	return PointingCursor()
 }

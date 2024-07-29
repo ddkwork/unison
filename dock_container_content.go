@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -60,17 +60,20 @@ func (d *dockContainerContent) SetCurrentIndex(index int) {
 func (d *dockContainerContent) LayoutSizes(_ *Panel, hint Size) (minSize, prefSize, maxSize Size) {
 	for _, c := range d.Children() {
 		min2, pref2, max2 := c.AsPanel().Sizes(hint)
-		minSize = minSize.Max(min2)
-		prefSize = prefSize.Max(pref2)
-		maxSize = maxSize.Max(max2)
+		minSize.Max(min2)
+		prefSize.Max(pref2)
+		maxSize.Max(max2)
 	}
 	if b := d.Border(); b != nil {
-		insets := b.Insets().Size()
-		minSize = minSize.Add(insets)
-		prefSize = prefSize.Add(insets)
-		maxSize = maxSize.Add(insets)
+		insets := b.Insets()
+		minSize.AddInsets(insets)
+		prefSize.AddInsets(insets)
+		maxSize.AddInsets(insets)
 	}
-	return minSize.Ceil(), prefSize.Ceil(), maxSize.Ceil()
+	minSize.GrowToInteger()
+	prefSize.GrowToInteger()
+	maxSize.GrowToInteger()
+	return minSize, prefSize, maxSize
 }
 
 func (d *dockContainerContent) PerformLayout(_ *Panel) {

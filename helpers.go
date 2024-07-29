@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -11,32 +11,30 @@ package unison
 
 import (
 	"strings"
-
-	"github.com/richardwilkes/unison/enums/paintstyle"
 )
 
 // DrawRectBase fills and strokes a rectangle.
 func DrawRectBase(canvas *Canvas, rect Rect, fillInk, strokeInk Ink) {
-	canvas.DrawRect(rect, fillInk.Paint(canvas, rect, paintstyle.Fill))
-	rect = rect.Inset(NewUniformInsets(0.5))
-	canvas.DrawRect(rect, strokeInk.Paint(canvas, rect, paintstyle.Stroke))
+	canvas.DrawRect(rect, fillInk.Paint(canvas, rect, Fill))
+	rect.InsetUniform(0.5)
+	canvas.DrawRect(rect, strokeInk.Paint(canvas, rect, Stroke))
 }
 
 // DrawRoundedRectBase fills and strokes a rounded rectangle.
 func DrawRoundedRectBase(canvas *Canvas, rect Rect, cornerRadius, thickness float32, fillInk, strokeInk Ink) {
-	canvas.DrawRoundedRect(rect, cornerRadius, cornerRadius, fillInk.Paint(canvas, rect, paintstyle.Fill))
-	rect = rect.Inset(NewUniformInsets(thickness / 2))
+	canvas.DrawRoundedRect(rect, cornerRadius, cornerRadius, fillInk.Paint(canvas, rect, Fill))
+	rect.InsetUniform(thickness / 2)
 	cornerRadius = max(cornerRadius-thickness/2, 0)
-	p := strokeInk.Paint(canvas, rect, paintstyle.Stroke)
+	p := strokeInk.Paint(canvas, rect, Stroke)
 	p.SetStrokeWidth(thickness)
 	canvas.DrawRoundedRect(rect, cornerRadius, cornerRadius, p)
 }
 
 // DrawEllipseBase fills and strokes an ellipse.
 func DrawEllipseBase(canvas *Canvas, rect Rect, thickness float32, fillInk, strokeInk Ink) {
-	canvas.DrawOval(rect, fillInk.Paint(canvas, rect, paintstyle.Fill))
-	rect = rect.Inset(NewUniformInsets(thickness / 2))
-	p := strokeInk.Paint(canvas, rect, paintstyle.Stroke)
+	canvas.DrawOval(rect, fillInk.Paint(canvas, rect, Fill))
+	rect.InsetUniform(thickness / 2)
+	p := strokeInk.Paint(canvas, rect, Stroke)
 	p.SetStrokeWidth(thickness)
 	canvas.DrawOval(rect, p)
 }

@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -12,9 +12,17 @@ package unison
 import (
 	"runtime"
 
-	"github.com/richardwilkes/unison/enums/blendmode"
-	"github.com/richardwilkes/unison/enums/invertstyle"
 	"github.com/richardwilkes/unison/internal/skia"
+)
+
+// InvertStyle holds the type inversion.
+type InvertStyle int32
+
+// Possible values for InvertStyle.
+const (
+	NoInvert InvertStyle = iota
+	InvertBrightness
+	InvertLightness
 )
 
 // ColorFilter is called with source colors and return new colors, which are then passed onto the next stage.
@@ -43,7 +51,7 @@ func (f *ColorFilter) filterOrNil() skia.ColorFilter {
 }
 
 // NewBlendColorFilter returns a new blend color filter.
-func NewBlendColorFilter(color Color, blendMode blendmode.Enum) *ColorFilter {
+func NewBlendColorFilter(color Color, blendMode BlendMode) *ColorFilter {
 	return newColorFilter(skia.ColorFilterNewMode(skia.Color(color), skia.BlendMode(blendMode)))
 }
 
@@ -74,12 +82,38 @@ func NewLumaColorFilter() *ColorFilter {
 }
 
 // NewHighContrastColorFilter returns a new high contrast color filter.
-func NewHighContrastColorFilter(contrast float32, style invertstyle.Enum, grayscale bool) *ColorFilter {
+func NewHighContrastColorFilter(contrast float32, style InvertStyle, grayscale bool) *ColorFilter {
 	return newColorFilter(skia.ColorFilterNewHighContrast(&skia.HighContrastConfig{
 		Grayscale:   grayscale,
 		InvertStyle: skia.InvertStyle(style),
 		Contrast:    contrast,
 	}))
+}
+
+// NewARGBTableColorFilter returns a new ARGB table color filter. Each of a, r, g, and b should be 256 bytes long. If
+// shorter than that, they will be expanded to 256 and the new locations will be set to 0.
+func NewARGBTableColorFilter(a, r, g, b []byte) *ColorFilter {
+	if len(a) < 256 {
+		a1 := make([]byte, 256)
+		copy(a1, a)
+		a = a1
+	}
+	if len(r) < 256 {
+		r1 := make([]byte, 256)
+		copy(r1, r)
+		r = r1
+	}
+	if len(g) < 256 {
+		g1 := make([]byte, 256)
+		copy(g1, g)
+		g = g1
+	}
+	if len(b) < 256 {
+		b1 := make([]byte, 256)
+		copy(b1, b)
+		b = b1
+	}
+	return newColorFilter(skia.ColorFilterNewTableARGB(a, r, g, b))
 }
 
 // NewAlphaFilter returns a new ColorFilter that applies an alpha blend.
@@ -115,14 +149,4 @@ func Alpha30Filter() *ColorFilter {
 		alpha30Filter = NewAlphaFilter(0.3)
 	}
 	return alpha30Filter
-}
-
-var alpha50Filter *ColorFilter
-
-// Alpha50Filter returns a ColorFilter that transforms colors by applying a 50% alpha blend.
-func Alpha50Filter() *ColorFilter {
-	if alpha50Filter == nil {
-		alpha50Filter = NewAlphaFilter(0.5)
-	}
-	return alpha50Filter
 }

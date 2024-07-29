@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
+// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -12,10 +12,9 @@ package demo
 import (
 	"fmt"
 
-	"github.com/richardwilkes/toolbox/tid"
+	"github.com/ddkwork/golibrary/mylog"
+	"github.com/google/uuid"
 	"github.com/richardwilkes/unison"
-	"github.com/richardwilkes/unison/enums/align"
-	"github.com/richardwilkes/unison/enums/behavior"
 )
 
 const topLevelRowsToMake = 100
@@ -26,10 +25,7 @@ var tableCounter int
 func NewDemoTableWindow(where unison.Point) (*unison.Window, error) {
 	// Create the window
 	tableCounter++
-	wnd, err := unison.NewWindow(fmt.Sprintf("Table #%d", tableCounter))
-	if err != nil {
-		return nil, err
-	}
+	wnd := mylog.Check2(unison.NewWindow(fmt.Sprintf("Table #%d", tableCounter)))
 
 	// Install our menus
 	installDefaultMenus(wnd)
@@ -53,7 +49,7 @@ func NewDemoTableWindow(where unison.Point) (*unison.Window, error) {
 	for i := range rows {
 		row := &demoRow{
 			table: table,
-			id:    tid.MustNewTID('a'),
+			id:    uuid.New(),
 			text:  fmt.Sprintf("Row %d", i+1),
 			text2: fmt.Sprintf("Some longer content for Row %d", i+1),
 		}
@@ -68,7 +64,7 @@ func NewDemoTableWindow(where unison.Point) (*unison.Window, error) {
 				child := &demoRow{
 					table:  table,
 					parent: row,
-					id:     tid.MustNewTID('a'),
+					id:     uuid.New(),
 					text:   fmt.Sprintf("Sub Row %d", j+1),
 				}
 				row.children[j] = child
@@ -80,7 +76,7 @@ func NewDemoTableWindow(where unison.Point) (*unison.Window, error) {
 						child.children[k] = &demoRow{
 							table:  table,
 							parent: child,
-							id:     tid.MustNewTID('a'),
+							id:     uuid.New(),
 							text:   fmt.Sprintf("Sub Sub Row %d", k+1),
 						}
 					}
@@ -102,18 +98,18 @@ func NewDemoTableWindow(where unison.Point) (*unison.Window, error) {
 		unison.NewTableColumnHeader[*demoRow]("xyz", ""),
 	)
 	header.SetLayoutData(&unison.FlexLayoutData{
-		HAlign: align.Fill,
-		VAlign: align.Fill,
+		HAlign: unison.FillAlignment,
+		VAlign: unison.FillAlignment,
 		HGrab:  true,
 	})
 	content.AddChild(header)
 
 	// Create a scroll panel and place a table panel inside it
 	scrollArea := unison.NewScrollPanel()
-	scrollArea.SetContent(table, behavior.Fill, behavior.Fill)
+	scrollArea.SetContent(table, unison.FillBehavior, unison.FillBehavior)
 	scrollArea.SetLayoutData(&unison.FlexLayoutData{
-		HAlign: align.Fill,
-		VAlign: align.Fill,
+		HAlign: unison.FillAlignment,
+		VAlign: unison.FillAlignment,
 		HGrab:  true,
 		VGrab:  true,
 	})
