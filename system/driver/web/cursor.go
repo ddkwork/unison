@@ -8,7 +8,7 @@ import (
 
 	"cogentcore.org/core/cursors"
 	"cogentcore.org/core/enums"
-	"cogentcore.org/core/system"
+	"github.com/richardwilkes/unison/system"
 )
 
 var TheCursor = &Cursor{CursorBase: system.CursorBase{Vis: true, Size: 32}}

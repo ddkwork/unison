@@ -5,7 +5,7 @@ import (
 
 	"cogentcore.org/core/events"
 	"cogentcore.org/core/math32"
-	"cogentcore.org/core/system"
+	"github.com/richardwilkes/unison/system"
 )
 
 type WindowSingle[A AppSingler] struct {

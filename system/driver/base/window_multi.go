@@ -4,7 +4,7 @@ import (
 	"image"
 
 	"cogentcore.org/core/events"
-	"cogentcore.org/core/system"
+	"github.com/richardwilkes/unison/system"
 )
 
 type WindowMulti[A system.App, D system.Drawer] struct {

@@ -9,12 +9,12 @@ import (
 
 	"cogentcore.org/core/base/errors"
 	"cogentcore.org/core/events"
-	"cogentcore.org/core/system"
 	"cogentcore.org/core/system/driver/base"
 	"cogentcore.org/core/vgpu"
 	"cogentcore.org/core/vgpu/vdraw"
 	"github.com/ddkwork/golibrary/mylog"
 	vk "github.com/goki/vulkan"
+	"github.com/richardwilkes/unison/system"
 )
 
 func Init() {

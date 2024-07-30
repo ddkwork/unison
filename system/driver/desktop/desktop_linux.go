@@ -9,9 +9,9 @@ import (
 
 	"cogentcore.org/core/base/errors"
 	"cogentcore.org/core/base/fileinfo/mimedata"
-	"cogentcore.org/core/system"
 	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/unison/internal/glfw"
+	"github.com/richardwilkes/unison/system"
 )
 
 func (a *App) Platform() system.Platforms {

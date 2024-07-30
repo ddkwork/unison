@@ -7,7 +7,7 @@ import (
 	"syscall/js"
 	"unsafe"
 
-	"cogentcore.org/core/system"
+	"github.com/richardwilkes/unison/system"
 )
 
 type Drawer struct {

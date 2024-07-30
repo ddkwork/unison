@@ -3,7 +3,7 @@ package base
 import (
 	"slices"
 
-	"cogentcore.org/core/system"
+	"github.com/richardwilkes/unison/system"
 )
 
 type AppMulti[W system.Window] struct {

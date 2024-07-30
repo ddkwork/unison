@@ -6,8 +6,8 @@ import (
 
 	"cogentcore.org/core/base/errors"
 	"cogentcore.org/core/events"
-	"cogentcore.org/core/system"
 	"cogentcore.org/core/system/driver/base"
+	"github.com/richardwilkes/unison/system"
 )
 
 func Init() {

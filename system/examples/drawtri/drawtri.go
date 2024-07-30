@@ -8,10 +8,10 @@ import (
 
 	"cogentcore.org/core/cursors"
 	"cogentcore.org/core/events"
-	"cogentcore.org/core/system"
 	_ "cogentcore.org/core/system/driver"
 	"cogentcore.org/core/vgpu"
 	"github.com/ddkwork/golibrary/mylog"
+	"github.com/richardwilkes/unison/system"
 )
 
 //go:embed *.spv

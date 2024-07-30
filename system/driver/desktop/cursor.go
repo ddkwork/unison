@@ -5,9 +5,9 @@ import (
 
 	"cogentcore.org/core/cursors/cursorimg"
 	"cogentcore.org/core/enums"
-	"cogentcore.org/core/system"
 	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/unison/internal/glfw"
+	"github.com/richardwilkes/unison/system"
 )
 
 var TheCursor = &Cursor{CursorBase: system.CursorBase{Vis: true, Size: 32}, Cursors: map[enums.Enum]map[int]*glfw.Cursor{}}

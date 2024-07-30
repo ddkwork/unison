@@ -8,7 +8,7 @@ import (
 	"unsafe"
 
 	"cogentcore.org/core/base/fileinfo/mimedata"
-	"cogentcore.org/core/system"
+	"github.com/richardwilkes/unison/system"
 )
 
 var TheClipboard = &Clipboard{}

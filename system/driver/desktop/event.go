@@ -7,8 +7,8 @@ import (
 	"cogentcore.org/core/events"
 	"cogentcore.org/core/events/key"
 	"cogentcore.org/core/math32"
-	"cogentcore.org/core/system"
 	"github.com/richardwilkes/unison/internal/glfw"
+	"github.com/richardwilkes/unison/system"
 )
 
 func GlfwMods(mod glfw.ModifierKey) key.Modifiers {

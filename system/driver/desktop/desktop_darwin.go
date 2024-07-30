@@ -13,8 +13,8 @@ import (
 
 	"cogentcore.org/core/base/errors"
 	"cogentcore.org/core/base/fileinfo/mimedata"
-	"cogentcore.org/core/system"
 	"github.com/ddkwork/golibrary/mylog"
+	"github.com/richardwilkes/unison/system"
 )
 
 func SetThreadPri(p float64) error {

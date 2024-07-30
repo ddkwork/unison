@@ -3,7 +3,7 @@ package offscreen
 import (
 	"image"
 
-	"cogentcore.org/core/system"
+	"github.com/richardwilkes/unison/system"
 )
 
 type Drawer struct {

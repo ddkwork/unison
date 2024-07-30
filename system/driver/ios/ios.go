@@ -13,7 +13,7 @@ import (
 
 	"cogentcore.org/core/events"
 	"cogentcore.org/core/styles"
-	"cogentcore.org/core/system"
+	"github.com/richardwilkes/unison/system"
 )
 
 func (a *App) MainLoop() {

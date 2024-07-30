@@ -16,11 +16,11 @@ import (
 
 	"cogentcore.org/core/events"
 	"cogentcore.org/core/styles"
-	"cogentcore.org/core/system"
 	"cogentcore.org/core/system/driver/base"
 	"cogentcore.org/core/system/driver/mobile/callfn"
 	"cogentcore.org/core/system/driver/mobile/mobileinit"
 	"github.com/ddkwork/golibrary/mylog"
+	"github.com/richardwilkes/unison/system"
 )
 
 var mimeMap = map[string]string{

@@ -5,12 +5,12 @@ import (
 	"runtime"
 
 	"cogentcore.org/core/base/errors"
-	"cogentcore.org/core/system"
 	"cogentcore.org/core/system/driver/base"
 	"cogentcore.org/core/vgpu"
 	"cogentcore.org/core/vgpu/vdraw"
 	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/unison/internal/glfw"
+	"github.com/richardwilkes/unison/system"
 
 	vk "github.com/goki/vulkan"
 )

@@ -6,7 +6,7 @@ import (
 	"cogentcore.org/core/events"
 	"cogentcore.org/core/math32"
 	"cogentcore.org/core/styles"
-	"cogentcore.org/core/system"
+	"github.com/richardwilkes/unison/system"
 )
 
 type AppSingle[D system.Drawer, W system.Window] struct {

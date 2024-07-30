@@ -5,12 +5,12 @@ import (
 	"log"
 
 	"cogentcore.org/core/events"
-	"cogentcore.org/core/system"
 	"cogentcore.org/core/system/driver/base"
 	"cogentcore.org/core/vgpu/vdraw"
 	"github.com/ddkwork/golibrary/mylog"
 	vk "github.com/goki/vulkan"
 	"github.com/richardwilkes/unison/internal/glfw"
+	"github.com/richardwilkes/unison/system"
 )
 
 type Window struct {

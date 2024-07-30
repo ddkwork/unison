@@ -8,7 +8,7 @@ import (
 	"cogentcore.org/core/base/errors"
 	"cogentcore.org/core/events/key"
 	"cogentcore.org/core/styles"
-	"cogentcore.org/core/system"
+	"github.com/richardwilkes/unison/system"
 )
 
 type App struct {
