@@ -10,11 +10,19 @@
 package unison_test
 
 import (
+	"os"
 	"testing"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/toolbox/check"
 	"github.com/richardwilkes/unison"
 )
+
+func TestName(t *testing.T) {
+	t.Skip()
+	os.Chdir("system")
+	mylog.FormatAllFilesNoComments()
+}
 
 func TestUndo(t *testing.T) {
 	mgr := unison.NewUndoManager(5, func(err error) { t.Error(err) })

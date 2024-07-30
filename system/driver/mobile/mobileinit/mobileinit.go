@@ -1,0 +1,3 @@
+package mobileinit
+
+import "C"
