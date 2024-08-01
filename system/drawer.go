@@ -6,6 +6,7 @@ import (
 	"image/draw"
 
 	"cogentcore.org/core/math32"
+	"github.com/richardwilkes/unison/internal/skia"
 )
 
 const (
@@ -30,7 +31,7 @@ type Drawer interface {
 	Fill(clr color.Color, src2dst math32.Matrix3, reg image.Rectangle, op draw.Op) error
 	StartFill() bool
 	EndFill()
-	Surface() any
+	Surface() skia.Surface
 	SetFrameImage(idx int, fb any)
 }
 
