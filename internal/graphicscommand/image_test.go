@@ -65,9 +65,7 @@ func TestClear(t *testing.T) {
 			Region: image.Rect(0, 0, w, h),
 		},
 	}))
-	err != nil{
-		t.Fatal(err),
-	}
+
 	for j := 0; j < h/2; j++ {
 		for i := 0; i < w/2; i++ {
 			idx := 4 * (i + w*j)
@@ -120,9 +118,7 @@ func TestShader(t *testing.T) {
 			Region: image.Rect(0, 0, w, h),
 		},
 	}))
-	err != nil{
-		t.Fatal(err),
-	}
+
 	for j := 0; j < h; j++ {
 		for i := 0; i < w; i++ {
 			idx := 4 * (i + w*j)
