@@ -16,8 +16,7 @@
 
 package gamepad
 
-type nativeGamepadsImpl struct {
-}
+type nativeGamepadsImpl struct{}
 
 func newNativeGamepadsImpl() nativeGamepads {
 	return &nativeGamepadsImpl{}

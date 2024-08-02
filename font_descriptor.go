@@ -14,6 +14,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/fatal"
 	"github.com/richardwilkes/toolbox/txt"
@@ -63,7 +64,7 @@ func (fd *FontDescriptor) UnmarshalText(text []byte) error {
 	fd.Slant = slant.Extract(parts[len(parts)-1])
 	fd.Spacing = spacing.Extract(parts[len(parts)-2])
 	fd.Weight = weight.Extract(parts[len(parts)-3])
-	size, err := strconv.ParseFloat(parts[len(parts)-4], 32)
+	size := mylog.Check2(strconv.ParseFloat(parts[len(parts)-4], 32))
 	if err != nil || size <= 0 {
 		return errs.Newf("invalid font descriptor: %s", string(text))
 	}

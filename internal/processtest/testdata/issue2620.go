@@ -17,6 +17,7 @@
 package main
 
 import (
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -35,7 +36,7 @@ func (g *Game) Layout(width, height int) (int, int) {
 
 func main() {
 	ebiten.SetRunnableOnUnfocused(false)
-	if err := ebiten.RunGame(&Game{}); err != nil {
+	if mylog.Check(ebiten.RunGame(&Game{})); err != nil {
 		panic(err)
 	}
 }

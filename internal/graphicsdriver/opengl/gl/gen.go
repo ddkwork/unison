@@ -22,23 +22,25 @@ import (
 	"os"
 	"reflect"
 	"strings"
+
+	"github.com/ddkwork/golibrary/mylog"
 )
 
 func main() {
-	if err := run(); err != nil {
+	if mylog.Check(run()); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 }
 
 func run() error {
-	f, err := os.Create("debug.go")
+	f := mylog.Check2(os.Create("debug.go"))
 
 	defer f.Close()
 
 	out := bufio.NewWriter(f)
 
-	if _, err := fmt.Fprintf(out, `// Copyright 2023 The Ebitengine Authors
+	if _ := mylog.Check2(fmt.Fprintf(out, `// Copyright 2023 The Ebitengine Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -68,7 +70,7 @@ type DebugContext struct {
 }
 
 var _ Context = (*DebugContext)(nil)
-`, "//go:build !playstation5"); err != nil {
+`, "//go:build !playstation5")); err != nil {
 		return err
 	}
 
@@ -92,50 +94,50 @@ var _ Context = (*DebugContext)(nil)
 			outNames = append(outNames, fmt.Sprintf("out%d", j))
 		}
 
-		if _, err := fmt.Fprintf(out, "\nfunc (d *DebugContext) %s(%s) (%s) {\n", name, strings.Join(argNamesAndTypes, ", "), strings.Join(outTypes, ",")); err != nil {
+		if _ := mylog.Check2(fmt.Fprintf(out, "\nfunc (d *DebugContext) %s(%s) (%s) {\n", name, strings.Join(argNamesAndTypes, ", "), strings.Join(outTypes, ","))); err != nil {
 			return err
 		}
 		if len(outTypes) > 0 {
-			if _, err := fmt.Fprintf(out, "\t%s := ", strings.Join(outNames, ", ")); err != nil {
+			if _ := mylog.Check2(fmt.Fprintf(out, "\t%s := ", strings.Join(outNames, ", "))); err != nil {
 				return err
 			}
 		} else {
-			if _, err := fmt.Fprintf(out, "\t"); err != nil {
+			if _ := mylog.Check2(fmt.Fprintf(out, "\t")); err != nil {
 				return err
 			}
 		}
-		if _, err := fmt.Fprintf(out, "d.Context.%s(%s)\n", name, strings.Join(argNames, ", ")); err != nil {
+		if _ := mylog.Check2(fmt.Fprintf(out, "d.Context.%s(%s)\n", name, strings.Join(argNames, ", "))); err != nil {
 			return err
 		}
 
 		// Print logs.
 		if name != "LoadFunctions" && name != "IsES" {
-			if _, err := fmt.Fprintf(out, "\tfmt.Fprintln(os.Stderr, %q)\n", name); err != nil {
+			if _ := mylog.Check2(fmt.Fprintf(out, "\tfmt.Fprintln(os.Stderr, %q)\n", name)); err != nil {
 				return err
 			}
 		}
 
 		// Check errors.
 		if name != "LoadFunctions" && name != "IsES" && name != "GetError" {
-			if _, err := fmt.Fprintf(out, `	if e := d.Context.GetError(); e != NO_ERROR {
+			if _ := mylog.Check2(fmt.Fprintf(out, `	if e := d.Context.GetError(); e != NO_ERROR {
 		panic(fmt.Sprintf("gl: GetError() returned %%d at %s", e))
 	}
-`, name); err != nil {
+`, name)); err != nil {
 				return err
 			}
 		}
 
 		if len(outTypes) > 0 {
-			if _, err := fmt.Fprintf(out, "\treturn %s\n", strings.Join(outNames, ", ")); err != nil {
+			if _ := mylog.Check2(fmt.Fprintf(out, "\treturn %s\n", strings.Join(outNames, ", "))); err != nil {
 				return err
 			}
 		}
-		if _, err := fmt.Fprintf(out, "}\n"); err != nil {
+		if _ := mylog.Check2(fmt.Fprintf(out, "}\n")); err != nil {
 			return err
 		}
 	}
 
-	if err := out.Flush(); err != nil {
+	if mylog.Check(out.Flush()); err != nil {
 		return err
 	}
 

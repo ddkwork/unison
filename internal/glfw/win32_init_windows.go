@@ -7,9 +7,11 @@ package glfw
 
 import (
 	"errors"
+	"unsafe"
+
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/unison/internal/microsoftgdk"
 	"github.com/richardwilkes/unison/internal/winver"
-	"unsafe"
 
 	"golang.org/x/sys/windows"
 )
@@ -198,7 +200,7 @@ func updateKeyNamesWin32() {
 }
 
 func createHelperWindow() error {
-	h, err := _CreateWindowExW(_WS_EX_OVERLAPPEDWINDOW, _GLFW_WNDCLASSNAME, "GLFW message window", _WS_CLIPSIBLINGS|_WS_CLIPCHILDREN, 0, 0, 1, 1, 0, 0, _glfw.platformWindow.instance, nil)
+	h := mylog.Check2(_CreateWindowExW(_WS_EX_OVERLAPPEDWINDOW, _GLFW_WNDCLASSNAME, "GLFW message window", _WS_CLIPSIBLINGS|_WS_CLIPCHILDREN, 0, 0, 1, 1, 0, 0, _glfw.platformWindow.instance, nil))
 
 	_glfw.platformWindow.helperWindowHandle = h
 
@@ -219,7 +221,7 @@ func createHelperWindow() error {
 		dbi.dbcc_size = uint32(unsafe.Sizeof(dbi))
 		dbi.dbcc_devicetype = _DBT_DEVTYP_DEVICEINTERFACE
 		dbi.dbcc_classguid = _GUID_DEVINTERFACE_HID
-		notify, err := _RegisterDeviceNotificationW(windows.Handle(_glfw.platformWindow.helperWindowHandle), unsafe.Pointer(&dbi), _DEVICE_NOTIFY_WINDOW_HANDLE)
+		notify := mylog.Check2(_RegisterDeviceNotificationW(windows.Handle(_glfw.platformWindow.helperWindowHandle), unsafe.Pointer(&dbi), _DEVICE_NOTIFY_WINDOW_HANDLE))
 
 		_glfw.platformWindow.deviceNotificationHandle = notify
 	}
@@ -236,9 +238,9 @@ func createHelperWindow() error {
 func createBlankCursor() error {
 	// HACK: Create a transparent cursor as using the NULL cursor breaks
 	//       using SetCursorPos when connected over RDP
-	cursorWidth, err := _GetSystemMetrics(_SM_CXCURSOR)
+	cursorWidth := mylog.Check2(_GetSystemMetrics(_SM_CXCURSOR))
 
-	cursorHeight, err := _GetSystemMetrics(_SM_CYCURSOR)
+	cursorHeight := mylog.Check2(_GetSystemMetrics(_SM_CYCURSOR))
 
 	andMask := make([]byte, cursorWidth*cursorHeight/8)
 	for i := range andMask {
@@ -260,7 +262,7 @@ func initRemoteSession() error {
 	}
 
 	// Check if the current progress was started with Remote Desktop.
-	r, err := _GetSystemMetrics(_SM_REMOTESESSION)
+	r := mylog.Check2(_GetSystemMetrics(_SM_REMOTESESSION))
 
 	_glfw.platformWindow.isRemoteSession = r > 0
 
@@ -268,7 +270,7 @@ func initRemoteSession() error {
 	// if cannot be moved to center in capture mode. If not Remote Desktop platformWindow.blankCursor stays nil
 	// and will perform has before (normal).
 	if _glfw.platformWindow.isRemoteSession {
-		if err := createBlankCursor(); err != nil {
+		if mylog.Check(createBlankCursor()); err != nil {
 			return err
 		}
 	}
@@ -280,7 +282,7 @@ func platformInit() error {
 	// Changing the foreground lock timeout was removed from the original code.
 	// See https://github.com/glfw/glfw/commit/58b48a3a00d9c2a5ca10cc23069a71d8773cc7a4
 
-	m, err := _GetModuleHandleExW(_GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS|_GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, unsafe.Pointer(&_glfw))
+	m := mylog.Check2(_GetModuleHandleExW(_GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS|_GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, unsafe.Pointer(&_glfw)))
 
 	_glfw.platformWindow.instance = _HINSTANCE(m)
 
@@ -294,18 +296,18 @@ func platformInit() error {
 			_ = _SetProcessDpiAwarenessContext(_DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2)
 		}
 	} else if winver.IsWindows8Point1OrGreater() {
-		if err := _SetProcessDpiAwareness(_PROCESS_PER_MONITOR_DPI_AWARE); err != nil && !errors.Is(err, handleError(windows.E_ACCESSDENIED)) {
+		if mylog.Check(_SetProcessDpiAwareness(_PROCESS_PER_MONITOR_DPI_AWARE)); err != nil && !errors.Is(err, handleError(windows.E_ACCESSDENIED)) {
 			return err
 		}
 	} else if winver.IsWindowsVistaOrGreater() {
 		_SetProcessDPIAware()
 	}
 
-	if err := registerWindowClassWin32(); err != nil {
+	if mylog.Check(registerWindowClassWin32()); err != nil {
 		return err
 	}
 
-	if err := createHelperWindow(); err != nil {
+	if mylog.Check(createHelperWindow()); err != nil {
 		return err
 	}
 	if microsoftgdk.IsXbox() {
@@ -324,15 +326,15 @@ func platformInit() error {
 			name:  "Xbox Monitor",
 			modes: []*VidMode{mode},
 		}
-		if err := inputMonitor(m, Connected, _GLFW_INSERT_LAST); err != nil {
+		if mylog.Check(inputMonitor(m, Connected, _GLFW_INSERT_LAST)); err != nil {
 			return err
 		}
 	} else {
 		// Some hacks are needed to support Remote Desktop...
-		if err := initRemoteSession(); err != nil {
+		if mylog.Check(initRemoteSession()); err != nil {
 			return err
 		}
-		if err := pollMonitorsWin32(); err != nil {
+		if mylog.Check(pollMonitorsWin32()); err != nil {
 			return err
 		}
 	}
@@ -341,13 +343,13 @@ func platformInit() error {
 
 func platformTerminate() error {
 	if _glfw.platformWindow.blankCursor != 0 {
-		if err := _DestroyCursor(_glfw.platformWindow.blankCursor); err != nil {
+		if mylog.Check(_DestroyCursor(_glfw.platformWindow.blankCursor)); err != nil {
 			return err
 		}
 	}
 
 	if _glfw.platformWindow.deviceNotificationHandle != 0 {
-		if err := _UnregisterDeviceNotification(_glfw.platformWindow.deviceNotificationHandle); err != nil {
+		if mylog.Check(_UnregisterDeviceNotification(_glfw.platformWindow.deviceNotificationHandle)); err != nil {
 			return err
 		}
 	}
@@ -356,13 +358,13 @@ func platformTerminate() error {
 		if !microsoftgdk.IsXbox() {
 			// An error 'invalid window handle' can occur without any specific reasons (#2551).
 			// As there is nothing to do, just ignore this error.
-			if err := _DestroyWindow(_glfw.platformWindow.helperWindowHandle); err != nil && !errors.Is(err, windows.ERROR_INVALID_WINDOW_HANDLE) {
+			if mylog.Check(_DestroyWindow(_glfw.platformWindow.helperWindowHandle)); err != nil && !errors.Is(err, windows.ERROR_INVALID_WINDOW_HANDLE) {
 				return err
 			}
 		}
 	}
 
-	if err := unregisterWindowClassWin32(); err != nil {
+	if mylog.Check(unregisterWindowClassWin32()); err != nil {
 		return err
 	}
 

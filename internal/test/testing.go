@@ -12,12 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package testing
+package test
 
 import (
 	"os"
 	"testing"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -44,8 +45,6 @@ func MainWithRunLoop(m *testing.M) {
 		m:    m,
 		code: 1,
 	}
-	if err := ebiten.RunGame(g); err != nil {
-		panic(err)
-	}
+	mylog.Check(ebiten.RunGame(g))
 	os.Exit(g.code)
 }

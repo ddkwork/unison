@@ -16,6 +16,8 @@ package hook
 
 import (
 	"sync"
+
+	"github.com/ddkwork/golibrary/mylog"
 )
 
 var m sync.Mutex
@@ -35,7 +37,7 @@ func RunBeforeUpdateHooks() error {
 	defer m.Unlock()
 
 	for _, f := range onBeforeUpdateHooks {
-		if err := f(); err != nil {
+		if mylog.Check(f()); err != nil {
 			return err
 		}
 	}

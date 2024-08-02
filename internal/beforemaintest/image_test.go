@@ -15,12 +15,14 @@
 package beforemiantest_test
 
 import (
-	"github.com/richardwilkes/unison/internal/atlas"
 	"image/color"
 	"os"
 	"runtime"
 	"testing"
 	"time"
+
+	"github.com/ddkwork/golibrary/mylog"
+	"github.com/richardwilkes/unison/internal/atlas"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )
@@ -73,7 +75,7 @@ func TestMain(m *testing.M) {
 		m:     m,
 		endCh: endCh,
 	}
-	if err := ebiten.RunGame(g); err != nil {
+	if mylog.Check(ebiten.RunGame(g)); err != nil {
 		panic(err)
 	}
 

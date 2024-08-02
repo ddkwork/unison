@@ -12,6 +12,7 @@ package unison
 import (
 	"time"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/unison/enums/blendmode"
 	"github.com/richardwilkes/unison/enums/imgfmt"
@@ -243,11 +244,8 @@ func (w *Well) Click() {
 func (w *Well) DefaultFileDrop(files []string) {
 	for _, one := range files {
 		if imageSpec := imgfmt.Distill(one); imageSpec != "" {
-			img, err := w.loadImage(imageSpec)
-			if err != nil {
-				errs.Log(err, "spec", imageSpec)
-				continue
-			}
+			img := mylog.Check2(w.loadImage(imageSpec))
+
 			if w.ValidateImageCallback != nil {
 				img = w.ValidateImageCallback(img)
 			}

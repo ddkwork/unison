@@ -18,9 +18,11 @@ package unison
 
 import (
 	stdcontext "context"
+	"runtime"
+
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/unison/internal/graphicscommand"
 	"github.com/richardwilkes/unison/internal/thread"
-	"runtime"
 
 	"golang.org/x/sync/errgroup"
 )
@@ -54,7 +56,6 @@ func (u *UserInterface) runMultiThread(game Game, options *RunOptions) error {
 	wg.Go(func() error {
 		defer cancel()
 
-		var err error
 		u.mainThread.Call(func() {
 			if err1 := u.initOnMainThread(options); err1 != nil {
 				err = err1
@@ -81,11 +82,11 @@ func (u *UserInterface) runSingleThread(game Game, options *RunOptions) error {
 
 	u.context = newContext(game)
 
-	if err := u.initOnMainThread(options); err != nil {
+	if mylog.Check(u.initOnMainThread(options)); err != nil {
 		return err
 	}
 
-	if err := u.loopGame(); err != nil {
+	if mylog.Check(u.loopGame()); err != nil {
 		return err
 	}
 

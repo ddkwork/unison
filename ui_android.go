@@ -88,14 +88,14 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/ebitengine/gomobile/app"
 )
 
-type graphicsDriverCreatorImpl struct {
-}
+type graphicsDriverCreatorImpl struct{}
 
 func (g *graphicsDriverCreatorImpl) newAuto() (graphicsdriver.Graphics, GraphicsLibrary, error) {
-	graphics, err := g.newOpenGL()
+	graphics := mylog.Check2(g.newOpenGL())
 	return graphics, GraphicsLibraryOpenGL, err
 }
 
@@ -117,11 +117,11 @@ func (*graphicsDriverCreatorImpl) newPlayStation5() (graphicsdriver.Graphics, er
 
 func deviceScaleFactorImpl() float64 {
 	var s float64
-	if err := app.RunOnJVM(func(vm, env, ctx uintptr) error {
+	if mylog.Check(app.RunOnJVM(func(vm, env, ctx uintptr) error {
 		// TODO: This might be crash when this is called from init(). How can we detect this?
 		s = float64(C.deviceScale(C.uintptr_t(vm), C.uintptr_t(env), C.uintptr_t(ctx)))
 		return nil
-	}); err != nil {
+	})); err != nil {
 		panic(fmt.Sprintf("devicescale: error %v", err))
 	}
 	return s

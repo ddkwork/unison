@@ -5,12 +5,14 @@
 
 package glfw
 
+import "github.com/ddkwork/golibrary/mylog"
+
 func (t *tls) create() error {
 	if t.platform.allocated {
 		panic("glfw: TLS must not be allocated")
 	}
 
-	i, err := _TlsAlloc()
+	i := mylog.Check2(_TlsAlloc())
 
 	t.platform.index = i
 	t.platform.allocated = true
@@ -19,7 +21,7 @@ func (t *tls) create() error {
 
 func (t *tls) destroy() error {
 	if t.platform.allocated {
-		if err := _TlsFree(t.platform.index); err != nil {
+		if mylog.Check(_TlsFree(t.platform.index)); err != nil {
 			return err
 		}
 	}

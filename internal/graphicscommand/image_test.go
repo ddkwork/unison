@@ -15,31 +15,28 @@
 package graphicscommand_test
 
 import (
-	"fmt"
-	"github.com/richardwilkes/unison/internal/builtinshader"
-	"github.com/richardwilkes/unison/internal/graphics"
-	"github.com/richardwilkes/unison/internal/graphicscommand"
-	"github.com/richardwilkes/unison/internal/graphicsdriver"
+	"github.com/richardwilkes/unison/internal/test"
 	"image"
 	"image/color"
 	"testing"
 
-	etesting "github.com/hajimehoshi/ebiten/v2/internal/testing"
-	"github.com/hajimehoshi/ebiten/v2/internal/ui"
+	"github.com/ddkwork/golibrary/mylog"
+	"github.com/richardwilkes/unison/internal/builtinshader"
+	"github.com/richardwilkes/unison/internal/graphics"
+	"github.com/richardwilkes/unison/internal/graphicscommand"
+	"github.com/richardwilkes/unison/internal/graphicsdriver"
 )
 
 var nearestFilterShader *graphicscommand.Shader
 
 func init() {
-	ir, err := graphics.CompileShader([]byte(builtinshader.ShaderSource(builtinshader.FilterNearest, builtinshader.AddressUnsafe, false)))
-	if err != nil {
-		panic(fmt.Sprintf("graphicscommand: compiling the nearest shader failed: %v", err))
-	}
+	ir := mylog.Check2(graphics.CompileShader([]byte(builtinshader.ShaderSource(builtinshader.FilterNearest, builtinshader.AddressUnsafe, false))))
+
 	nearestFilterShader = graphicscommand.NewShader(ir)
 }
 
 func TestMain(m *testing.M) {
-	etesting.MainWithRunLoop(m)
+	test.MainWithRunLoop(m)
 }
 
 func quadVertices(w, h float32) []float32 {
@@ -62,12 +59,12 @@ func TestClear(t *testing.T) {
 	dst.DrawTriangles([graphics.ShaderSrcImageCount]*graphicscommand.Image{src}, vs, is, graphicsdriver.BlendClear, dr, [graphics.ShaderSrcImageCount]image.Rectangle{}, nearestFilterShader, nil, graphicsdriver.FillRuleFillAll)
 
 	pix := make([]byte, 4*w*h)
-	if err := dst.ReadPixels(ui.Get().GraphicsDriverForTesting(), []graphicsdriver.PixelsArgs{
+	if mylog.Check(dst.ReadPixels(ui.Get().GraphicsDriverForTesting(), []graphicsdriver.PixelsArgs{
 		{
 			Pixels: pix,
 			Region: image.Rect(0, 0, w, h),
 		},
-	}); err != nil {
+	})); err != nil {
 		t.Fatal(err)
 	}
 	for j := 0; j < h/2; j++ {
@@ -112,16 +109,16 @@ func TestShader(t *testing.T) {
 	dst.DrawTriangles([graphics.ShaderSrcImageCount]*graphicscommand.Image{clr}, vs, is, graphicsdriver.BlendClear, dr, [graphics.ShaderSrcImageCount]image.Rectangle{}, nearestFilterShader, nil, graphicsdriver.FillRuleFillAll)
 
 	g := ui.Get().GraphicsDriverForTesting()
-	s := graphicscommand.NewShader(etesting.ShaderProgramFill(0xff, 0, 0, 0xff))
+	s := graphicscommand.NewShader(test.ShaderProgramFill(0xff, 0, 0, 0xff))
 	dst.DrawTriangles([graphics.ShaderSrcImageCount]*graphicscommand.Image{}, vs, is, graphicsdriver.BlendSourceOver, dr, [graphics.ShaderSrcImageCount]image.Rectangle{}, s, nil, graphicsdriver.FillRuleFillAll)
 
 	pix := make([]byte, 4*w*h)
-	if err := dst.ReadPixels(g, []graphicsdriver.PixelsArgs{
+	if mylog.Check(dst.ReadPixels(g, []graphicsdriver.PixelsArgs{
 		{
 			Pixels: pix,
 			Region: image.Rect(0, 0, w, h),
 		},
-	}); err != nil {
+	})); err != nil {
 		t.Fatal(err)
 	}
 	for j := 0; j < h; j++ {

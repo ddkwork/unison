@@ -16,10 +16,12 @@ package directx
 
 import (
 	"fmt"
-	"github.com/richardwilkes/unison/internal/graphics"
-	"github.com/richardwilkes/unison/internal/graphicsdriver"
 	"image"
 	"unsafe"
+
+	"github.com/ddkwork/golibrary/mylog"
+	"github.com/richardwilkes/unison/internal/graphics"
+	"github.com/richardwilkes/unison/internal/graphicsdriver"
 )
 
 type image11 struct {
@@ -81,7 +83,7 @@ func (i *image11) ReadPixels(args []graphicsdriver.PixelsArgs) error {
 		unionRegion = unionRegion.Union(a.Region)
 	}
 
-	staging, err := i.graphics.device.CreateTexture2D(&_D3D11_TEXTURE2D_DESC{
+	staging := mylog.Check2(i.graphics.device.CreateTexture2D(&_D3D11_TEXTURE2D_DESC{
 		Width:     uint32(unionRegion.Dx()),
 		Height:    uint32(unionRegion.Dy()),
 		MipLevels: 0,
@@ -95,7 +97,7 @@ func (i *image11) ReadPixels(args []graphicsdriver.PixelsArgs) error {
 		BindFlags:      0,
 		CPUAccessFlags: uint32(_D3D11_CPU_ACCESS_READ),
 		MiscFlags:      0,
-	}, nil)
+	}, nil))
 
 	defer staging.Release()
 
@@ -109,7 +111,7 @@ func (i *image11) ReadPixels(args []graphicsdriver.PixelsArgs) error {
 	})
 
 	var mapped _D3D11_MAPPED_SUBRESOURCE
-	if err := i.graphics.deviceContext.Map(unsafe.Pointer(staging), 0, _D3D11_MAP_READ, 0, &mapped); err != nil {
+	if mylog.Check(i.graphics.deviceContext.Map(unsafe.Pointer(staging), 0, _D3D11_MAP_READ, 0, &mapped)); err != nil {
 		return err
 	}
 
@@ -148,7 +150,7 @@ func (i *image11) WritePixels(args []graphicsdriver.PixelsArgs) error {
 
 func (i *image11) setAsRenderTarget(useStencil bool) error {
 	if i.renderTargetView == nil {
-		rtv, err := i.graphics.device.CreateRenderTargetView(unsafe.Pointer(i.texture), nil)
+		rtv := mylog.Check2(i.graphics.device.CreateRenderTargetView(unsafe.Pointer(i.texture), nil))
 
 		i.renderTargetView = rtv
 	}
@@ -164,7 +166,7 @@ func (i *image11) setAsRenderTarget(useStencil bool) error {
 
 	if i.stencil == nil {
 		w, h := i.internalSize()
-		s, err := i.graphics.device.CreateTexture2D(&_D3D11_TEXTURE2D_DESC{
+		s := mylog.Check2(i.graphics.device.CreateTexture2D(&_D3D11_TEXTURE2D_DESC{
 			Width:     uint32(w),
 			Height:    uint32(h),
 			MipLevels: 0,
@@ -178,13 +180,13 @@ func (i *image11) setAsRenderTarget(useStencil bool) error {
 			BindFlags:      uint32(_D3D11_BIND_DEPTH_STENCIL),
 			CPUAccessFlags: 0,
 			MiscFlags:      0,
-		}, nil)
+		}, nil))
 
 		i.stencil = s
 	}
 
 	if i.stencilView == nil {
-		sv, err := i.graphics.device.CreateDepthStencilView(unsafe.Pointer(i.stencil), nil)
+		sv := mylog.Check2(i.graphics.device.CreateDepthStencilView(unsafe.Pointer(i.stencil), nil))
 
 		i.stencilView = sv
 	}
@@ -197,10 +199,8 @@ func (i *image11) setAsRenderTarget(useStencil bool) error {
 
 func (i *image11) getShaderResourceView() (*_ID3D11ShaderResourceView, error) {
 	if i.shaderResourceView == nil {
-		srv, err := i.graphics.device.CreateShaderResourceView(unsafe.Pointer(i.texture), nil)
-		if err != nil {
-			return nil, err
-		}
+		srv := mylog.Check2(i.graphics.device.CreateShaderResourceView(unsafe.Pointer(i.texture), nil))
+
 		i.shaderResourceView = srv
 	}
 	return i.shaderResourceView, nil

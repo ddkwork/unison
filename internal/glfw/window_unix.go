@@ -62,6 +62,8 @@ import (
 	"image"
 	"sync"
 	"unsafe"
+
+	"github.com/ddkwork/golibrary/mylog"
 )
 
 // Internal window list stuff
@@ -190,7 +192,7 @@ func goWindowContentScaleCB(window unsafe.Pointer, x C.float, y C.float) {
 // This function may only be called from the main thread.
 func DefaultWindowHints() error {
 	C.glfwDefaultWindowHints()
-	if err := fetchErrorIgnoringPlatformError(); err != nil {
+	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
 		return err
 	}
 	return nil
@@ -203,7 +205,7 @@ func DefaultWindowHints() error {
 // This function may only be called from the main thread.
 func WindowHint(target Hint, hint int) error {
 	C.glfwWindowHint(C.int(target), C.int(hint))
-	if err := fetchErrorIgnoringPlatformError(); err != nil {
+	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
 		return err
 	}
 	return nil
@@ -229,7 +231,7 @@ func WindowHintString(hint Hint, value string) error {
 	str := C.CString(value)
 	defer C.free(unsafe.Pointer(str))
 	C.glfwWindowHintString(C.int(hint), str)
-	if err := fetchErrorIgnoringPlatformError(); err != nil {
+	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
 		return err
 	}
 	return nil
@@ -285,7 +287,7 @@ func CreateWindow(width, height int, title string, monitor *Monitor, share *Wind
 
 	w := C.glfwCreateWindow(C.int(width), C.int(height), t, m, s)
 	if w == nil {
-		if err := fetchErrorIgnoringPlatformError(); err != nil {
+		if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
 			return nil, err
 		}
 		return nil, nil
@@ -303,7 +305,7 @@ func CreateWindow(width, height int, title string, monitor *Monitor, share *Wind
 func (w *Window) Destroy() error {
 	windows.remove(w.data)
 	C.glfwDestroyWindow(w.data)
-	if err := fetchErrorIgnoringPlatformError(); err != nil {
+	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
 		return err
 	}
 	return nil
@@ -312,7 +314,7 @@ func (w *Window) Destroy() error {
 // ShouldClose reports the value of the close flag of the specified window.
 func (w *Window) ShouldClose() (bool, error) {
 	ret := C.glfwWindowShouldClose(w.data) != 0
-	if err := fetchErrorIgnoringPlatformError(); err != nil {
+	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
 		return false, err
 	}
 	return ret, nil
@@ -327,7 +329,7 @@ func (w *Window) SetShouldClose(value bool) error {
 	} else {
 		C.glfwSetWindowShouldClose(w.data, C.int(True))
 	}
-	if err := fetchErrorIgnoringPlatformError(); err != nil {
+	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
 		return err
 	}
 	return nil
@@ -340,7 +342,7 @@ func (w *Window) SetTitle(title string) error {
 	t := C.CString(title)
 	defer C.free(unsafe.Pointer(t))
 	C.glfwSetWindowTitle(w.data, t)
-	if err := fetchErrorIgnoringPlatformError(); err != nil {
+	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
 		return err
 	}
 	return nil
@@ -374,7 +376,7 @@ func (w *Window) SetIcon(images []image.Image) error {
 	}
 	C.glfwSetWindowIcon(w.data, C.int(count), p)
 
-	if err := fetchErrorIgnoringPlatformError(); err != nil {
+	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
 		return err
 	}
 	return nil
@@ -385,7 +387,7 @@ func (w *Window) SetIcon(images []image.Image) error {
 func (w *Window) GetPos() (x, y int, err error) {
 	var xpos, ypos C.int
 	C.glfwGetWindowPos(w.data, &xpos, &ypos)
-	if err := fetchErrorIgnoringPlatformError(); err != nil {
+	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
 		return 0, 0, err
 	}
 	return int(xpos), int(ypos), nil
@@ -407,7 +409,7 @@ func (w *Window) GetPos() (x, y int, err error) {
 // This function may only be called from the main thread.
 func (w *Window) SetPos(xpos, ypos int) error {
 	C.glfwSetWindowPos(w.data, C.int(xpos), C.int(ypos))
-	if err := fetchErrorIgnoringPlatformError(); err != nil {
+	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
 		return err
 	}
 	return nil
@@ -418,7 +420,7 @@ func (w *Window) SetPos(xpos, ypos int) error {
 func (w *Window) GetSize() (width, height int, err error) {
 	var wi, h C.int
 	C.glfwGetWindowSize(w.data, &wi, &h)
-	if err := fetchErrorIgnoringPlatformError(); err != nil {
+	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
 		return 0, 0, err
 	}
 	return int(wi), int(h), nil
@@ -436,7 +438,7 @@ func (w *Window) GetSize() (width, height int, err error) {
 // This function may only be called from the main thread.
 func (w *Window) SetSize(width, height int) error {
 	C.glfwSetWindowSize(w.data, C.int(width), C.int(height))
-	if err := fetchErrorIgnoringPlatformError(); err != nil {
+	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
 		return err
 	}
 	return nil
@@ -448,7 +450,7 @@ func (w *Window) SetSize(width, height int) error {
 // The size limits are applied immediately and may cause the window to be resized.
 func (w *Window) SetSizeLimits(minw, minh, maxw, maxh int) error {
 	C.glfwSetWindowSizeLimits(w.data, C.int(minw), C.int(minh), C.int(maxw), C.int(maxh))
-	if err := fetchErrorIgnoringPlatformError(); err != nil {
+	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
 		return err
 	}
 	return nil
@@ -465,7 +467,7 @@ func (w *Window) SetSizeLimits(minw, minh, maxw, maxh int) error {
 // The aspect ratio is applied immediately and may cause the window to be resized.
 func (w *Window) SetAspectRatio(numer, denom int) error {
 	C.glfwSetWindowAspectRatio(w.data, C.int(numer), C.int(denom))
-	if err := fetchErrorIgnoringPlatformError(); err != nil {
+	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
 		return err
 	}
 	return nil
@@ -476,7 +478,7 @@ func (w *Window) SetAspectRatio(numer, denom int) error {
 func (w *Window) GetFramebufferSize() (width, height int, err error) {
 	var wi, h C.int
 	C.glfwGetFramebufferSize(w.data, &wi, &h)
-	if err := fetchErrorIgnoringPlatformError(); err != nil {
+	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
 		return 0, 0, err
 	}
 	return int(wi), int(h), nil
@@ -491,7 +493,7 @@ func (w *Window) GetFramebufferSize() (width, height int, err error) {
 func (w *Window) GetFrameSize() (left, top, right, bottom int, err error) {
 	var l, t, r, b C.int
 	C.glfwGetWindowFrameSize(w.data, &l, &t, &r, &b)
-	if err := fetchErrorIgnoringPlatformError(); err != nil {
+	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
 		return 0, 0, 0, 0, err
 	}
 	return int(l), int(t), int(r), int(b), nil
@@ -600,7 +602,7 @@ func (w *Window) Restore() error {
 // This function may only be called from the main thread.
 func (w *Window) Show() error {
 	C.glfwShowWindow(w.data)
-	if err := fetchErrorIgnoringPlatformError(); err != nil {
+	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
 		return err
 	}
 	return nil
@@ -612,7 +614,7 @@ func (w *Window) Show() error {
 // This function may only be called from the main thread.
 func (w *Window) Hide() error {
 	C.glfwHideWindow(w.data)
-	if err := fetchErrorIgnoringPlatformError(); err != nil {
+	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
 		return err
 	}
 	return nil
@@ -624,7 +626,7 @@ func (w *Window) Hide() error {
 // Returns nil if the window is in windowed mode.
 func (w *Window) GetMonitor() (*Monitor, error) {
 	m := C.glfwGetWindowMonitor(w.data)
-	if err := fetchErrorIgnoringPlatformError(); err != nil {
+	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
 		return nil, err
 	}
 	if m == nil {
@@ -656,7 +658,7 @@ func (w *Window) SetMonitor(monitor *Monitor, xpos, ypos, width, height, refresh
 		m = monitor.data
 	}
 	C.glfwSetWindowMonitor(w.data, m, C.int(xpos), C.int(ypos), C.int(width), C.int(height), C.int(refreshRate))
-	if err := fetchErrorIgnoringPlatformError(); err != nil {
+	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
 		return err
 	}
 	return nil
@@ -666,7 +668,7 @@ func (w *Window) SetMonitor(monitor *Monitor, xpos, ypos, width, height, refresh
 // some related to the window and others to its context.
 func (w *Window) GetAttrib(attrib Hint) (int, error) {
 	ret := int(C.glfwGetWindowAttrib(w.data, C.int(attrib)))
-	if err := fetchErrorIgnoringPlatformError(); err != nil {
+	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
 		return 0, err
 	}
 	return ret, nil
@@ -692,7 +694,7 @@ func (w *Window) SetAttrib(attrib Hint, value int) error {
 // is retained until the window is destroyed. The initial value is nil.
 func (w *Window) SetUserPointer(pointer unsafe.Pointer) error {
 	C.glfwSetWindowUserPointer(w.data, pointer)
-	if err := fetchErrorIgnoringPlatformError(); err != nil {
+	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
 		return err
 	}
 	return nil
@@ -702,7 +704,7 @@ func (w *Window) SetUserPointer(pointer unsafe.Pointer) error {
 // window. The initial value is nil.
 func (w *Window) GetUserPointer() (unsafe.Pointer, error) {
 	ret := C.glfwGetWindowUserPointer(w.data)
-	if err := fetchErrorIgnoringPlatformError(); err != nil {
+	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -722,7 +724,7 @@ func (w *Window) SetPosCallback(cbfun PosCallback) (previous PosCallback, err er
 	} else {
 		C.glfwSetWindowPosCallbackCB(w.data)
 	}
-	if err := fetchErrorIgnoringPlatformError(); err != nil {
+	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
 		return nil, err
 	}
 	return previous, nil
@@ -742,7 +744,7 @@ func (w *Window) SetSizeCallback(cbfun SizeCallback) (previous SizeCallback, err
 	} else {
 		C.glfwSetWindowSizeCallbackCB(w.data)
 	}
-	if err := fetchErrorIgnoringPlatformError(); err != nil {
+	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
 		return nil, err
 	}
 	return previous, nil
@@ -761,7 +763,7 @@ func (w *Window) SetFramebufferSizeCallback(cbfun FramebufferSizeCallback) (prev
 	} else {
 		C.glfwSetFramebufferSizeCallbackCB(w.data)
 	}
-	if err := fetchErrorIgnoringPlatformError(); err != nil {
+	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
 		return nil, err
 	}
 	return previous, nil
@@ -787,7 +789,7 @@ func (w *Window) SetCloseCallback(cbfun CloseCallback) (previous CloseCallback, 
 	} else {
 		C.glfwSetWindowCloseCallbackCB(w.data)
 	}
-	if err := fetchErrorIgnoringPlatformError(); err != nil {
+	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
 		return nil, err
 	}
 	return previous, nil
@@ -829,7 +831,7 @@ func (w *Window) SetContentScaleCallback(cbfun ContentScaleCallback) (ContentSca
 	} else {
 		C.glfwSetWindowContentScaleCallbackCB(w.data)
 	}
-	if err := fetchErrorIgnoringPlatformError(); err != nil {
+	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
 		return nil, err
 	}
 	return previous, nil
@@ -853,7 +855,7 @@ func (w *Window) SetRefreshCallback(cbfun RefreshCallback) (previous RefreshCall
 	} else {
 		C.glfwSetWindowRefreshCallbackCB(w.data)
 	}
-	if err := fetchErrorIgnoringPlatformError(); err != nil {
+	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
 		return nil, err
 	}
 	return previous, nil
@@ -876,7 +878,7 @@ func (w *Window) SetFocusCallback(cbfun FocusCallback) (previous FocusCallback, 
 	} else {
 		C.glfwSetWindowFocusCallbackCB(w.data)
 	}
-	if err := fetchErrorIgnoringPlatformError(); err != nil {
+	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
 		return nil, err
 	}
 	return previous, nil
@@ -895,7 +897,7 @@ func (w *Window) SetIconifyCallback(cbfun IconifyCallback) (previous IconifyCall
 	} else {
 		C.glfwSetWindowIconifyCallbackCB(w.data)
 	}
-	if err := fetchErrorIgnoringPlatformError(); err != nil {
+	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
 		return nil, err
 	}
 	return previous, nil
@@ -912,7 +914,7 @@ func (w *Window) SetClipboardString(str string) error {
 	cp := C.CString(str)
 	defer C.free(unsafe.Pointer(cp))
 	C.glfwSetClipboardString(w.data, cp)
-	if err := fetchErrorIgnoringPlatformError(); err != nil {
+	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
 		return err
 	}
 	return nil
@@ -928,7 +930,7 @@ func (w *Window) SetClipboardString(str string) error {
 func (w *Window) GetClipboardString() (string, error) {
 	cs := C.glfwGetClipboardString(w.data)
 	if cs == nil {
-		if err := fetchErrorIgnoringPlatformError(); err != nil {
+		if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
 			if errors.Is(err, FormatUnavailable) {
 				return "", nil
 			}
@@ -950,7 +952,7 @@ func (w *Window) GetClipboardString() (string, error) {
 // This function may only be called from the main thread.
 func PollEvents() error {
 	C.glfwPollEvents()
-	if err := fetchErrorIgnoringPlatformError(); err != nil {
+	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
 		return err
 	}
 	return nil
@@ -971,7 +973,7 @@ func PollEvents() error {
 // This function may only be called from the main thread.
 func WaitEvents() error {
 	C.glfwWaitEvents()
-	if err := fetchErrorIgnoringPlatformError(); err != nil {
+	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
 		return err
 	}
 	return nil
@@ -1001,7 +1003,7 @@ func WaitEvents() error {
 // Event processing is not required for joystick input to work.
 func WaitEventsTimeout(timeout float64) error {
 	C.glfwWaitEventsTimeout(C.double(timeout))
-	if err := fetchErrorIgnoringPlatformError(); err != nil {
+	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
 		return err
 	}
 	return nil
@@ -1016,7 +1018,7 @@ func WaitEventsTimeout(timeout float64) error {
 // This function may be called from secondary threads.
 func PostEmptyEvent() error {
 	C.glfwPostEmptyEvent()
-	if err := fetchErrorIgnoringPlatformError(); err != nil {
+	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
 		return err
 	}
 	return nil

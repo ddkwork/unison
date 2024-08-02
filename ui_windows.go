@@ -17,13 +17,15 @@ package unison
 import (
 	"errors"
 	"fmt"
+	"runtime"
+	"syscall"
+
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/unison/internal/graphicsdriver"
 	"github.com/richardwilkes/unison/internal/graphicsdriver/directx"
 	"github.com/richardwilkes/unison/internal/graphicsdriver/opengl"
 	"github.com/richardwilkes/unison/internal/microsoftgdk"
 	"github.com/richardwilkes/unison/internal/winver"
-	"runtime"
-	"syscall"
 
 	"golang.org/x/sys/windows"
 
@@ -112,10 +114,8 @@ func (u *UserInterface) adjustWindowPosition(x, y int, monitor *Monitor) (int, i
 	if x < mx {
 		x = mx
 	}
-	t, err := _GetSystemMetrics(_SM_CYCAPTION)
-	if err != nil {
-		panic(err)
-	}
+	t := mylog.Check2(_GetSystemMetrics(_SM_CYCAPTION))
+
 	if y < my+int(t) {
 		y = my + int(t)
 	}
@@ -127,13 +127,8 @@ func initialMonitorByOS() *Monitor {
 		return theMonitors.primaryMonitor()
 	}
 
-	px, py, err := _GetCursorPos()
-	if err != nil {
-		if errors.Is(err, windows.ERROR_ACCESS_DENIED) {
-			return nil
-		}
-		return nil
-	}
+	px, py := mylog.Check3(_GetCursorPos())
+
 	x, y := int(px), int(py)
 
 	// Find the monitor including the cursor.
@@ -158,10 +153,7 @@ func monitorFromWin32Window(w windows.HWND) *Monitor {
 		return nil
 	}
 
-	mi, err := _GetMonitorInfoW(m)
-	if err != nil {
-		panic(err)
-	}
+	mi := mylog.Check2(_GetMonitorInfoW(m))
 
 	x, y := int(mi.rcMonitor.left), int(mi.rcMonitor.top)
 	for _, m := range theMonitors.append(nil) {
@@ -205,7 +197,7 @@ func initializeWindowAfterCreation(w *glfw.Window) error {
 
 func (u *UserInterface) skipTaskbar() error {
 	// S_FALSE is returned when CoInitializeEx is nested. This is a successful case.
-	if err := windows.CoInitializeEx(0, windows.COINIT_MULTITHREADED); err != nil && !errors.Is(err, syscall.Errno(windows.S_FALSE)) {
+	if mylog.Check(windows.CoInitializeEx(0, windows.COINIT_MULTITHREADED)); err != nil && !errors.Is(err, syscall.Errno(windows.S_FALSE)) {
 		return err
 	}
 	// CoUninitialize should be called even when CoInitializeEx returns S_FALSE.
@@ -216,7 +208,7 @@ func (u *UserInterface) skipTaskbar() error {
 	defer t.Release()
 
 	w := u.window.GetWin32Window()
-	if err := t.DeleteTab(w); err != nil {
+	if mylog.Check(t.DeleteTab(w)); err != nil {
 		return err
 	}
 

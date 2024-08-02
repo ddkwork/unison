@@ -16,13 +16,15 @@ package shader
 
 import (
 	"fmt"
-	"github.com/richardwilkes/unison/internal/shaderir"
 	"go/ast"
 	gconstant "go/constant"
 	"go/token"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/ddkwork/golibrary/mylog"
+	"github.com/richardwilkes/unison/internal/shaderir"
 )
 
 func canTruncateToInteger(v gconstant.Value) bool {
@@ -293,28 +295,16 @@ func (cs *compileState) parseExpr(block *block, fname string, expr ast.Expr, mar
 			var finalType shaderir.Type
 			switch callee.BuiltinFunc {
 			case shaderir.BoolF:
-				if err := checkArgsForBoolBuiltinFunc(args, argts); err != nil {
-					cs.addError(e.Pos(), err.Error())
-					return nil, nil, nil, false
-				}
+				mylog.Check(checkArgsForBoolBuiltinFunc(args, argts))
 				finalType = shaderir.Type{Main: shaderir.Bool}
 			case shaderir.IntF:
-				if err := checkArgsForIntBuiltinFunc(args, argts); err != nil {
-					cs.addError(e.Pos(), err.Error())
-					return nil, nil, nil, false
-				}
+				mylog.Check(checkArgsForIntBuiltinFunc(args, argts))
 				finalType = shaderir.Type{Main: shaderir.Int}
 			case shaderir.FloatF:
-				if err := checkArgsForFloatBuiltinFunc(args, argts); err != nil {
-					cs.addError(e.Pos(), err.Error())
-					return nil, nil, nil, false
-				}
+				mylog.Check(checkArgsForFloatBuiltinFunc(args, argts))
 				finalType = shaderir.Type{Main: shaderir.Float}
 			case shaderir.Vec2F:
-				if err := checkArgsForVec2BuiltinFunc(args, argts); err != nil {
-					cs.addError(e.Pos(), err.Error())
-					return nil, nil, nil, false
-				}
+				mylog.Check(checkArgsForVec2BuiltinFunc(args, argts))
 				for i := range args {
 					if args[i].Const == nil {
 						continue
@@ -324,10 +314,7 @@ func (cs *compileState) parseExpr(block *block, fname string, expr ast.Expr, mar
 				}
 				finalType = shaderir.Type{Main: shaderir.Vec2}
 			case shaderir.Vec3F:
-				if err := checkArgsForVec3BuiltinFunc(args, argts); err != nil {
-					cs.addError(e.Pos(), err.Error())
-					return nil, nil, nil, false
-				}
+				mylog.Check(checkArgsForVec3BuiltinFunc(args, argts))
 				for i := range args {
 					if args[i].Const == nil {
 						continue
@@ -337,10 +324,7 @@ func (cs *compileState) parseExpr(block *block, fname string, expr ast.Expr, mar
 				}
 				finalType = shaderir.Type{Main: shaderir.Vec3}
 			case shaderir.Vec4F:
-				if err := checkArgsForVec4BuiltinFunc(args, argts); err != nil {
-					cs.addError(e.Pos(), err.Error())
-					return nil, nil, nil, false
-				}
+				mylog.Check(checkArgsForVec4BuiltinFunc(args, argts))
 				for i := range args {
 					if args[i].Const == nil {
 						continue
@@ -350,28 +334,16 @@ func (cs *compileState) parseExpr(block *block, fname string, expr ast.Expr, mar
 				}
 				finalType = shaderir.Type{Main: shaderir.Vec4}
 			case shaderir.IVec2F:
-				if err := checkArgsForIVec2BuiltinFunc(args, argts); err != nil {
-					cs.addError(e.Pos(), err.Error())
-					return nil, nil, nil, false
-				}
+				mylog.Check(checkArgsForIVec2BuiltinFunc(args, argts))
 				finalType = shaderir.Type{Main: shaderir.IVec2}
 			case shaderir.IVec3F:
-				if err := checkArgsForIVec3BuiltinFunc(args, argts); err != nil {
-					cs.addError(e.Pos(), err.Error())
-					return nil, nil, nil, false
-				}
+				mylog.Check(checkArgsForIVec3BuiltinFunc(args, argts))
 				finalType = shaderir.Type{Main: shaderir.IVec3}
 			case shaderir.IVec4F:
-				if err := checkArgsForIVec4BuiltinFunc(args, argts); err != nil {
-					cs.addError(e.Pos(), err.Error())
-					return nil, nil, nil, false
-				}
+				mylog.Check(checkArgsForIVec4BuiltinFunc(args, argts))
 				finalType = shaderir.Type{Main: shaderir.IVec4}
 			case shaderir.Mat2F:
-				if err := checkArgsForMat2BuiltinFunc(args, argts); err != nil {
-					cs.addError(e.Pos(), err.Error())
-					return nil, nil, nil, false
-				}
+				mylog.Check(checkArgsForMat2BuiltinFunc(args, argts))
 				for i := range args {
 					if args[i].Const == nil {
 						continue
@@ -381,10 +353,7 @@ func (cs *compileState) parseExpr(block *block, fname string, expr ast.Expr, mar
 				}
 				finalType = shaderir.Type{Main: shaderir.Mat2}
 			case shaderir.Mat3F:
-				if err := checkArgsForMat3BuiltinFunc(args, argts); err != nil {
-					cs.addError(e.Pos(), err.Error())
-					return nil, nil, nil, false
-				}
+				mylog.Check(checkArgsForMat3BuiltinFunc(args, argts))
 				for i := range args {
 					if args[i].Const == nil {
 						continue
@@ -394,10 +363,7 @@ func (cs *compileState) parseExpr(block *block, fname string, expr ast.Expr, mar
 				}
 				finalType = shaderir.Type{Main: shaderir.Mat3}
 			case shaderir.Mat4F:
-				if err := checkArgsForMat4BuiltinFunc(args, argts); err != nil {
-					cs.addError(e.Pos(), err.Error())
-					return nil, nil, nil, false
-				}
+				mylog.Check(checkArgsForMat4BuiltinFunc(args, argts))
 				for i := range args {
 					if args[i].Const == nil {
 						continue

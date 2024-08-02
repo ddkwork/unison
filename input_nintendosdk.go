@@ -24,18 +24,18 @@ package unison
 // const int kScreenWidth = 1920;
 // const int kScreenHeight = 1080;
 import "C"
+import "github.com/ddkwork/golibrary/mylog"
 
 func (u *UserInterface) updateInputState() error {
-	var err error
 	u.mainThread.Call(func() {
-		err = u.updateInputStateImpl()
+		mylog.Check(u.updateInputStateImpl())
 	})
 	return err
 }
 
 // updateInputStateImpl must be called from the main thread.
 func (u *UserInterface) updateInputStateImpl() error {
-	if err := gamepad.Update(); err != nil {
+	if mylog.Check(gamepad.Update()); err != nil {
 		return err
 	}
 

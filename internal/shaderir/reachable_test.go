@@ -15,10 +15,12 @@
 package shaderir_test
 
 import (
-	"github.com/richardwilkes/unison/internal/shader"
-	"github.com/richardwilkes/unison/internal/shaderir"
 	"sort"
 	"testing"
+
+	"github.com/ddkwork/golibrary/mylog"
+	"github.com/richardwilkes/unison/internal/shader"
+	"github.com/richardwilkes/unison/internal/shaderir"
 )
 
 func compileToIR(src []byte) (*shaderir.Program, error) {
@@ -101,10 +103,8 @@ func neverCalled() float {
 	}
 
 	for _, c := range cases {
-		ir, err := compileToIR([]byte(c.source))
-		if err != nil {
-			t.Fatal(err)
-		}
+		ir := mylog.Check2(compileToIR([]byte(c.source)))
+
 		got := ir.AppendReachableUniformVariablesFromBlock(nil, ir.Funcs[c.index].Block)
 		sort.Ints(got)
 		want := c.expected

@@ -13,6 +13,8 @@ import "C"
 
 import (
 	"unsafe"
+
+	"github.com/ddkwork/golibrary/mylog"
 )
 
 // MakeContextCurrent makes the context of the window current.
@@ -21,7 +23,7 @@ import (
 // be used instead.
 func (w *Window) MakeContextCurrent() error {
 	C.glfwMakeContextCurrent(w.data)
-	if err := fetchErrorIgnoringPlatformError(); err != nil {
+	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
 		return err
 	}
 	return nil
@@ -30,7 +32,7 @@ func (w *Window) MakeContextCurrent() error {
 // DetachCurrentContext detaches the current context.
 func DetachCurrentContext() error {
 	C.glfwMakeContextCurrent(nil)
-	if err := fetchErrorIgnoringPlatformError(); err != nil {
+	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
 		return err
 	}
 	return nil
@@ -39,7 +41,7 @@ func DetachCurrentContext() error {
 // GetCurrentContext returns the window whose context is current.
 func GetCurrentContext() (*Window, error) {
 	w := C.glfwGetCurrentContext()
-	if err := fetchErrorIgnoringPlatformError(); err != nil {
+	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
 		return nil, err
 	}
 	if w == nil {
@@ -53,7 +55,7 @@ func GetCurrentContext() (*Window, error) {
 // of screen updates before swapping the buffers.
 func (w *Window) SwapBuffers() error {
 	C.glfwSwapBuffers(w.data)
-	if err := fetchErrorIgnoringPlatformError(); err != nil {
+	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
 		return err
 	}
 	return nil
@@ -75,7 +77,7 @@ func (w *Window) SwapBuffers() error {
 // user settings that override the request or due to bugs in the driver.
 func SwapInterval(interval int) error {
 	C.glfwSwapInterval(C.int(interval))
-	if err := fetchErrorIgnoringPlatformError(); err != nil {
+	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
 		return err
 	}
 	return nil
@@ -93,7 +95,7 @@ func ExtensionSupported(extension string) (bool, error) {
 	e := C.CString(extension)
 	defer C.free(unsafe.Pointer(e))
 	ret := C.glfwExtensionSupported(e) != 0
-	if err := fetchErrorIgnoringPlatformError(); err != nil {
+	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
 		return false, err
 	}
 	return ret, nil
@@ -111,7 +113,7 @@ func GetProcAddress(procname string) (unsafe.Pointer, error) {
 	p := C.CString(procname)
 	defer C.free(unsafe.Pointer(p))
 	ret := unsafe.Pointer(C.glfwGetProcAddress(p))
-	if err := fetchErrorIgnoringPlatformError(); err != nil {
+	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
 		return nil, err
 	}
 	return ret, nil

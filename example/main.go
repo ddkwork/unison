@@ -15,6 +15,7 @@ import (
 	"log/slog"
 	"os"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/toolbox/cmdline"
 	"github.com/richardwilkes/toolbox/fatal"
 	"github.com/richardwilkes/toolbox/log/tracelog"
@@ -36,7 +37,7 @@ func main() {
 	slog.SetDefault(slog.New(tracelog.New(log.Default().Writer(), slog.LevelInfo)))
 
 	unison.Start(unison.StartupFinishedCallback(func() {
-		_, err := demo.NewDemoWindow(unison.PrimaryDisplay().Usable.Point)
+		_ := mylog.Check2(demo.NewDemoWindow(unison.PrimaryDisplay().Usable.Point))
 		fatal.IfErr(err)
 	})) // Never returns
 }

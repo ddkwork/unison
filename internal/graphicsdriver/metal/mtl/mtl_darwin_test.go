@@ -27,14 +27,12 @@ import (
 
 	"golang.org/x/image/math/f32"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/hajimehoshi/ebiten/v2/internal/graphicsdriver/metal/mtl"
 )
 
 func Disabled_TestRenderTriangle(t *testing.T) {
-	device, err := mtl.CreateSystemDefaultDevice()
-	if err != nil {
-		t.Fatal(err)
-	}
+	device := mylog.Check2(mtl.CreateSystemDefaultDevice())
 
 	// Create a render pipeline state.
 	const source = `#include <metal_stdlib>
@@ -57,26 +55,17 @@ fragment float4 FragmentShader(Vertex in [[stage_in]]) {
 	return in.color;
 }
 `
-	lib, err := device.NewLibraryWithSource(source, mtl.CompileOptions{})
-	if err != nil {
-		t.Fatal(err)
-	}
-	vs, err := lib.NewFunctionWithName("VertexShader")
-	if err != nil {
-		t.Fatal(err)
-	}
-	fs, err := lib.NewFunctionWithName("FragmentShader")
-	if err != nil {
-		t.Fatal(err)
-	}
+	lib := mylog.Check2(device.NewLibraryWithSource(source, mtl.CompileOptions{}))
+
+	vs := mylog.Check2(lib.NewFunctionWithName("VertexShader"))
+
+	fs := mylog.Check2(lib.NewFunctionWithName("FragmentShader"))
+
 	var rpld mtl.RenderPipelineDescriptor
 	rpld.VertexFunction = vs
 	rpld.FragmentFunction = fs
 	rpld.ColorAttachments[0].PixelFormat = mtl.PixelFormatRGBA8UNorm
-	rps, err := device.NewRenderPipelineStateWithDescriptor(rpld)
-	if err != nil {
-		t.Fatal(err)
-	}
+	rps := mylog.Check2(device.NewRenderPipelineStateWithDescriptor(rpld))
 
 	// Create a vertex buffer.
 	type Vertex struct {
@@ -130,21 +119,16 @@ fragment float4 FragmentShader(Vertex in [[stage_in]]) {
 	texture.GetBytes(&got.Pix[0], uintptr(bytesPerRow), region, 0)
 
 	// TODO: Embed this file?
-	want, err := readPNG(filepath.Join("testdata", "triangle.png"))
-	if err != nil {
-		t.Fatal(err)
-	}
+	want := mylog.Check2(readPNG(filepath.Join("testdata", "triangle.png")))
 
-	if err := imageEq(got, want); err != nil {
+	if mylog.Check(imageEq(got, want)); err != nil {
 		t.Errorf("got image != want: %v", err)
 	}
 }
 
 func readPNG(name string) (image.Image, error) {
-	f, err := os.Open(name)
-	if err != nil {
-		return nil, err
-	}
+	f := mylog.Check2(os.Open(name))
+
 	defer func() {
 		_ = f.Close()
 	}()

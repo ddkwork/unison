@@ -16,11 +16,12 @@ package directx
 
 import (
 	"fmt"
-	"github.com/richardwilkes/unison/internal/microsoftgdk"
 	"math"
 	"runtime"
 	"syscall"
 	"unsafe"
+
+	"github.com/richardwilkes/unison/internal/microsoftgdk"
 
 	"golang.org/x/sys/windows"
 )

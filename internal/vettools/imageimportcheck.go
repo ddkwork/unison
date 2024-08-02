@@ -21,6 +21,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"golang.org/x/tools/go/analysis"
 )
 
@@ -60,10 +61,8 @@ func runImageImportCheck(pass *analysis.Pass) (any, error) {
 	var errs []imageImportCheckError
 	for _, f := range pass.Files {
 		for _, i := range f.Imports {
-			path, err := strconv.Unquote(i.Path.Value)
-			if err != nil {
-				return nil, err
-			}
+			path := mylog.Check2(strconv.Unquote(i.Path.Value))
+
 			if path == "image/gif" || path == "image/jpeg" || path == "image/png" {
 				err := imageImportCheckError{
 					Pos:    pass.Fset.File(f.Pos()).Pos(int(i.Pos())),

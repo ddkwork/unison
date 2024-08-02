@@ -20,6 +20,7 @@ import (
 	"syscall"
 	"unsafe"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/toolbox/fatal"
 	"github.com/richardwilkes/toolbox/xio/fs"
 	"github.com/richardwilkes/toolbox/xmath/geom"
@@ -323,7 +324,7 @@ type textBlobBuilderRunBuffer struct {
 }
 
 func init() {
-	dir, err := os.UserCacheDir()
+	dir := mylog.Check2(os.UserCacheDir())
 	fatal.IfErr(err)
 	dir = filepath.Join(dir, "unison", "dll_cache")
 	fatal.IfErr(os.MkdirAll(dir, 0755))

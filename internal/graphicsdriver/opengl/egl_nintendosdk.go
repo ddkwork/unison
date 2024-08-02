@@ -52,7 +52,8 @@ func newEGL(nativeWindowHandle uintptr) (*egl, error) {
 		C.EGL_GREEN_SIZE, 8,
 		C.EGL_BLUE_SIZE, 8,
 		C.EGL_ALPHA_SIZE, 8,
-		C.EGL_NONE}
+		C.EGL_NONE,
+	}
 	var numConfigs C.EGLint
 	var config C.EGLConfig
 	if r := C.eglChooseConfig(e.display, &configAttribs[0], &config, 1, &numConfigs); r == 0 {
@@ -79,7 +80,8 @@ func newEGL(nativeWindowHandle uintptr) (*egl, error) {
 		C.EGL_CONTEXT_MINOR_VERSION, 2,
 		// For debug callback
 		C.EGL_CONTEXT_FLAGS_KHR, C.EGL_CONTEXT_OPENGL_DEBUG_BIT_KHR,
-		C.EGL_NONE}
+		C.EGL_NONE,
+	}
 	e.context = C.eglCreateContext(e.display, config, C.EGLContext(C.EGL_NO_CONTEXT), &contextAttribs[0])
 	if e.context == C.EGLContext(C.EGL_NO_CONTEXT) {
 		return nil, fmt.Errorf("opengl: eglCreateContext failed: error: %d", C.eglGetError())

@@ -12,9 +12,15 @@ package unison_test
 import (
 	"testing"
 
+	"github.com/ddkwork/golibrary/mylog"
+
 	"github.com/richardwilkes/toolbox/check"
 	"github.com/richardwilkes/unison"
 )
+
+func TestName(t *testing.T) {
+	mylog.FormatAllFiles()
+}
 
 func TestOKLCH(t *testing.T) {
 	check.Equal(t, unison.White, unison.OKLCH(1, 0, 0, 1))

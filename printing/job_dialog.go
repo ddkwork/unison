@@ -17,6 +17,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xio"
@@ -83,14 +84,11 @@ func (d *JobDialog) JobAttributes() *JobAttributes {
 // RunModal presents the dialog and returns true if the user pressed OK.
 func (d *JobDialog) RunModal() bool {
 	defer d.scanCancel()
-	dlg, err := unison.NewDialog(nil, nil, d.createContent(), []*unison.DialogButtonInfo{
+	dlg := mylog.Check2(unison.NewDialog(nil, nil, d.createContent(), []*unison.DialogButtonInfo{
 		unison.NewCancelButtonInfo(),
 		unison.NewOKButtonInfoWithTitle(i18n.Text("Print")),
-	})
-	if err != nil {
-		unison.ErrorDialogWithError(i18n.Text("Unable to create print dialog."), err)
-		return false
-	}
+	}))
+
 	dlg.Window().SetTitle(i18n.Text("Print"))
 	d.dialog = dlg
 	d.dialog.Button(unison.ModalResponseOK).SetEnabled(false)
@@ -228,8 +226,8 @@ func (d *JobDialog) setPrinter(printer *Printer) {
 	}
 	d.printer = printer
 	d.printerID = d.printer.PrinterID
-	var err error
-	if d.printerAttributes, err = d.printer.Attributes(15*time.Second, true); err != nil {
+
+	if d.printerAttributes = mylog.Check2(d.printer.Attributes(15*time.Second, true)); err != nil {
 		errs.Log(err)
 	}
 	if icon := d.retrieveIcon(); icon != nil {
@@ -259,25 +257,22 @@ func (d *JobDialog) retrieveIcon() *unison.Image {
 		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 		defer cancel()
 		link := icons[len(icons)-1]
-		req, err := http.NewRequestWithContext(ctx, http.MethodGet, link, http.NoBody)
-		if err != nil {
-			errs.Log(errs.NewWithCause("unable to create request for link", err), linkAttr, link)
-			return nil
-		}
+		req := mylog.Check2(http.NewRequestWithContext(ctx, http.MethodGet, link, http.NoBody))
+
 		req.Header.Add("Accept-Encoding", "identity")
 		var rsp *http.Response
-		if rsp, err = d.printer.httpClient.Do(req); err != nil { //nolint:bodyclose // Body is closed by xio.CloseIgnoringErrors
+		if rsp = mylog.Check2(d.printer.httpClient.Do(req)); err != nil { //nolint:bodyclose // Body is closed by xio.CloseIgnoringErrors
 			errs.Log(errs.NewWithCause("unable to initiate download for link", err), linkAttr, link)
 			return nil
 		}
 		defer xio.CloseIgnoringErrors(rsp.Body)
 		var content []byte
-		if content, err = io.ReadAll(rsp.Body); err != nil {
+		if content = mylog.Check2(io.ReadAll(rsp.Body)); err != nil {
 			errs.Log(errs.NewWithCause("unable to read body for link", err), linkAttr, link)
 			return nil
 		}
 		var img *unison.Image
-		if img, err = unison.NewImageFromBytes(content, 0.5); err != nil {
+		if img = mylog.Check2(unison.NewImageFromBytes(content, 0.5)); err != nil {
 			errs.Log(errs.NewWithCause("unable to create image from data for link", err), linkAttr, link)
 			return nil
 		}

@@ -16,17 +16,19 @@ package shader_test
 
 import (
 	"fmt"
-	"github.com/richardwilkes/unison/internal/shader"
-	"github.com/richardwilkes/unison/internal/shaderir"
-	"github.com/richardwilkes/unison/internal/shaderir/glsl"
-	"github.com/richardwilkes/unison/internal/shaderir/hlsl"
-	"github.com/richardwilkes/unison/internal/shaderir/msl"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/ddkwork/golibrary/mylog"
+	"github.com/richardwilkes/unison/internal/shader"
+	"github.com/richardwilkes/unison/internal/shaderir"
+	"github.com/richardwilkes/unison/internal/shaderir/glsl"
+	"github.com/richardwilkes/unison/internal/shaderir/hlsl"
+	"github.com/richardwilkes/unison/internal/shaderir/msl"
 )
 
 func TestMain(m *testing.M) {
@@ -93,10 +95,7 @@ func TestCompile(t *testing.T) {
 		t.Skip("file open might not be implemented in this environment")
 	}
 
-	files, err := os.ReadDir("testdata")
-	if err != nil {
-		t.Fatal(err)
-	}
+	files := mylog.Check2(os.ReadDir("testdata"))
 
 	type testcase struct {
 		Name  string
@@ -121,10 +120,7 @@ func TestCompile(t *testing.T) {
 			continue
 		}
 
-		src, err := os.ReadFile(filepath.Join("testdata", n))
-		if err != nil {
-			t.Fatal(err)
-		}
+		src := mylog.Check2(os.ReadFile(filepath.Join("testdata", n)))
 
 		name := n[:len(n)-len(".go")]
 		tc := testcase{
@@ -134,19 +130,15 @@ func TestCompile(t *testing.T) {
 
 		vsn := name + ".expected.vs"
 		if _, ok := fnames[vsn]; ok {
-			vs, err := os.ReadFile(filepath.Join("testdata", vsn))
-			if err != nil {
-				t.Fatal(err)
-			}
+			vs := mylog.Check2(os.ReadFile(filepath.Join("testdata", vsn)))
+
 			tc.VS = vs
 		}
 
 		fsn := name + ".expected.fs"
 		if _, ok := fnames[fsn]; ok {
-			fs, err := os.ReadFile(filepath.Join("testdata", fsn))
-			if err != nil {
-				t.Fatal(err)
-			}
+			fs := mylog.Check2(os.ReadFile(filepath.Join("testdata", fsn)))
+
 			tc.FS = fs
 		}
 
@@ -156,19 +148,15 @@ func TestCompile(t *testing.T) {
 
 		hlsln := name + ".expected.hlsl"
 		if _, ok := fnames[hlsln]; ok {
-			hlsl, err := os.ReadFile(filepath.Join("testdata", hlsln))
-			if err != nil {
-				t.Fatal(err)
-			}
+			hlsl := mylog.Check2(os.ReadFile(filepath.Join("testdata", hlsln)))
+
 			tc.HLSL = hlsl
 		}
 
 		metaln := name + ".expected.metal"
 		if _, ok := fnames[metaln]; ok {
-			metal, err := os.ReadFile(filepath.Join("testdata", metaln))
-			if err != nil {
-				t.Fatal(err)
-			}
+			metal := mylog.Check2(os.ReadFile(filepath.Join("testdata", metaln)))
+
 			tc.Metal = metal
 		}
 
@@ -177,11 +165,7 @@ func TestCompile(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.Name, func(t *testing.T) {
-			s, err := shader.Compile(tc.Src, "Vertex", "Fragment", 0)
-			if err != nil {
-				t.Error(err)
-				return
-			}
+			s := mylog.Check2(shader.Compile(tc.Src, "Vertex", "Fragment", 0))
 
 			// GLSL
 			vs, fs := glsl.Compile(s, glsl.GLSLVersionDefault)

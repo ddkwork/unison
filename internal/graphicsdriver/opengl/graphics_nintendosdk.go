@@ -16,20 +16,18 @@
 
 package opengl
 
+import "github.com/ddkwork/golibrary/mylog"
+
 type graphicsPlatform struct {
 	egl *egl
 }
 
 func NewGraphics(nativeWindowType uintptr) (graphicsdriver.Graphics, error) {
-	ctx, err := gl.NewDefaultContext()
-	if err != nil {
-		return nil, err
-	}
+	ctx := mylog.Check2(gl.NewDefaultContext())
+
 	g := newGraphics(ctx)
-	e, err := newEGL(nativeWindowType)
-	if err != nil {
-		return nil, err
-	}
+	e := mylog.Check2(newEGL(nativeWindowType))
+
 	g.egl = e
 	return g, nil
 }

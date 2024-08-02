@@ -12,6 +12,7 @@ package demo
 import (
 	"fmt"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/unison"
 )
@@ -48,7 +49,7 @@ func init() {
 		Title:      "New Demo Window",
 		KeyBinding: unison.KeyBinding{KeyCode: unison.KeyN, Modifiers: unison.OSMenuCmdModifier()},
 		ExecuteCallback: func(_ *unison.Action, _ any) {
-			if _, err := NewDemoWindow(initialWindowLocation()); err != nil {
+			if _ := mylog.Check2(NewDemoWindow(initialWindowLocation())); err != nil {
 				errs.Log(err)
 			}
 		},
@@ -59,7 +60,7 @@ func init() {
 		Title:      "New Demo Table Window",
 		KeyBinding: unison.KeyBinding{KeyCode: unison.KeyT, Modifiers: unison.OSMenuCmdModifier()},
 		ExecuteCallback: func(_ *unison.Action, _ any) {
-			if _, err := NewDemoTableWindow(initialWindowLocation()); err != nil {
+			if _ := mylog.Check2(NewDemoTableWindow(initialWindowLocation())); err != nil {
 				errs.Log(err)
 			}
 		},
@@ -70,7 +71,7 @@ func init() {
 		Title:      "New Demo Dock Window",
 		KeyBinding: unison.KeyBinding{KeyCode: unison.KeyD, Modifiers: unison.OSMenuCmdModifier()},
 		ExecuteCallback: func(_ *unison.Action, _ any) {
-			if _, err := NewDemoDockWindow(initialWindowLocation()); err != nil {
+			if _ := mylog.Check2(NewDemoDockWindow(initialWindowLocation())); err != nil {
 				errs.Log(err)
 			}
 		},
@@ -81,7 +82,7 @@ func init() {
 		Title:      "New Demo Markdown Window",
 		KeyBinding: unison.KeyBinding{KeyCode: unison.KeyK, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
 		ExecuteCallback: func(_ *unison.Action, _ any) {
-			if _, err := NewDemoMarkdownWindow(initialWindowLocation()); err != nil {
+			if _ := mylog.Check2(NewDemoMarkdownWindow(initialWindowLocation())); err != nil {
 				errs.Log(err)
 			}
 		},
@@ -92,7 +93,7 @@ func init() {
 		Title:      "Show Colors",
 		KeyBinding: unison.KeyBinding{KeyCode: unison.KeyK, Modifiers: unison.OSMenuCmdModifier()},
 		ExecuteCallback: func(_ *unison.Action, _ any) {
-			if _, err := NewDemoColorsWindow(initialWindowLocation()); err != nil {
+			if _ := mylog.Check2(NewDemoColorsWindow(initialWindowLocation())); err != nil {
 				errs.Log(err)
 			}
 		},

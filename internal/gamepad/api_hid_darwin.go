@@ -17,6 +17,7 @@ package gamepad
 import (
 	"unsafe"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/ebitengine/purego"
 )
 
@@ -87,7 +88,7 @@ type (
 type _IOHIDDeviceCallback func(context unsafe.Pointer, result _IOReturn, sender unsafe.Pointer, device _IOHIDDeviceRef)
 
 func initializeIOKit() error {
-	iokit, err := purego.Dlopen("/System/Library/Frameworks/IOKit.framework/IOKit", purego.RTLD_LAZY|purego.RTLD_GLOBAL)
+	iokit := mylog.Check2(purego.Dlopen("/System/Library/Frameworks/IOKit.framework/IOKit", purego.RTLD_LAZY|purego.RTLD_GLOBAL))
 
 	purego.RegisterLibFunc(&_IOHIDElementGetTypeID, iokit, "IOHIDElementGetTypeID")
 	purego.RegisterLibFunc(&_IOHIDManagerCreate, iokit, "IOHIDManagerCreate")

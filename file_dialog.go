@@ -15,6 +15,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xio/fs"
@@ -86,14 +87,11 @@ func (d *fileDialog) RunModal() bool {
 		dialogTitle = i18n.Text("Save…")
 		okTitle = i18n.Text("Save")
 	}
-	dlg, err := NewDialog(nil, nil, d.createContent(), []*DialogButtonInfo{
+	dlg := mylog.Check2(NewDialog(nil, nil, d.createContent(), []*DialogButtonInfo{
 		NewCancelButtonInfo(),
 		NewOKButtonInfoWithTitle(okTitle),
-	})
-	if err != nil {
-		ErrorDialogWithError(i18n.Text("Unable to create file dialog."), err)
-		return false
-	}
+	}))
+
 	dlg.Window().SetTitle(dialogTitle)
 	d.dialog = dlg
 	d.dialog.Button(ModalResponseOK).SetEnabled(false)
@@ -383,8 +381,8 @@ func (d *fileDialog) filterHandler(popup *PopupMenu[string]) {
 
 func (d *fileDialog) prepareCurrentDir(dir string) {
 	d.currentDir = resolveToAcceptableAbsDir(dir)
-	var err error
-	if d.dirEntries, err = os.ReadDir(d.currentDir); err != nil {
+
+	if d.dirEntries = mylog.Check2(os.ReadDir(d.currentDir)); err != nil {
 		errs.Log(err, "path", d.currentDir)
 	}
 }
@@ -514,12 +512,12 @@ func resolveToAcceptableAbsDir(dir string) string {
 	if d := dirToAbsDirOnly("."); d != "" {
 		return d
 	}
-	if d, err := os.UserHomeDir(); err == nil {
+	if d := mylog.Check2(os.UserHomeDir()); err == nil {
 		if d = dirToAbsDirOnly(d); d != "" {
 			return d
 		}
 	}
-	if u, err := user.Current(); err == nil {
+	if u := mylog.Check2(user.Current()); err == nil {
 		if d := dirToAbsDirOnly(u.HomeDir); d != "" {
 			return d
 		}
@@ -528,7 +526,7 @@ func resolveToAcceptableAbsDir(dir string) string {
 }
 
 func dirToAbsDirOnly(dir string) string {
-	if d, err := filepath.Abs(dir); err == nil && fs.IsDir(d) {
+	if d := mylog.Check2(filepath.Abs(dir)); err == nil && fs.IsDir(d) {
 		return d
 	}
 	return ""

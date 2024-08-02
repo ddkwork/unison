@@ -16,12 +16,14 @@ package directx
 
 import (
 	"fmt"
+	"math"
+	"unsafe"
+
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/unison/internal/graphics"
 	"github.com/richardwilkes/unison/internal/graphicsdriver"
 	"github.com/richardwilkes/unison/internal/shaderir"
 	"github.com/richardwilkes/unison/internal/shaderir/hlsl"
-	"math"
-	"unsafe"
 
 	"golang.org/x/sys/windows"
 )
@@ -177,39 +179,29 @@ func newGraphics11(useWARP bool, useDebugLayer bool) (gr11 *graphics11) {
 
 	// Apparently, adapter must be nil if the driver type is not unknown. This is not documented explicitly.
 	// https://learn.microsoft.com/en-us/windows/win32/api/d3d11/nf-d3d11-d3d11createdevice
-	d, fl, ctx, err := _D3D11CreateDevice(nil, driverType, 0, uint32(flags), featureLevels, true, true)
-	if err != nil {
-		return nil
-	}
+	d, fl, ctx := mylog.Check4(_D3D11CreateDevice(nil, driverType, 0, uint32(flags), featureLevels, true, true))
+
 	g.device = (*_ID3D11Device)(d)
 	g.featureLevel = fl
 	g.deviceContext = (*_ID3D11DeviceContext)(ctx)
 
 	// Get IDXGIFactory from the current device and use it, instead of CreateDXGIFactory.
 	// Or, MakeWindowAssociation doesn't work well (#2661).
-	dd, err := g.device.QueryInterface(&_IID_IDXGIDevice)
-	if err != nil {
-		return nil
-	}
+	dd := mylog.Check2(g.device.QueryInterface(&_IID_IDXGIDevice))
+
 	dxgiDevice := (*_IDXGIDevice)(dd)
 	defer dxgiDevice.Release()
 
-	dxgiAdapter, err := dxgiDevice.GetAdapter()
-	if err != nil {
-		return nil
-	}
+	dxgiAdapter := mylog.Check2(dxgiDevice.GetAdapter())
+
 	defer dxgiAdapter.Release()
 
-	df, err := dxgiAdapter.GetParent(&_IID_IDXGIFactory)
-	if err != nil {
-		return nil
-	}
+	df := mylog.Check2(dxgiAdapter.GetParent(&_IID_IDXGIFactory))
+
 	dxgiFactory := (*_IDXGIFactory)(df)
 
-	gi, err := newGraphicsInfra(dxgiFactory)
-	if err != nil {
-		return nil
-	}
+	gi := mylog.Check2(newGraphicsInfra(dxgiFactory))
+
 	g.graphicsInfra = gi
 	defer func() {
 		if ferr != nil {
@@ -222,7 +214,7 @@ func newGraphics11(useWARP bool, useDebugLayer bool) (gr11 *graphics11) {
 
 	// Set the rasterizer state.
 	if g.rasterizerState == nil {
-		rs, err := g.device.CreateRasterizerState(&_D3D11_RASTERIZER_DESC{
+		rs := mylog.Check2(g.device.CreateRasterizerState(&_D3D11_RASTERIZER_DESC{
 			FillMode:              _D3D11_FILL_SOLID,
 			CullMode:              _D3D11_CULL_NONE,
 			FrontCounterClockwise: 0,
@@ -233,17 +225,15 @@ func newGraphics11(useWARP bool, useDebugLayer bool) (gr11 *graphics11) {
 			ScissorEnable:         1,
 			MultisampleEnable:     0,
 			AntialiasedLineEnable: 0,
-		})
-		if err != nil {
-			return nil
-		}
+		}))
+
 		g.rasterizerState = rs
 	}
 	g.deviceContext.RSSetState(g.rasterizerState)
 
 	// Set the sampler state.
 	if g.samplerState == nil {
-		s, err := g.device.CreateSamplerState(&_D3D11_SAMPLER_DESC{
+		s := mylog.Check2(g.device.CreateSamplerState(&_D3D11_SAMPLER_DESC{
 			Filter:         _D3D11_FILTER_MIN_MAG_MIP_POINT,
 			AddressU:       _D3D11_TEXTURE_ADDRESS_WRAP,
 			AddressV:       _D3D11_TEXTURE_ADDRESS_WRAP,
@@ -251,10 +241,8 @@ func newGraphics11(useWARP bool, useDebugLayer bool) (gr11 *graphics11) {
 			ComparisonFunc: _D3D11_COMPARISON_NEVER,
 			MinLOD:         -math.MaxFloat32,
 			MaxLOD:         math.MaxFloat32,
-		})
-		if err != nil {
-			return nil
-		}
+		}))
+
 		g.samplerState = s
 	}
 	g.deviceContext.PSSetSamplers(0, []*_ID3D11SamplerState{g.samplerState})
@@ -275,7 +263,7 @@ func (g *graphics11) End(present bool) error {
 		return nil
 	}
 
-	if err := g.graphicsInfra.present(g.vsyncEnabled); err != nil {
+	if mylog.Check(g.graphicsInfra.present(g.vsyncEnabled)); err != nil {
 		return err
 	}
 
@@ -287,11 +275,11 @@ func (g *graphics11) End(present bool) error {
 			g.screenImage.disposeBuffers()
 		}
 
-		if err := g.graphicsInfra.resizeSwapChain(g.newScreenWidth, g.newScreenHeight); err != nil {
+		if mylog.Check(g.graphicsInfra.resizeSwapChain(g.newScreenWidth, g.newScreenHeight)); err != nil {
 			return err
 		}
 
-		t, err := g.graphicsInfra.getBuffer(0, &_IID_ID3D11Texture2D)
+		t := mylog.Check2(g.graphicsInfra.getBuffer(0, &_IID_ID3D11Texture2D))
 
 		g.screenImage.width = g.newScreenWidth
 		g.screenImage.height = g.newScreenHeight
@@ -351,7 +339,7 @@ func (g *graphics11) SetVertices(vertices []float32, indices []uint32) error {
 	// Copy the vertices data.
 	{
 		var mapped _D3D11_MAPPED_SUBRESOURCE
-		if err := g.deviceContext.Map(unsafe.Pointer(g.vertexBuffer), 0, _D3D11_MAP_WRITE_DISCARD, 0, &mapped); err != nil {
+		if mylog.Check(g.deviceContext.Map(unsafe.Pointer(g.vertexBuffer), 0, _D3D11_MAP_WRITE_DISCARD, 0, &mapped)); err != nil {
 			return err
 		}
 		copy(unsafe.Slice((*float32)(mapped.pData), len(vertices)), vertices)
@@ -361,9 +349,7 @@ func (g *graphics11) SetVertices(vertices []float32, indices []uint32) error {
 	// Copy the indices data.
 	{
 		var mapped _D3D11_MAPPED_SUBRESOURCE
-		if err := g.deviceContext.Map(unsafe.Pointer(g.indexBuffer), 0, _D3D11_MAP_WRITE_DISCARD, 0, &mapped); err != nil {
-			return err
-		}
+		mylog.Check(g.deviceContext.Map(unsafe.Pointer(g.indexBuffer), 0, _D3D11_MAP_WRITE_DISCARD, 0, &mapped))
 		copy(unsafe.Slice((*uint32)(mapped.pData), len(indices)), indices)
 		g.deviceContext.Unmap(unsafe.Pointer(g.indexBuffer), 0)
 	}
@@ -372,7 +358,7 @@ func (g *graphics11) SetVertices(vertices []float32, indices []uint32) error {
 }
 
 func (g *graphics11) NewImage(width, height int) (graphicsdriver.Image, error) {
-	t, err := g.device.CreateTexture2D(&_D3D11_TEXTURE2D_DESC{
+	t := mylog.Check2(g.device.CreateTexture2D(&_D3D11_TEXTURE2D_DESC{
 		Width:     uint32(graphics.InternalImageSize(width)),
 		Height:    uint32(graphics.InternalImageSize(height)),
 		MipLevels: 1, // 0 doesn't work when shrinking the image.
@@ -386,10 +372,7 @@ func (g *graphics11) NewImage(width, height int) (graphicsdriver.Image, error) {
 		BindFlags:      uint32(_D3D11_BIND_SHADER_RESOURCE | _D3D11_BIND_RENDER_TARGET),
 		CPUAccessFlags: 0,
 		MiscFlags:      0,
-	}, nil)
-	if err != nil {
-		return nil, err
-	}
+	}, nil))
 
 	i := &image11{
 		graphics: g,
@@ -415,15 +398,12 @@ func (g *graphics11) NewScreenFramebufferImage(width, height int) (graphicsdrive
 	if g.graphicsInfra.isSwapChainInited() {
 		g.newScreenWidth, g.newScreenHeight = width, height
 	} else {
-		if err := g.graphicsInfra.initSwapChain(width, height, unsafe.Pointer(g.device), g.window); err != nil {
+		if mylog.Check(g.graphicsInfra.initSwapChain(width, height, unsafe.Pointer(g.device), g.window)); err != nil {
 			return nil, err
 		}
 	}
 
-	t, err := g.graphicsInfra.getBuffer(0, &_IID_ID3D11Texture2D)
-	if err != nil {
-		return nil, err
-	}
+	t := mylog.Check2(g.graphicsInfra.getBuffer(0, &_IID_ID3D11Texture2D))
 
 	i := &image11{
 		graphics: g,
@@ -475,10 +455,7 @@ func (g *graphics11) MaxImageSize() int {
 }
 
 func (g *graphics11) NewShader(program *shaderir.Program) (graphicsdriver.Shader, error) {
-	vsh, psh, err := compileShader(program)
-	if err != nil {
-		return nil, err
-	}
+	vsh, psh := mylog.Check3(compileShader(program))
 
 	s := &shader11{
 		graphics:         g,
@@ -535,22 +512,22 @@ func (g *graphics11) DrawTriangles(dstID graphicsdriver.ImageID, srcIDs [graphic
 		},
 	})
 
-	if err := dst.setAsRenderTarget(fillRule != graphicsdriver.FillRuleFillAll); err != nil {
+	if mylog.Check(dst.setAsRenderTarget(fillRule != graphicsdriver.FillRuleFillAll)); err != nil {
 		return err
 	}
 
 	// Set the shader parameters.
 	shader := g.shaders[shaderID]
-	if err := shader.use(uniforms, srcs); err != nil {
+	if mylog.Check(shader.use(uniforms, srcs)); err != nil {
 		return err
 	}
 
 	if fillRule == graphicsdriver.FillRuleFillAll {
-		bs, err := g.blendState(blend, noStencil)
+		bs := mylog.Check2(g.blendState(blend, noStencil))
 
 		g.deviceContext.OMSetBlendState(bs, nil, 0xffffffff)
 
-		dss, err := g.depthStencilState(noStencil)
+		dss := mylog.Check2(g.depthStencilState(noStencil))
 
 		g.deviceContext.OMSetDepthStencilState(dss, 0)
 	}
@@ -569,41 +546,29 @@ func (g *graphics11) DrawTriangles(dstID graphicsdriver.ImageID, srcIDs [graphic
 		case graphicsdriver.FillRuleFillAll:
 			g.deviceContext.DrawIndexed(uint32(dstRegion.IndexCount), uint32(indexOffset), 0)
 		case graphicsdriver.FillRuleNonZero:
-			bs, err := g.blendState(blend, incrementStencil)
-			if err != nil {
-				return err
-			}
+			bs := mylog.Check2(g.blendState(blend, incrementStencil))
+
 			g.deviceContext.OMSetBlendState(bs, nil, 0xffffffff)
-			dss, err := g.depthStencilState(incrementStencil)
-			if err != nil {
-				return err
-			}
+			dss := mylog.Check2(g.depthStencilState(incrementStencil))
+
 			g.deviceContext.OMSetDepthStencilState(dss, 0)
 			g.deviceContext.DrawIndexed(uint32(dstRegion.IndexCount), uint32(indexOffset), 0)
 		case graphicsdriver.FillRuleEvenOdd:
-			bs, err := g.blendState(blend, invertStencil)
-			if err != nil {
-				return err
-			}
+			bs := mylog.Check2(g.blendState(blend, invertStencil))
+
 			g.deviceContext.OMSetBlendState(bs, nil, 0xffffffff)
-			dss, err := g.depthStencilState(invertStencil)
-			if err != nil {
-				return err
-			}
+			dss := mylog.Check2(g.depthStencilState(invertStencil))
+
 			g.deviceContext.OMSetDepthStencilState(dss, 0)
 			g.deviceContext.DrawIndexed(uint32(dstRegion.IndexCount), uint32(indexOffset), 0)
 		}
 
 		if fillRule != graphicsdriver.FillRuleFillAll {
-			bs, err := g.blendState(blend, drawWithStencil)
-			if err != nil {
-				return err
-			}
+			bs := mylog.Check2(g.blendState(blend, drawWithStencil))
+
 			g.deviceContext.OMSetBlendState(bs, nil, 0xffffffff)
-			dss, err := g.depthStencilState(drawWithStencil)
-			if err != nil {
-				return err
-			}
+			dss := mylog.Check2(g.depthStencilState(drawWithStencil))
+
 			g.deviceContext.OMSetDepthStencilState(dss, 0)
 			g.deviceContext.DrawIndexed(uint32(dstRegion.IndexCount), uint32(indexOffset), 0)
 		}
@@ -638,7 +603,7 @@ func (g *graphics11) blendState(blend graphicsdriver.Blend, stencilMode stencilM
 		return bs
 	}
 
-	bs, err := g.device.CreateBlendState(&_D3D11_BLEND_DESC{
+	bs := mylog.Check2(g.device.CreateBlendState(&_D3D11_BLEND_DESC{
 		AlphaToCoverageEnable:  0,
 		IndependentBlendEnable: 0,
 		RenderTarget: [8]_D3D11_RENDER_TARGET_BLEND_DESC{
@@ -653,10 +618,7 @@ func (g *graphics11) blendState(blend graphicsdriver.Blend, stencilMode stencilM
 				RenderTargetWriteMask: writeMask,
 			},
 		},
-	})
-	if err != nil {
-		return nil
-	}
+	}))
 
 	if g.blendStates == nil {
 		g.blendStates = map[blendStateKey]*_ID3D11BlendState{}
@@ -705,10 +667,7 @@ func (g *graphics11) depthStencilState(mode stencilMode) (*_ID3D11DepthStencilSt
 		desc.BackFace.StencilFunc = _D3D11_COMPARISON_NOT_EQUAL
 	}
 
-	s, err := g.device.CreateDepthStencilState(desc)
-	if err != nil {
-		return nil, err
-	}
+	s := mylog.Check2(g.device.CreateDepthStencilState(desc))
 
 	if g.depthStencilStates == nil {
 		g.depthStencilStates = map[stencilMode]*_ID3D11DepthStencilState{}

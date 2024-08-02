@@ -15,6 +15,10 @@
 package atlas_test
 
 import (
+	"github.com/richardwilkes/unison/internal/atlas"
+	"github.com/richardwilkes/unison/internal/graphics"
+	"github.com/richardwilkes/unison/internal/graphicsdriver"
+	"github.com/richardwilkes/unison/internal/test"
 	"image"
 	"image/color"
 	"runtime"
@@ -22,8 +26,7 @@ import (
 	"time"
 	"unsafe"
 
-	t "github.com/hajimehoshi/ebiten/v2/internal/testing"
-	"github.com/hajimehoshi/ebiten/v2/internal/ui"
+	"github.com/ddkwork/golibrary/mylog"
 )
 
 const (
@@ -35,7 +38,7 @@ const (
 func TestMain(m *testing.M) {
 	atlas.SetImageSizeForTesting(minSourceImageSizeForTesting, minDestinationImageSizeForTesting, maxImageSizeForTesting)
 	defer atlas.ResetImageSizeForTesting()
-	t.MainWithRunLoop(m)
+	test.MainWithRunLoop(m)
 }
 
 func quadVertices(sw, sh, x, y int, scalex float32) []float32 {
@@ -116,10 +119,8 @@ func TestEnsureIsolatedFromSourceBackend(t *testing.T) {
 	}
 
 	pix = make([]byte, 4*size*size)
-	ok, err := img4.ReadPixels(ui.Get().GraphicsDriverForTesting(), pix, image.Rect(0, 0, size, size))
-	if err != nil {
-		t.Fatal(err)
-	}
+	ok := mylog.Check2(img4.ReadPixels(ui.Get().GraphicsDriverForTesting(), pix, image.Rect(0, 0, size, size)))
+
 	if !ok {
 		t.Fatal("ReadPixels failed")
 	}
@@ -215,10 +216,8 @@ func TestReputOnSourceBackend(t *testing.T) {
 	atlas.PutImagesOnSourceBackendForTesting()
 
 	pix = make([]byte, 4*size*size)
-	ok, err := img1.ReadPixels(ui.Get().GraphicsDriverForTesting(), pix, image.Rect(0, 0, size, size))
-	if err != nil {
-		t.Fatal(err)
-	}
+	ok := mylog.Check2(img1.ReadPixels(ui.Get().GraphicsDriverForTesting(), pix, image.Rect(0, 0, size, size)))
+
 	if !ok {
 		t.Fatal("ReadPixels failed")
 	}
@@ -243,10 +242,8 @@ func TestReputOnSourceBackend(t *testing.T) {
 	}
 
 	pix = make([]byte, 4*size*size)
-	ok, err = img1.ReadPixels(ui.Get().GraphicsDriverForTesting(), pix, image.Rect(0, 0, size, size))
-	if err != nil {
-		t.Fatal(err)
-	}
+	ok = mylog.Check2(img1.ReadPixels(ui.Get().GraphicsDriverForTesting(), pix, image.Rect(0, 0, size, size)))
+
 	if !ok {
 		t.Fatal("ReadPixels failed")
 	}
@@ -335,10 +332,8 @@ func TestExtend(t *testing.T) {
 	img1.WritePixels(p1, image.Rect(0, 0, w1, h1))
 
 	pix0 := make([]byte, 4*w0*h0)
-	ok, err := img0.ReadPixels(ui.Get().GraphicsDriverForTesting(), pix0, image.Rect(0, 0, w0, h0))
-	if err != nil {
-		t.Fatal(err)
-	}
+	ok := mylog.Check2(img0.ReadPixels(ui.Get().GraphicsDriverForTesting(), pix0, image.Rect(0, 0, w0, h0)))
+
 	if !ok {
 		t.Fatal("ReadPixels failed")
 	}
@@ -358,10 +353,8 @@ func TestExtend(t *testing.T) {
 	}
 
 	pix1 := make([]byte, 4*w1*h1)
-	ok, err = img1.ReadPixels(ui.Get().GraphicsDriverForTesting(), pix1, image.Rect(0, 0, w1, h1))
-	if err != nil {
-		t.Fatal(err)
-	}
+	ok = mylog.Check2(img1.ReadPixels(ui.Get().GraphicsDriverForTesting(), pix1, image.Rect(0, 0, w1, h1)))
+
 	if !ok {
 		t.Fatal("ReadPixels failed")
 	}
@@ -404,10 +397,8 @@ func TestWritePixelsAfterDrawTriangles(t *testing.T) {
 	dst.WritePixels(pix, image.Rect(0, 0, w, h))
 
 	pix = make([]byte, 4*w*h)
-	ok, err := dst.ReadPixels(ui.Get().GraphicsDriverForTesting(), pix, image.Rect(0, 0, w, h))
-	if err != nil {
-		t.Fatal(err)
-	}
+	ok := mylog.Check2(dst.ReadPixels(ui.Get().GraphicsDriverForTesting(), pix, image.Rect(0, 0, w, h)))
+
 	if !ok {
 		t.Fatal("ReadPixels failed")
 	}
@@ -450,10 +441,8 @@ func TestSmallImages(t *testing.T) {
 	dst.DrawTriangles([graphics.ShaderSrcImageCount]*atlas.Image{src}, vs, is, graphicsdriver.BlendSourceOver, dr, [graphics.ShaderSrcImageCount]image.Rectangle{}, atlas.NearestFilterShader, nil, graphicsdriver.FillRuleFillAll)
 
 	pix = make([]byte, 4*w*h)
-	ok, err := dst.ReadPixels(ui.Get().GraphicsDriverForTesting(), pix, image.Rect(0, 0, w, h))
-	if err != nil {
-		t.Fatal(err)
-	}
+	ok := mylog.Check2(dst.ReadPixels(ui.Get().GraphicsDriverForTesting(), pix, image.Rect(0, 0, w, h)))
+
 	if !ok {
 		t.Fatal("ReadPixels failed")
 	}
@@ -497,10 +486,8 @@ func TestLongImages(t *testing.T) {
 	dst.DrawTriangles([graphics.ShaderSrcImageCount]*atlas.Image{src}, vs, is, graphicsdriver.BlendSourceOver, dr, [graphics.ShaderSrcImageCount]image.Rectangle{}, atlas.NearestFilterShader, nil, graphicsdriver.FillRuleFillAll)
 
 	pix = make([]byte, 4*dstW*dstH)
-	ok, err := dst.ReadPixels(ui.Get().GraphicsDriverForTesting(), pix, image.Rect(0, 0, dstW, dstH))
-	if err != nil {
-		t.Fatal(err)
-	}
+	ok := mylog.Check2(dst.ReadPixels(ui.Get().GraphicsDriverForTesting(), pix, image.Rect(0, 0, dstW, dstH)))
+
 	if !ok {
 		t.Fatal("ReadPixels failed")
 	}
@@ -587,7 +574,7 @@ func TestMaxImageSizeExceeded(t *testing.T) {
 	defer img.Deallocate()
 
 	defer func() {
-		if err := recover(); err == nil {
+		if mylog.Check(recover()); err == nil {
 			t.Errorf("WritePixels must panic but not")
 		}
 	}()
@@ -712,10 +699,8 @@ func TestImageWritePixelsModify(t *testing.T) {
 
 		// Check the pixels are the original ones.
 		pix = make([]byte, 4*size*size)
-		ok, err := img.ReadPixels(ui.Get().GraphicsDriverForTesting(), pix, image.Rect(0, 0, size, size))
-		if err != nil {
-			t.Fatal(err)
-		}
+		ok := mylog.Check2(img.ReadPixels(ui.Get().GraphicsDriverForTesting(), pix, image.Rect(0, 0, size, size)))
+
 		if !ok {
 			t.Fatal("ReadPixels failed")
 		}

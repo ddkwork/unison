@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"unsafe"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"golang.org/x/sys/windows"
 )
 
@@ -31,12 +32,9 @@ func (c *defaultContext) init() error {
 }
 
 func (c *defaultContext) getProcAddress(namea string) (uintptr, error) {
-	cname, err := windows.BytePtrFromString(namea)
-	if err != nil {
-		return 0, err
-	}
+	cname := mylog.Check2(windows.BytePtrFromString(namea))
 
-	r, _, err := procWglGetProcAddress.Call(uintptr(unsafe.Pointer(cname)))
+	r, _ := mylog.Check3(procWglGetProcAddress.Call(uintptr(unsafe.Pointer(cname))))
 	if r != 0 {
 		return r, nil
 	}
@@ -45,7 +43,7 @@ func (c *defaultContext) getProcAddress(namea string) (uintptr, error) {
 	}
 
 	p := opengl32.NewProc(namea)
-	if err := p.Find(); err != nil {
+	if mylog.Check(p.Find()); err != nil {
 		return 0, err
 	}
 	return p.Addr(), nil

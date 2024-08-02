@@ -16,6 +16,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/unison/enums/slant"
 	"github.com/richardwilkes/unison/enums/spacing"
@@ -180,22 +181,18 @@ func (f *fontImpl) Descriptor() FontDescriptor {
 
 func init() {
 	const fontDir = "resources/fonts"
-	entries, err := fontFS.ReadDir(fontDir)
-	if err != nil {
-		errs.Log(errs.NewWithCause("unable to read embedded file system", err), "path", fontDir)
-		return
-	}
+	entries := mylog.Check2(fontFS.ReadDir(fontDir))
+
 	for _, entry := range entries {
 		if entry.Type().IsRegular() {
 			name := entry.Name()
 			lower := strings.ToLower(name)
 			if strings.HasSuffix(lower, ".otf") || strings.HasSuffix(lower, ".ttf") {
 				var data []byte
-				if data, err = fontFS.ReadFile(path.Join(fontDir, name)); err != nil {
+				if data = mylog.Check2(fontFS.ReadFile(path.Join(fontDir, name))); err != nil {
 					errs.Log(errs.NewWithCause("unable to read font", err), "name", name)
-				} else if _, err = RegisterFont(data); err != nil {
-					errs.Log(errs.NewWithCause("unable to register font", err), "name", name)
 				}
+
 			}
 		}
 	}

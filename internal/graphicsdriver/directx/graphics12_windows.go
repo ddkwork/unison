@@ -17,12 +17,14 @@ package directx
 import (
 	"errors"
 	"fmt"
+	"unsafe"
+
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/unison/internal/graphics"
 	"github.com/richardwilkes/unison/internal/graphicsdriver"
 	"github.com/richardwilkes/unison/internal/microsoftgdk"
 	"github.com/richardwilkes/unison/internal/shaderir"
 	"github.com/richardwilkes/unison/internal/shaderir/hlsl"
-	"unsafe"
 
 	"golang.org/x/sys/windows"
 )
@@ -111,11 +113,11 @@ func newGraphics12(useWARP bool, useDebugLayer bool, featureLevel _D3D_FEATURE_L
 	// Initialize not only a device but also other members like a fence.
 	// Even if initializing a device succeeds, initializing a fence might fail (#2142).
 	if microsoftgdk.IsXbox() {
-		if err := g.initializeXbox(useWARP, useDebugLayer); err != nil {
+		if mylog.Check(g.initializeXbox(useWARP, useDebugLayer)); err != nil {
 			return nil
 		}
 	} else {
-		if err := g.initializeDesktop(useWARP, useDebugLayer, featureLevel); err != nil {
+		if mylog.Check(g.initializeDesktop(useWARP, useDebugLayer, featureLevel)); err != nil {
 			return nil
 		}
 	}
@@ -124,7 +126,7 @@ func newGraphics12(useWARP bool, useDebugLayer bool, featureLevel _D3D_FEATURE_L
 }
 
 func (g *graphics12) initializeDesktop(useWARP bool, useDebugLayer bool, featureLevel _D3D_FEATURE_LEVEL) (ferr error) {
-	if err := d3d12.Load(); err != nil {
+	if mylog.Check(d3d12.Load()); err != nil {
 		return err
 	}
 
@@ -133,7 +135,7 @@ func (g *graphics12) initializeDesktop(useWARP bool, useDebugLayer bool, feature
 
 	// The debug interface is optional and might not exist.
 	if useDebugLayer {
-		d, err := _D3D12GetDebugInterface()
+		d := mylog.Check2(_D3D12GetDebugInterface())
 
 		g.debug = d
 		defer func() {
@@ -145,9 +147,9 @@ func (g *graphics12) initializeDesktop(useWARP bool, useDebugLayer bool, feature
 		g.debug.EnableDebugLayer()
 	}
 
-	f, err := _CreateDXGIFactory()
+	f := mylog.Check2(_CreateDXGIFactory())
 
-	gi, err := newGraphicsInfra(f)
+	gi := mylog.Check2(newGraphicsInfra(f))
 
 	g.graphicsInfra = gi
 	defer func() {
@@ -157,7 +159,7 @@ func (g *graphics12) initializeDesktop(useWARP bool, useDebugLayer bool, feature
 		}
 	}()
 
-	adapters, err := g.graphicsInfra.appendAdapters(nil, useWARP)
+	adapters := mylog.Check2(g.graphicsInfra.appendAdapters(nil, useWARP))
 
 	defer func() {
 		for _, a := range adapters {
@@ -172,16 +174,14 @@ func (g *graphics12) initializeDesktop(useWARP bool, useDebugLayer bool, feature
 		}
 	} else {
 		for _, a := range adapters {
-			desc, err := a.GetDesc1()
-			if err != nil {
-				continue
-			}
+			desc := mylog.Check2(a.GetDesc1())
+
 			if desc.Flags&_DXGI_ADAPTER_FLAG_SOFTWARE != 0 {
 				continue
 			}
 
 			// Test D3D12CreateDevice without creating an actual device.
-			if _, err := _D3D12CreateDevice(unsafe.Pointer(a), featureLevel, &_IID_ID3D12Device, false); err != nil {
+			if _ := mylog.Check2(_D3D12CreateDevice(unsafe.Pointer(a), featureLevel, &_IID_ID3D12Device, false)); err != nil {
 				continue
 			}
 			adapter = a
@@ -193,17 +193,17 @@ func (g *graphics12) initializeDesktop(useWARP bool, useDebugLayer bool, feature
 		return errors.New("directx: DirectX 12 is not supported")
 	}
 
-	d, err := _D3D12CreateDevice(unsafe.Pointer(adapter), featureLevel, &_IID_ID3D12Device, true)
+	d := mylog.Check2(_D3D12CreateDevice(unsafe.Pointer(adapter), featureLevel, &_IID_ID3D12Device, true))
 
 	g.device = (*_ID3D12Device)(d)
 
-	if err := g.initializeMembers(g.frameIndex); err != nil {
+	if mylog.Check(g.initializeMembers(g.frameIndex)); err != nil {
 		return err
 	}
 
 	// GetCopyableFootprints might return an invalid value with Wine (#2114).
 	// To check this early, call NewImage here.
-	i, err := g.NewImage(1, 1)
+	i := mylog.Check2(g.NewImage(1, 1))
 
 	i.Dispose()
 
@@ -213,7 +213,7 @@ func (g *graphics12) initializeDesktop(useWARP bool, useDebugLayer bool, feature
 func (g *graphics12) initializeXbox(useWARP bool, useDebugLayer bool) (ferr error) {
 	g = &graphics12{}
 
-	if err := d3d12x.Load(); err != nil {
+	if mylog.Check(d3d12x.Load()); err != nil {
 		return err
 	}
 
@@ -226,22 +226,22 @@ func (g *graphics12) initializeXbox(useWARP bool, useDebugLayer bool) (ferr erro
 	if useDebugLayer {
 		params.ProcessDebugFlags = _D3D12_PROCESS_DEBUG_FLAG_DEBUG_LAYER_ENABLED
 	}
-	d, err := _D3D12XboxCreateDevice(nil, params, &_IID_ID3D12Device)
+	d := mylog.Check2(_D3D12XboxCreateDevice(nil, params, &_IID_ID3D12Device))
 
 	g.device = (*_ID3D12Device)(d)
 
-	if err := g.initializeMembers(g.frameIndex); err != nil {
+	if mylog.Check(g.initializeMembers(g.frameIndex)); err != nil {
 		return err
 	}
 
-	if err := g.registerFrameEventForXbox(); err != nil {
+	if mylog.Check(g.registerFrameEventForXbox()); err != nil {
 		return err
 	}
 
 	g.suspendingCh = make(chan struct{})
 	g.suspendedCh = make(chan struct{})
 	g.resumeCh = make(chan struct{})
-	if _, err := _RegisterAppStateChangeNotification(func(quiesced bool, context unsafe.Pointer) uintptr {
+	if _ := mylog.Check2(_RegisterAppStateChangeNotification(func(quiesced bool, context unsafe.Pointer) uintptr {
 		if quiesced {
 			g.suspendingCh <- struct{}{}
 			// Confirm the suspension completed before the callback ends.
@@ -250,7 +250,7 @@ func (g *graphics12) initializeXbox(useWARP bool, useDebugLayer bool) (ferr erro
 			g.resumeCh <- struct{}{}
 		}
 		return 0
-	}, nil); err != nil {
+	}, nil)); err != nil {
 		return err
 	}
 
@@ -258,23 +258,23 @@ func (g *graphics12) initializeXbox(useWARP bool, useDebugLayer bool) (ferr erro
 }
 
 func (g *graphics12) registerFrameEventForXbox() error {
-	d, err := g.device.QueryInterface(&_IID_IDXGIDevice)
+	d := mylog.Check2(g.device.QueryInterface(&_IID_IDXGIDevice))
 
 	dxgiDevice := (*_IDXGIDevice)(d)
 	defer dxgiDevice.Release()
 
-	dxgiAdapter, err := dxgiDevice.GetAdapter()
+	dxgiAdapter := mylog.Check2(dxgiDevice.GetAdapter())
 
 	defer dxgiAdapter.Release()
 
-	dxgiOutput, err := dxgiAdapter.EnumOutputs(0)
+	dxgiOutput := mylog.Check2(dxgiAdapter.EnumOutputs(0))
 
 	defer dxgiOutput.Release()
 
-	if err := g.device.SetFrameIntervalX(dxgiOutput, _D3D12XBOX_FRAME_INTERVAL_60_HZ, frameCount-1, _D3D12XBOX_FRAME_INTERVAL_FLAG_NONE); err != nil {
+	if mylog.Check(g.device.SetFrameIntervalX(dxgiOutput, _D3D12XBOX_FRAME_INTERVAL_60_HZ, frameCount-1, _D3D12XBOX_FRAME_INTERVAL_FLAG_NONE)); err != nil {
 		return err
 	}
-	if err := g.device.ScheduleFrameEventX(_D3D12XBOX_FRAME_EVENT_ORIGIN, 0, nil, _D3D12XBOX_SCHEDULE_FRAME_EVENT_FLAG_NONE); err != nil {
+	if mylog.Check(g.device.ScheduleFrameEventX(_D3D12XBOX_FRAME_EVENT_ORIGIN, 0, nil, _D3D12XBOX_SCHEDULE_FRAME_EVENT_FLAG_NONE)); err != nil {
 		return err
 	}
 
@@ -283,10 +283,8 @@ func (g *graphics12) registerFrameEventForXbox() error {
 
 func (g *graphics12) initializeMembers(frameIndex int) (ferr error) {
 	// Create an event for a fence.
-	e, err := windows.CreateEventEx(nil, nil, 0, windows.EVENT_MODIFY_STATE|windows.SYNCHRONIZE)
-	if err != nil {
-		return fmt.Errorf("directx: CreateEvent failed: %w", err)
-	}
+	e := mylog.Check2(windows.CreateEventEx(nil, nil, 0, windows.EVENT_MODIFY_STATE|windows.SYNCHRONIZE))
+
 	g.fenceWaitEvent = e
 
 	// Create a command queue.
@@ -294,7 +292,7 @@ func (g *graphics12) initializeMembers(frameIndex int) (ferr error) {
 		Type:  _D3D12_COMMAND_LIST_TYPE_DIRECT,
 		Flags: _D3D12_COMMAND_QUEUE_FLAG_NONE,
 	}
-	c, err := g.device.CreateCommandQueue(&desc)
+	c := mylog.Check2(g.device.CreateCommandQueue(&desc))
 
 	g.commandQueue = c
 	defer func() {
@@ -306,7 +304,7 @@ func (g *graphics12) initializeMembers(frameIndex int) (ferr error) {
 
 	// Create command allocators.
 	for i := 0; i < frameCount; i++ {
-		dca, err := g.device.CreateCommandAllocator(_D3D12_COMMAND_LIST_TYPE_DIRECT)
+		dca := mylog.Check2(g.device.CreateCommandAllocator(_D3D12_COMMAND_LIST_TYPE_DIRECT))
 
 		g.drawCommandAllocators[i] = dca
 		defer func(i int) {
@@ -316,7 +314,7 @@ func (g *graphics12) initializeMembers(frameIndex int) (ferr error) {
 			}
 		}(i)
 
-		cca, err := g.device.CreateCommandAllocator(_D3D12_COMMAND_LIST_TYPE_DIRECT)
+		cca := mylog.Check2(g.device.CreateCommandAllocator(_D3D12_COMMAND_LIST_TYPE_DIRECT))
 
 		g.copyCommandAllocators[i] = cca
 		defer func(i int) {
@@ -328,7 +326,7 @@ func (g *graphics12) initializeMembers(frameIndex int) (ferr error) {
 	}
 
 	// Create a frame fence.
-	f, err := g.device.CreateFence(0, _D3D12_FENCE_FLAG_NONE)
+	f := mylog.Check2(g.device.CreateFence(0, _D3D12_FENCE_FLAG_NONE))
 
 	g.fence = f
 	defer func() {
@@ -340,7 +338,7 @@ func (g *graphics12) initializeMembers(frameIndex int) (ferr error) {
 	g.fenceValues[frameIndex]++
 
 	// Create command lists.
-	dcl, err := g.device.CreateCommandList(0, _D3D12_COMMAND_LIST_TYPE_DIRECT, g.drawCommandAllocators[0], nil)
+	dcl := mylog.Check2(g.device.CreateCommandList(0, _D3D12_COMMAND_LIST_TYPE_DIRECT, g.drawCommandAllocators[0], nil))
 
 	g.drawCommandList = dcl
 	defer func() {
@@ -350,7 +348,7 @@ func (g *graphics12) initializeMembers(frameIndex int) (ferr error) {
 		}
 	}()
 
-	ccl, err := g.device.CreateCommandList(0, _D3D12_COMMAND_LIST_TYPE_DIRECT, g.copyCommandAllocators[0], nil)
+	ccl := mylog.Check2(g.device.CreateCommandList(0, _D3D12_COMMAND_LIST_TYPE_DIRECT, g.copyCommandAllocators[0], nil))
 
 	g.copyCommandList = ccl
 	defer func() {
@@ -361,20 +359,20 @@ func (g *graphics12) initializeMembers(frameIndex int) (ferr error) {
 	}()
 
 	// Close the command list once as this is immediately Reset at Begin.
-	if err := g.drawCommandList.Close(); err != nil {
+	if mylog.Check(g.drawCommandList.Close()); err != nil {
 		return err
 	}
-	if err := g.copyCommandList.Close(); err != nil {
+	if mylog.Check(g.copyCommandList.Close()); err != nil {
 		return err
 	}
 
 	// Create a descriptor heap for RTV.
-	h, err := g.device.CreateDescriptorHeap(&_D3D12_DESCRIPTOR_HEAP_DESC{
+	h := mylog.Check2(g.device.CreateDescriptorHeap(&_D3D12_DESCRIPTOR_HEAP_DESC{
 		Type:           _D3D12_DESCRIPTOR_HEAP_TYPE_RTV,
 		NumDescriptors: frameCount,
 		Flags:          _D3D12_DESCRIPTOR_HEAP_FLAG_NONE,
 		NodeMask:       0,
-	})
+	}))
 
 	g.rtvDescriptorHeap = h
 	defer func() {
@@ -385,7 +383,7 @@ func (g *graphics12) initializeMembers(frameIndex int) (ferr error) {
 	}()
 	g.rtvDescriptorSize = g.device.GetDescriptorHandleIncrementSize(_D3D12_DESCRIPTOR_HEAP_TYPE_RTV)
 
-	if err := g.pipelineStates.initialize(g.device); err != nil {
+	if mylog.Check(g.pipelineStates.initialize(g.device)); err != nil {
 		return err
 	}
 
@@ -403,7 +401,7 @@ func createBuffer(device *_ID3D12Device, bufferSize uint64, heapType _D3D12_HEAP
 		state = _D3D12_RESOURCE_STATE_COPY_DEST
 	}
 
-	r, err := device.CreateCommittedResource(&_D3D12_HEAP_PROPERTIES{
+	r := mylog.Check2(device.CreateCommittedResource(&_D3D12_HEAP_PROPERTIES{
 		Type:                 heapType,
 		CPUPageProperty:      _D3D12_CPU_PAGE_PROPERTY_UNKNOWN,
 		MemoryPoolPreference: _D3D12_MEMORY_POOL_UNKNOWN,
@@ -423,10 +421,8 @@ func createBuffer(device *_ID3D12Device, bufferSize uint64, heapType _D3D12_HEAP
 		},
 		Layout: _D3D12_TEXTURE_LAYOUT_ROW_MAJOR,
 		Flags:  _D3D12_RESOURCE_FLAG_NONE,
-	}, state, nil)
-	if err != nil {
-		return nil, err
-	}
+	}, state, nil))
+
 	return r, nil
 }
 
@@ -436,14 +432,14 @@ func (g *graphics12) updateSwapChain(width, height int) error {
 	}
 
 	if microsoftgdk.IsXbox() {
-		if err := g.initSwapChainXbox(width, height); err != nil {
+		if mylog.Check(g.initSwapChainXbox(width, height)); err != nil {
 			return err
 		}
 		return nil
 	}
 
 	if !g.graphicsInfra.isSwapChainInited() {
-		if err := g.initSwapChainDesktop(width, height); err != nil {
+		if mylog.Check(g.initSwapChainDesktop(width, height)); err != nil {
 			return err
 		}
 		return nil
@@ -456,17 +452,17 @@ func (g *graphics12) updateSwapChain(width, height int) error {
 }
 
 func (g *graphics12) initSwapChainDesktop(width, height int) error {
-	if err := g.graphicsInfra.initSwapChain(width, height, unsafe.Pointer(g.commandQueue), g.window); err != nil {
+	if mylog.Check(g.graphicsInfra.initSwapChain(width, height, unsafe.Pointer(g.commandQueue), g.window)); err != nil {
 		return err
 	}
 
 	// TODO: Get the current buffer index?
 
-	if err := g.createRenderTargetViewsDesktop(); err != nil {
+	if mylog.Check(g.createRenderTargetViewsDesktop()); err != nil {
 		return err
 	}
 
-	idx, err := g.graphicsInfra.currentBackBufferIndex()
+	idx := mylog.Check2(g.graphicsInfra.currentBackBufferIndex())
 
 	g.frameIndex = idx
 
@@ -474,10 +470,10 @@ func (g *graphics12) initSwapChainDesktop(width, height int) error {
 }
 
 func (g *graphics12) initSwapChainXbox(width, height int) (ferr error) {
-	h, err := g.rtvDescriptorHeap.GetCPUDescriptorHandleForHeapStart()
+	h := mylog.Check2(g.rtvDescriptorHeap.GetCPUDescriptorHandleForHeapStart())
 
 	for i := 0; i < frameCount; i++ {
-		r, err := g.device.CreateCommittedResource(&_D3D12_HEAP_PROPERTIES{
+		r := mylog.Check2(g.device.CreateCommittedResource(&_D3D12_HEAP_PROPERTIES{
 			Type:                 _D3D12_HEAP_TYPE_DEFAULT,
 			CPUPageProperty:      _D3D12_CPU_PAGE_PROPERTY_UNKNOWN,
 			MemoryPoolPreference: _D3D12_MEMORY_POOL_UNKNOWN,
@@ -499,7 +495,7 @@ func (g *graphics12) initSwapChainXbox(width, height int) (ferr error) {
 			Flags:  _D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET,
 		}, _D3D12_RESOURCE_STATE_PRESENT, &_D3D12_CLEAR_VALUE{
 			Format: _DXGI_FORMAT_B8G8R8A8_UNORM,
-		})
+		}))
 
 		g.renderTargets[i] = r
 		defer func(i int) {
@@ -521,7 +517,7 @@ func (g *graphics12) initSwapChainXbox(width, height int) (ferr error) {
 
 func (g *graphics12) resizeSwapChainDesktop(width, height int) error {
 	// All resources must be released before ResizeBuffers.
-	if err := g.waitForCommandQueue(); err != nil {
+	if mylog.Check(g.waitForCommandQueue()); err != nil {
 		return err
 	}
 	g.releaseResources(g.frameIndex)
@@ -534,11 +530,11 @@ func (g *graphics12) resizeSwapChainDesktop(width, height int) error {
 		r.Release()
 	}
 
-	if err := g.graphicsInfra.resizeSwapChain(width, height); err != nil {
+	if mylog.Check(g.graphicsInfra.resizeSwapChain(width, height)); err != nil {
 		return err
 	}
 
-	if err := g.createRenderTargetViewsDesktop(); err != nil {
+	if mylog.Check(g.createRenderTargetViewsDesktop()); err != nil {
 		return err
 	}
 
@@ -547,10 +543,10 @@ func (g *graphics12) resizeSwapChainDesktop(width, height int) error {
 
 func (g *graphics12) createRenderTargetViewsDesktop() (ferr error) {
 	// Create frame resources.
-	h, err := g.rtvDescriptorHeap.GetCPUDescriptorHandleForHeapStart()
+	h := mylog.Check2(g.rtvDescriptorHeap.GetCPUDescriptorHandleForHeapStart())
 
 	for i := 0; i < frameCount; i++ {
-		r, err := g.graphicsInfra.getBuffer(uint32(i), &_IID_ID3D12Resource)
+		r := mylog.Check2(g.graphicsInfra.getBuffer(uint32(i), &_IID_ID3D12Resource))
 
 		g.renderTargets[i] = (*_ID3D12Resource)(r)
 		defer func(i int) {
@@ -576,41 +572,41 @@ func (g *graphics12) Begin() error {
 	if microsoftgdk.IsXbox() && !g.frameStarted {
 		select {
 		case <-g.suspendingCh:
-			if err := g.commandQueue.SuspendX(0); err != nil {
+			if mylog.Check(g.commandQueue.SuspendX(0)); err != nil {
 				return err
 			}
 			g.suspendedCh <- struct{}{}
 			<-g.resumeCh
-			if err := g.commandQueue.ResumeX(); err != nil {
+			if mylog.Check(g.commandQueue.ResumeX()); err != nil {
 				return err
 			}
-			if err := g.registerFrameEventForXbox(); err != nil {
+			if mylog.Check(g.registerFrameEventForXbox()); err != nil {
 				return err
 			}
 		default:
 		}
 
 		g.framePipelineToken = _D3D12XBOX_FRAME_PIPELINE_TOKEN_NULL
-		if err := g.device.WaitFrameEventX(_D3D12XBOX_FRAME_EVENT_ORIGIN, windows.INFINITE, nil, _D3D12XBOX_WAIT_FRAME_EVENT_FLAG_NONE, &g.framePipelineToken); err != nil {
+		if mylog.Check(g.device.WaitFrameEventX(_D3D12XBOX_FRAME_EVENT_ORIGIN, windows.INFINITE, nil, _D3D12XBOX_WAIT_FRAME_EVENT_FLAG_NONE, &g.framePipelineToken)); err != nil {
 			return err
 		}
 	}
 	g.frameStarted = true
 
 	if g.prevBeginFrameIndex != g.frameIndex {
-		if err := g.drawCommandAllocators[g.frameIndex].Reset(); err != nil {
+		if mylog.Check(g.drawCommandAllocators[g.frameIndex].Reset()); err != nil {
 			return err
 		}
-		if err := g.copyCommandAllocators[g.frameIndex].Reset(); err != nil {
+		if mylog.Check(g.copyCommandAllocators[g.frameIndex].Reset()); err != nil {
 			return err
 		}
 	}
 	g.prevBeginFrameIndex = g.frameIndex
 
-	if err := g.drawCommandList.Reset(g.drawCommandAllocators[g.frameIndex], nil); err != nil {
+	if mylog.Check(g.drawCommandList.Reset(g.drawCommandAllocators[g.frameIndex], nil)); err != nil {
 		return err
 	}
-	if err := g.copyCommandList.Reset(g.copyCommandAllocators[g.frameIndex], nil); err != nil {
+	if mylog.Check(g.copyCommandList.Reset(g.copyCommandAllocators[g.frameIndex], nil)); err != nil {
 		return err
 	}
 	return nil
@@ -620,10 +616,10 @@ func (g *graphics12) End(present bool) error {
 	// The swap chain might still be nil when Begin-End is invoked not by a frame (e.g., Image.At).
 
 	// As copyCommandList and drawCommandList are exclusive, the order should not matter here.
-	if err := g.flushCommandList(g.copyCommandList); err != nil {
+	if mylog.Check(g.flushCommandList(g.copyCommandList)); err != nil {
 		return err
 	}
-	if err := g.copyCommandList.Close(); err != nil {
+	if mylog.Check(g.copyCommandList.Close()); err != nil {
 		return err
 	}
 
@@ -634,7 +630,7 @@ func (g *graphics12) End(present bool) error {
 		}
 	}
 
-	if err := g.drawCommandList.Close(); err != nil {
+	if mylog.Check(g.drawCommandList.Close()); err != nil {
 		return err
 	}
 	g.commandQueue.ExecuteCommandLists([]*_ID3D12GraphicsCommandList{g.drawCommandList})
@@ -643,7 +639,7 @@ func (g *graphics12) End(present bool) error {
 	// The threshold is an arbitrary number.
 	// This is needed especially for testings, where present is always false.
 	if len(g.vertices[g.frameIndex]) >= 16 {
-		if err := g.waitForCommandQueue(); err != nil {
+		if mylog.Check(g.waitForCommandQueue()); err != nil {
 			return err
 		}
 		g.releaseResources(g.frameIndex)
@@ -654,17 +650,17 @@ func (g *graphics12) End(present bool) error {
 
 	if present {
 		if microsoftgdk.IsXbox() {
-			if err := g.presentXbox(); err != nil {
+			if mylog.Check(g.presentXbox()); err != nil {
 				return err
 			}
 		} else {
-			if err := g.presentDesktop(); err != nil {
+			if mylog.Check(g.presentDesktop()); err != nil {
 				return err
 			}
 		}
 
 		if g.newScreenWidth != 0 && g.newScreenHeight != 0 {
-			if err := g.resizeSwapChainDesktop(g.newScreenWidth, g.newScreenHeight); err != nil {
+			if mylog.Check(g.resizeSwapChainDesktop(g.newScreenWidth, g.newScreenHeight)); err != nil {
 				return err
 			}
 			g.screenImage.width = g.newScreenWidth
@@ -673,7 +669,7 @@ func (g *graphics12) End(present bool) error {
 			g.newScreenHeight = 0
 		}
 
-		if err := g.moveToNextFrame(); err != nil {
+		if mylog.Check(g.moveToNextFrame()); err != nil {
 			return err
 		}
 
@@ -700,7 +696,7 @@ func (g *graphics12) presentXbox() error {
 
 func (g *graphics12) moveToNextFrame() error {
 	fv := g.fenceValues[g.frameIndex]
-	if err := g.commandQueue.Signal(g.fence, fv); err != nil {
+	if mylog.Check(g.commandQueue.Signal(g.fence, fv)); err != nil {
 		return err
 	}
 
@@ -708,16 +704,16 @@ func (g *graphics12) moveToNextFrame() error {
 	if microsoftgdk.IsXbox() {
 		g.frameIndex = (g.frameIndex + 1) % frameCount
 	} else {
-		idx, err := g.graphicsInfra.currentBackBufferIndex()
+		idx := mylog.Check2(g.graphicsInfra.currentBackBufferIndex())
 
 		g.frameIndex = idx
 	}
 
 	if g.fence.GetCompletedValue() < g.fenceValues[g.frameIndex] {
-		if err := g.fence.SetEventOnCompletion(g.fenceValues[g.frameIndex], g.fenceWaitEvent); err != nil {
+		if mylog.Check(g.fence.SetEventOnCompletion(g.fenceValues[g.frameIndex], g.fenceWaitEvent)); err != nil {
 			return err
 		}
-		if _, err := windows.WaitForSingleObject(g.fenceWaitEvent, windows.INFINITE); err != nil {
+		if _ := mylog.Check2(windows.WaitForSingleObject(g.fenceWaitEvent, windows.INFINITE)); err != nil {
 			return err
 		}
 	}
@@ -774,29 +770,29 @@ func (g *graphics12) flushCommandList(commandList *_ID3D12GraphicsCommandList) e
 		g.needFlushCopyCommandList = false
 	}
 
-	if err := commandList.Close(); err != nil {
+	if mylog.Check(commandList.Close()); err != nil {
 		return err
 	}
 
 	g.commandQueue.ExecuteCommandLists([]*_ID3D12GraphicsCommandList{commandList})
 
-	if err := g.waitForCommandQueue(); err != nil {
+	if mylog.Check(g.waitForCommandQueue()); err != nil {
 		return err
 	}
 
 	switch commandList {
 	case g.drawCommandList:
-		if err := g.drawCommandAllocators[g.frameIndex].Reset(); err != nil {
+		if mylog.Check(g.drawCommandAllocators[g.frameIndex].Reset()); err != nil {
 			return err
 		}
-		if err := commandList.Reset(g.drawCommandAllocators[g.frameIndex], nil); err != nil {
+		if mylog.Check(commandList.Reset(g.drawCommandAllocators[g.frameIndex], nil)); err != nil {
 			return err
 		}
 	case g.copyCommandList:
-		if err := g.copyCommandAllocators[g.frameIndex].Reset(); err != nil {
+		if mylog.Check(g.copyCommandAllocators[g.frameIndex].Reset()); err != nil {
 			return err
 		}
-		if err := commandList.Reset(g.copyCommandAllocators[g.frameIndex], nil); err != nil {
+		if mylog.Check(commandList.Reset(g.copyCommandAllocators[g.frameIndex], nil)); err != nil {
 			return err
 		}
 
@@ -810,13 +806,13 @@ func (g *graphics12) flushCommandList(commandList *_ID3D12GraphicsCommandList) e
 
 func (g *graphics12) waitForCommandQueue() error {
 	fv := g.fenceValues[g.frameIndex]
-	if err := g.commandQueue.Signal(g.fence, fv); err != nil {
+	if mylog.Check(g.commandQueue.Signal(g.fence, fv)); err != nil {
 		return err
 	}
-	if err := g.fence.SetEventOnCompletion(fv, g.fenceWaitEvent); err != nil {
+	if mylog.Check(g.fence.SetEventOnCompletion(fv, g.fenceWaitEvent)); err != nil {
 		return err
 	}
-	if _, err := windows.WaitForSingleObject(g.fenceWaitEvent, windows.INFINITE); err != nil {
+	if _ := mylog.Check2(windows.WaitForSingleObject(g.fenceWaitEvent, windows.INFINITE)); err != nil {
 		return err
 	}
 	g.fenceValues[g.frameIndex]++
@@ -842,7 +838,7 @@ func (g *graphics12) SetVertices(vertices []float32, indices []uint32) (ferr err
 	}
 	if g.vertices[g.frameIndex][vidx] == nil {
 		// TODO: Use the default heap for efficiently. See the official example HelloTriangle.
-		vs, err := createBuffer(g.device, uint64(vsize), _D3D12_HEAP_TYPE_UPLOAD)
+		vs := mylog.Check2(createBuffer(g.device, uint64(vsize), _D3D12_HEAP_TYPE_UPLOAD))
 
 		g.vertices[g.frameIndex][vidx] = &resourceWithSize{
 			value:       vs,
@@ -868,7 +864,7 @@ func (g *graphics12) SetVertices(vertices []float32, indices []uint32) (ferr err
 		g.indices[g.frameIndex][iidx] = nil
 	}
 	if g.indices[g.frameIndex][iidx] == nil {
-		is, err := createBuffer(g.device, uint64(isize), _D3D12_HEAP_TYPE_UPLOAD)
+		is := mylog.Check2(createBuffer(g.device, uint64(isize), _D3D12_HEAP_TYPE_UPLOAD))
 
 		g.indices[g.frameIndex][iidx] = &resourceWithSize{
 			value:       is,
@@ -882,12 +878,12 @@ func (g *graphics12) SetVertices(vertices []float32, indices []uint32) (ferr err
 		}()
 	}
 
-	m, err := g.vertices[g.frameIndex][vidx].value.Map(0, &_D3D12_RANGE{0, 0})
+	m := mylog.Check2(g.vertices[g.frameIndex][vidx].value.Map(0, &_D3D12_RANGE{0, 0}))
 
 	copy(unsafe.Slice((*float32)(unsafe.Pointer(m)), len(vertices)), vertices)
 	g.vertices[g.frameIndex][vidx].value.Unmap(0, nil)
 
-	m, err = g.indices[g.frameIndex][iidx].value.Map(0, &_D3D12_RANGE{0, 0})
+	m = mylog.Check2(g.indices[g.frameIndex][iidx].value.Map(0, &_D3D12_RANGE{0, 0}))
 
 	copy(unsafe.Slice((*uint32)(unsafe.Pointer(m)), len(indices)), indices)
 	g.indices[g.frameIndex][iidx].value.Unmap(0, nil)
@@ -913,16 +909,13 @@ func (g *graphics12) NewImage(width, height int) (graphicsdriver.Image, error) {
 	}
 
 	state := _D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
-	t, err := g.device.CreateCommittedResource(&_D3D12_HEAP_PROPERTIES{
+	t := mylog.Check2(g.device.CreateCommittedResource(&_D3D12_HEAP_PROPERTIES{
 		Type:                 _D3D12_HEAP_TYPE_DEFAULT, // Upload?
 		CPUPageProperty:      _D3D12_CPU_PAGE_PROPERTY_UNKNOWN,
 		MemoryPoolPreference: _D3D12_MEMORY_POOL_UNKNOWN,
 		CreationNodeMask:     1,
 		VisibleNodeMask:      1,
-	}, _D3D12_HEAP_FLAG_NONE, &desc, state, nil)
-	if err != nil {
-		return nil, err
-	}
+	}, _D3D12_HEAP_FLAG_NONE, &desc, state, nil))
 
 	i := &image12{
 		graphics: g,
@@ -946,7 +939,7 @@ func (g *graphics12) NewScreenFramebufferImage(width, height int) (graphicsdrive
 		g.screenImage = nil
 	}
 
-	if err := g.updateSwapChain(width, height); err != nil {
+	if mylog.Check(g.updateSwapChain(width, height)); err != nil {
 		return nil, err
 	}
 
@@ -1007,10 +1000,7 @@ func (g *graphics12) MaxImageSize() int {
 }
 
 func (g *graphics12) NewShader(program *shaderir.Program) (graphicsdriver.Shader, error) {
-	vsh, psh, err := compileShader(program)
-	if err != nil {
-		return nil, err
-	}
+	vsh, psh := mylog.Check3(compileShader(program))
 
 	s := &shader12{
 		graphics:       g,
@@ -1029,7 +1019,7 @@ func (g *graphics12) DrawTriangles(dstID graphicsdriver.ImageID, srcs [graphics.
 		return fmt.Errorf("directx: shader ID is invalid")
 	}
 
-	if err := g.flushCommandList(g.copyCommandList); err != nil {
+	if mylog.Check(g.flushCommandList(g.copyCommandList)); err != nil {
 		return err
 	}
 
@@ -1039,7 +1029,7 @@ func (g *graphics12) DrawTriangles(dstID graphicsdriver.ImageID, srcs [graphics.
 		numPipelines = 2
 	}
 	if len(g.pipelineStates.constantBuffers[g.frameIndex])+numPipelines > numDescriptorsPerFrame {
-		if err := g.flushCommandList(g.drawCommandList); err != nil {
+		if mylog.Check(g.flushCommandList(g.drawCommandList)); err != nil {
 			return err
 		}
 		g.pipelineStates.releaseConstantBuffers(g.frameIndex)
@@ -1067,7 +1057,7 @@ func (g *graphics12) DrawTriangles(dstID graphicsdriver.ImageID, srcs [graphics.
 		g.drawCommandList.ResourceBarrier(resourceBarriers)
 	}
 
-	if err := dst.setAsRenderTarget(g.drawCommandList, g.device, fillRule != graphicsdriver.FillRuleFillAll); err != nil {
+	if mylog.Check(dst.setAsRenderTarget(g.drawCommandList, g.device, fillRule != graphicsdriver.FillRuleFillAll)); err != nil {
 		return err
 	}
 
@@ -1100,7 +1090,7 @@ func (g *graphics12) DrawTriangles(dstID graphicsdriver.ImageID, srcs [graphics.
 		Format:         _DXGI_FORMAT_R32_UINT,
 	})
 
-	if err := g.pipelineStates.drawTriangles(g.device, g.drawCommandList, g.frameIndex, dst.screen, srcImages, shader, dstRegions, adjustedUniforms, blend, indexOffset, fillRule); err != nil {
+	if mylog.Check(g.pipelineStates.drawTriangles(g.device, g.drawCommandList, g.frameIndex, dst.screen, srcImages, shader, dstRegions, adjustedUniforms, blend, indexOffset, fillRule)); err != nil {
 		return err
 	}
 

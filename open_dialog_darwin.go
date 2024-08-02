@@ -12,6 +12,7 @@ package unison
 import (
 	"net/url"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/unison/internal/ns"
 )
@@ -26,11 +27,8 @@ func platformNewOpenDialog() OpenDialog {
 
 func (d *macOpenDialog) InitialDirectory() string {
 	urlStr := d.dialog.DirectoryURL().AbsoluteString()
-	u, err := url.Parse(urlStr)
-	if err != nil {
-		errs.Log(errs.NewWithCause("unable to parse directory URL", err), "url", urlStr)
-		return ""
-	}
+	u := mylog.Check2(url.Parse(urlStr))
+
 	return u.Path
 }
 

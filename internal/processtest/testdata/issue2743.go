@@ -19,6 +19,7 @@ package main
 import (
 	"time"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -41,7 +42,7 @@ func main() {
 			time.Sleep(time.Millisecond)
 		}
 	}()
-	if err := ebiten.RunGame(&Game{}); err != nil {
+	if mylog.Check(ebiten.RunGame(&Game{})); err != nil {
 		panic(err)
 	}
 }

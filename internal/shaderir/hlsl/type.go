@@ -16,6 +16,7 @@ package hlsl
 
 import (
 	"fmt"
+
 	"github.com/richardwilkes/unison/internal/shaderir"
 )
 

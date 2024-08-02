@@ -31,8 +31,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/internal/graphicsdriver/metal"
 )
 
-type graphicsDriverCreatorImpl struct {
-}
+type graphicsDriverCreatorImpl struct{}
 
 func (g *graphicsDriverCreatorImpl) newAuto() (graphicsdriver.Graphics, GraphicsLibrary, error) {
 	m, err1 := g.newMetal()

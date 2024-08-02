@@ -20,6 +20,8 @@ import (
 	"sync"
 	"syscall/js"
 	"time"
+
+	"github.com/ddkwork/golibrary/mylog"
 )
 
 type graphicsDriverCreatorImpl struct {
@@ -27,7 +29,7 @@ type graphicsDriverCreatorImpl struct {
 }
 
 func (g *graphicsDriverCreatorImpl) newAuto() (graphicsdriver.Graphics, GraphicsLibrary, error) {
-	graphics, err := g.newOpenGL()
+	graphics := mylog.Check2(g.newOpenGL())
 	return graphics, GraphicsLibraryOpenGL, err
 }
 
@@ -311,7 +313,7 @@ func (u *UserInterface) update() error {
 	if u.suspended() {
 		return hook.SuspendAudio()
 	}
-	if err := hook.ResumeAudio(); err != nil {
+	if mylog.Check(hook.ResumeAudio()); err != nil {
 		return err
 	}
 	return u.updateImpl(false)
@@ -327,7 +329,7 @@ func (u *UserInterface) updateImpl(force bool) error {
 		return nil
 	}
 
-	if err := gamepad.Update(); err != nil {
+	if mylog.Check(gamepad.Update()); err != nil {
 		return err
 	}
 
@@ -337,11 +339,11 @@ func (u *UserInterface) updateImpl(force bool) error {
 
 	w, h := u.outsideSize()
 	if force {
-		if err := u.context.forceUpdateFrame(u.graphicsDriver, w, h, theMonitor.DeviceScaleFactor(), u); err != nil {
+		if mylog.Check(u.context.forceUpdateFrame(u.graphicsDriver, w, h, theMonitor.DeviceScaleFactor(), u)); err != nil {
 			return err
 		}
 	} else {
-		if err := u.context.updateFrame(u.graphicsDriver, w, h, theMonitor.DeviceScaleFactor(), u); err != nil {
+		if mylog.Check(u.context.updateFrame(u.graphicsDriver, w, h, theMonitor.DeviceScaleFactor(), u)); err != nil {
 			return err
 		}
 	}
@@ -374,7 +376,7 @@ func (u *UserInterface) loopGame() error {
 
 	var cf js.Func
 	f := func() {
-		if err := u.error(); err != nil {
+		if mylog.Check(u.error()); err != nil {
 			errCh <- err
 			return
 		}
@@ -383,7 +385,7 @@ func (u *UserInterface) loopGame() error {
 				u.onceUpdateCalled = true
 			}()
 			u.renderingScheduled = false
-			if err := u.update(); err != nil {
+			if mylog.Check(u.update()); err != nil {
 				close(reqStopAudioCh)
 				<-resStopAudioCh
 
@@ -435,12 +437,12 @@ func (u *UserInterface) loopGame() error {
 			select {
 			case <-t.C:
 				if u.suspended() {
-					if err := hook.SuspendAudio(); err != nil {
+					if mylog.Check(hook.SuspendAudio()); err != nil {
 						errCh <- err
 						return
 					}
 				} else {
-					if err := hook.ResumeAudio(); err != nil {
+					if mylog.Check(hook.ResumeAudio()); err != nil {
 						errCh <- err
 						return
 					}
@@ -550,7 +552,7 @@ func (u *UserInterface) setWindowEventHandlers(v js.Value) {
 		// updateImpl can block. Use goroutine.
 		// See https://pkg.go.dev/syscall/js#FuncOf.
 		go func() {
-			if err := u.updateImpl(true); err != nil {
+			if mylog.Check(u.updateImpl(true)); err != nil {
 				u.setError(err)
 				return
 			}
@@ -567,7 +569,7 @@ func (u *UserInterface) setCanvasEventHandlers(v js.Value) {
 
 		e := args[0]
 		e.Call("preventDefault")
-		if err := u.updateInputFromEvent(e); err != nil {
+		if mylog.Check(u.updateInputFromEvent(e)); err != nil {
 			u.setError(err)
 			return nil
 		}
@@ -576,7 +578,7 @@ func (u *UserInterface) setCanvasEventHandlers(v js.Value) {
 	v.Call("addEventListener", "keyup", js.FuncOf(func(this js.Value, args []js.Value) any {
 		e := args[0]
 		e.Call("preventDefault")
-		if err := u.updateInputFromEvent(e); err != nil {
+		if mylog.Check(u.updateInputFromEvent(e)); err != nil {
 			u.setError(err)
 			return nil
 		}
@@ -590,7 +592,7 @@ func (u *UserInterface) setCanvasEventHandlers(v js.Value) {
 
 		e := args[0]
 		e.Call("preventDefault")
-		if err := u.updateInputFromEvent(e); err != nil {
+		if mylog.Check(u.updateInputFromEvent(e)); err != nil {
 			u.setError(err)
 			return nil
 		}
@@ -599,7 +601,7 @@ func (u *UserInterface) setCanvasEventHandlers(v js.Value) {
 	v.Call("addEventListener", "mouseup", js.FuncOf(func(this js.Value, args []js.Value) any {
 		e := args[0]
 		e.Call("preventDefault")
-		if err := u.updateInputFromEvent(e); err != nil {
+		if mylog.Check(u.updateInputFromEvent(e)); err != nil {
 			u.setError(err)
 			return nil
 		}
@@ -608,7 +610,7 @@ func (u *UserInterface) setCanvasEventHandlers(v js.Value) {
 	v.Call("addEventListener", "mousemove", js.FuncOf(func(this js.Value, args []js.Value) any {
 		e := args[0]
 		e.Call("preventDefault")
-		if err := u.updateInputFromEvent(e); err != nil {
+		if mylog.Check(u.updateInputFromEvent(e)); err != nil {
 			u.setError(err)
 			return nil
 		}
@@ -617,7 +619,7 @@ func (u *UserInterface) setCanvasEventHandlers(v js.Value) {
 	v.Call("addEventListener", "wheel", js.FuncOf(func(this js.Value, args []js.Value) any {
 		e := args[0]
 		e.Call("preventDefault")
-		if err := u.updateInputFromEvent(e); err != nil {
+		if mylog.Check(u.updateInputFromEvent(e)); err != nil {
 			u.setError(err)
 			return nil
 		}
@@ -631,7 +633,7 @@ func (u *UserInterface) setCanvasEventHandlers(v js.Value) {
 
 		e := args[0]
 		e.Call("preventDefault")
-		if err := u.updateInputFromEvent(e); err != nil {
+		if mylog.Check(u.updateInputFromEvent(e)); err != nil {
 			u.setError(err)
 			return nil
 		}
@@ -640,7 +642,7 @@ func (u *UserInterface) setCanvasEventHandlers(v js.Value) {
 	v.Call("addEventListener", "touchend", js.FuncOf(func(this js.Value, args []js.Value) any {
 		e := args[0]
 		e.Call("preventDefault")
-		if err := u.updateInputFromEvent(e); err != nil {
+		if mylog.Check(u.updateInputFromEvent(e)); err != nil {
 			u.setError(err)
 			return nil
 		}
@@ -649,7 +651,7 @@ func (u *UserInterface) setCanvasEventHandlers(v js.Value) {
 	v.Call("addEventListener", "touchmove", js.FuncOf(func(this js.Value, args []js.Value) any {
 		e := args[0]
 		e.Call("preventDefault")
-		if err := u.updateInputFromEvent(e); err != nil {
+		if mylog.Check(u.updateInputFromEvent(e)); err != nil {
 			u.setError(err)
 			return nil
 		}
@@ -710,7 +712,7 @@ func (u *UserInterface) appendDroppedFiles(data js.Value) {
 		}
 	}
 	if len(entries) > 0 {
-		fs, err := file.NewFileEntryFS(entries)
+		fs := mylog.Check2(file.NewFileEntryFS(entries))
 
 		u.inputState.DroppedFiles = fs
 	}
@@ -724,7 +726,7 @@ func (u *UserInterface) forceUpdateOnMinimumFPSMode() {
 	// updateImpl can block. Use goroutine.
 	// See https://pkg.go.dev/syscall/js#FuncOf.
 	go func() {
-		if err := u.updateImpl(true); err != nil {
+		if mylog.Check(u.updateImpl(true)); err != nil {
 			u.setError(err)
 		}
 	}()
@@ -756,9 +758,9 @@ func (u *UserInterface) initOnMainThread(options *RunOptions) error {
 		canvas.Call("focus")
 	}
 
-	g, lib, err := newGraphicsDriver(&graphicsDriverCreatorImpl{
+	g, lib := mylog.Check3(newGraphicsDriver(&graphicsDriverCreatorImpl{
 		canvas: canvas,
-	}, options.GraphicsLibrary)
+	}, options.GraphicsLibrary))
 
 	u.graphicsDriver = g
 	u.setGraphicsLibrary(lib)

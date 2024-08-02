@@ -7,8 +7,9 @@ package glfw
 
 import (
 	"fmt"
-	"github.com/ddkwork/golibrary/mylog"
 	"math"
+
+	"github.com/ddkwork/golibrary/mylog"
 )
 
 const stick = 3
@@ -118,7 +119,7 @@ func (w *Window) inputDrop(paths []string) {
 
 func (w *Window) centerCursorInContentArea() error {
 	width, height := w.platformGetWindowSize()
-	if err := w.platformSetCursorPos(float64(width/2), float64(height/2)); err != nil {
+	if mylog.Check(w.platformSetCursorPos(float64(width/2), float64(height/2))); err != nil {
 		return err
 	}
 	return nil
@@ -163,7 +164,7 @@ func (w *Window) SetInputMode(mode InputMode, value int) error {
 		w.virtualCursorPosX = x
 		w.virtualCursorPosY = y
 
-		if err := w.platformSetCursorMode(value); err != nil {
+		if mylog.Check(w.platformSetCursorMode(value)); err != nil {
 			return err
 		}
 		return nil
@@ -216,7 +217,7 @@ func (w *Window) SetInputMode(mode InputMode, value int) error {
 		}
 
 		w.rawMouseMotion = intToBool(value)
-		if err := w.platformSetRawMouseMotion(intToBool(value)); err != nil {
+		if mylog.Check(w.platformSetRawMouseMotion(intToBool(value))); err != nil {
 			return err
 		}
 		return nil
@@ -356,7 +357,7 @@ func CreateStandardCursor(shape StandardCursor) *Cursor {
 	cursor := &Cursor{}
 	_glfw.cursors = append(_glfw.cursors, cursor)
 
-	if err := cursor.platformCreateStandardCursor(shape); err != nil {
+	if mylog.Check(cursor.platformCreateStandardCursor(shape)); err != nil {
 		_ = cursor.Destroy()
 		return nil
 	}
@@ -376,13 +377,13 @@ func (c *Cursor) Destroy() error {
 	// Make sure the cursor is not being used by any window
 	for _, window := range _glfw.windows {
 		if window.cursor == c {
-			if err := window.SetCursor(nil); err != nil {
+			if mylog.Check(window.SetCursor(nil)); err != nil {
 				return err
 			}
 		}
 	}
 
-	if err := c.platformDestroyCursor(); err != nil {
+	if mylog.Check(c.platformDestroyCursor()); err != nil {
 		return err
 	}
 
@@ -405,7 +406,7 @@ func (w *Window) SetCursor(cursor *Cursor) error {
 
 	w.cursor = cursor
 
-	if err := w.platformSetCursor(cursor); err != nil {
+	if mylog.Check(w.platformSetCursor(cursor)); err != nil {
 		return err
 	}
 	return nil

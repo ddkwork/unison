@@ -15,13 +15,15 @@
 package unison
 
 import (
+	"math"
+	"time"
+
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/unison/internal/atlas"
 	"github.com/richardwilkes/unison/internal/clock"
 	"github.com/richardwilkes/unison/internal/debug"
 	"github.com/richardwilkes/unison/internal/graphicsdriver"
 	"github.com/richardwilkes/unison/internal/hook"
-	"math"
-	"time"
 )
 
 var (
@@ -80,7 +82,7 @@ func (c *context) forceUpdateFrame(graphicsDriver graphicsdriver.Graphics, outsi
 		n = 2
 	}
 	for i := 0; i < n; i++ {
-		if err := c.updateFrameImpl(graphicsDriver, 1, outsideWidth, outsideHeight, deviceScaleFactor, ui, true); err != nil {
+		if mylog.Check(c.updateFrameImpl(graphicsDriver, 1, outsideWidth, outsideHeight, deviceScaleFactor, ui, true)); err != nil {
 			return err
 		}
 	}
@@ -96,7 +98,7 @@ func (c *context) updateFrameImpl(graphicsDriver graphicsdriver.Graphics, update
 
 	debug.Logf("----\n")
 
-	if err := atlas.BeginFrame(graphicsDriver); err != nil {
+	if mylog.Check(atlas.BeginFrame(graphicsDriver)); err != nil {
 		return err
 	}
 
@@ -113,7 +115,7 @@ func (c *context) updateFrameImpl(graphicsDriver graphicsdriver.Graphics, update
 	}()
 
 	// Flush deferred functions, like reading pixels from GPU.
-	if err := c.processFuncsInFrame(ui); err != nil {
+	if mylog.Check(c.processFuncsInFrame(ui)); err != nil {
 		return err
 	}
 
@@ -123,7 +125,7 @@ func (c *context) updateFrameImpl(graphicsDriver graphicsdriver.Graphics, update
 	}
 
 	// Update the input state after the layout is updated as a cursor position is affected by the layout.
-	if err := ui.updateInputState(); err != nil {
+	if mylog.Check(ui.updateInputState()); err != nil {
 		return err
 	}
 
@@ -141,27 +143,27 @@ func (c *context) updateFrameImpl(graphicsDriver graphicsdriver.Graphics, update
 			ui.readInputState(inputState)
 		})
 
-		if err := hook.RunBeforeUpdateHooks(); err != nil {
+		if mylog.Check(hook.RunBeforeUpdateHooks()); err != nil {
 			return err
 		}
-		if err := c.game.Update(); err != nil {
+		if mylog.Check(c.game.Update()); err != nil {
 			return err
 		}
 
 		// Catch the error that happened at (*Image).At.
-		if err := ui.error(); err != nil {
+		if mylog.Check(ui.error()); err != nil {
 			return err
 		}
 	}
 
 	// Update window icons during a frame, since an icon might be *ebiten.Image and
 	// getting pixels from it needs to be in a frame (#1468).
-	if err := ui.updateIconIfNeeded(); err != nil {
+	if mylog.Check(ui.updateIconIfNeeded()); err != nil {
 		return err
 	}
 
 	// Draw the game.
-	if err := c.drawGame(graphicsDriver, ui, forceDraw); err != nil {
+	if mylog.Check(c.drawGame(graphicsDriver, ui, forceDraw)); err != nil {
 		return err
 	}
 
@@ -187,7 +189,7 @@ func (c *context) drawGame(graphicsDriver graphicsdriver.Graphics, ui *UserInter
 		c.offscreen.clear()
 	}
 
-	if err := c.game.DrawOffscreen(); err != nil {
+	if mylog.Check(c.game.DrawOffscreen()); err != nil {
 		return err
 	}
 
@@ -313,7 +315,7 @@ func (c *context) processFuncsInFrame(ui *UserInterface) error {
 		default:
 			if processed {
 				// Catch the error that happened at (*Image).At.
-				if err := ui.error(); err != nil {
+				if mylog.Check(ui.error()); err != nil {
 					return err
 				}
 			}

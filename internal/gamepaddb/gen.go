@@ -25,6 +25,8 @@ import (
 	"os"
 	"strings"
 	"text/template"
+
+	"github.com/ddkwork/golibrary/mylog"
 )
 
 const license = `// Copyright 2024 The Ebitengine Authors
@@ -89,7 +91,7 @@ func init() {
 `
 
 func main() {
-	if err := run(); err != nil {
+	if mylog.Check(run()); err != nil {
 		log.Fatal(err)
 	}
 }
@@ -127,7 +129,7 @@ func run() error {
 		},
 	}
 
-	controllerDBs, err := splitDBsByPlatform(gameControllerDB)
+	controllerDBs := mylog.Check2(splitDBsByPlatform(gameControllerDB))
 
 	for sdlPlatformName, platform := range platforms {
 		controllerDB, ok := controllerDBs[sdlPlatformName]
@@ -136,19 +138,19 @@ func run() error {
 		}
 
 		// Write each chunk into separate text file for embedding into respective generated files.
-		if err = os.WriteFile(fmt.Sprintf("gamecontrollerdb_%s.txt", platform.filenameSuffix), []byte(controllerDB), 0666); err != nil {
+		if mylog.Check(os.WriteFile(fmt.Sprintf("gamecontrollerdb_%s.txt", platform.filenameSuffix), []byte(controllerDB), 0666)); err != nil {
 			return err
 		}
 
 		path := fmt.Sprintf("db_%s.go", platform.filenameSuffix)
-		tmpl, err := template.New(path).Parse(dbTemplate)
+		tmpl := mylog.Check2(template.New(path).Parse(dbTemplate))
 
-		f, err := os.Create(path)
+		f := mylog.Check2(os.Create(path))
 
 		defer f.Close()
 
 		w := bufio.NewWriter(f)
-		if err := tmpl.Execute(w, struct {
+		if mylog.Check(tmpl.Execute(w, struct {
 			License          string
 			DoNotEdit        string
 			BuildConstraints string
@@ -160,10 +162,10 @@ func run() error {
 			BuildConstraints: platform.buildConstraints,
 			FileNameSuffix:   platform.filenameSuffix,
 			HasGLFWGamepads:  platform.hasGLFWGamepads,
-		}); err != nil {
+		})); err != nil {
 			return err
 		}
-		if err := w.Flush(); err != nil {
+		if mylog.Check(w.Flush()); err != nil {
 			return err
 		}
 	}
@@ -188,7 +190,7 @@ func splitDBsByPlatform(controllerDB []byte) (map[string]string, error) {
 			}
 		}
 	}
-	if err := s.Err(); err != nil {
+	if mylog.Check(s.Err()); err != nil {
 		return nil, err
 	}
 

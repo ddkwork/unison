@@ -15,19 +15,19 @@
 package buffered_test
 
 import (
+	"github.com/richardwilkes/unison/internal/test"
+	"image"
+	"testing"
+
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/unison/internal/atlas"
 	"github.com/richardwilkes/unison/internal/buffered"
 	"github.com/richardwilkes/unison/internal/graphics"
 	"github.com/richardwilkes/unison/internal/graphicsdriver"
-	"image"
-	"testing"
-
-	t "github.com/hajimehoshi/ebiten/v2/internal/testing"
-	"github.com/hajimehoshi/ebiten/v2/internal/ui"
 )
 
 func TestMain(m *testing.M) {
-	t.MainWithRunLoop(m)
+	test.MainWithRunLoop(m)
 }
 
 func TestUnsyncedPixels(t *testing.T) {
@@ -38,10 +38,8 @@ func TestUnsyncedPixels(t *testing.T) {
 
 	// Merge the entry into the cached pixels.
 	// The entry for dotsBuffer is now gone in the current implementation.
-	ok, err := dst.ReadPixels(ui.Get().GraphicsDriverForTesting(), make([]byte, 4*16*16), image.Rect(0, 0, 16, 16))
-	if err != nil {
-		t.Fatal(err)
-	}
+	ok := mylog.Check2(dst.ReadPixels(ui.Get().GraphicsDriverForTesting(), make([]byte, 4*16*16), image.Rect(0, 0, 16, 16)))
+
 	if !ok {
 		t.Fatal("ReadPixels failed")
 	}
@@ -60,10 +58,8 @@ func TestUnsyncedPixels(t *testing.T) {
 
 	// Check the result is correct.
 	var got [4]byte
-	ok, err = dst.ReadPixels(ui.Get().GraphicsDriverForTesting(), got[:], image.Rect(0, 0, 1, 1))
-	if err != nil {
-		t.Fatal(err)
-	}
+	ok = mylog.Check2(dst.ReadPixels(ui.Get().GraphicsDriverForTesting(), got[:], image.Rect(0, 0, 1, 1)))
+
 	if !ok {
 		t.Fatal("ReadPixels failed")
 	}

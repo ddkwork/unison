@@ -22,6 +22,7 @@ import (
 	"sort"
 	"unsafe"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/ebitengine/purego/objc"
 
 	"github.com/hajimehoshi/ebiten/v2/internal/cocoa"
@@ -78,11 +79,8 @@ var (
 
 func init() {
 	// mtl.CreateSystemDefaultDevice must be called on the main thread (#2147).
-	d, err := mtl.CreateSystemDefaultDevice()
-	if err != nil {
-		systemDefaultDeviceErr = err
-		return
-	}
+	d := mylog.Check2(mtl.CreateSystemDefaultDevice())
+
 	systemDefaultDevice = d
 }
 
@@ -101,7 +99,7 @@ func NewGraphics() (graphicsdriver.Graphics, error) {
 	if runtime.GOOS != "ios" {
 		// Initializing a Metal device and a layer must be done in the main thread on macOS.
 		// Note that this assumes NewGraphics is called on the main thread on desktops.
-		if err := g.view.initialize(systemDefaultDevice); err != nil {
+		if mylog.Check(g.view.initialize(systemDefaultDevice)); err != nil {
 			return nil, err
 		}
 	}
@@ -386,7 +384,7 @@ func (g *Graphics) Initialize() error {
 
 	if runtime.GOOS == "ios" {
 		// Initializing a Metal device and a layer must be done in the render thread on iOS.
-		if err := g.view.initialize(systemDefaultDevice); err != nil {
+		if mylog.Check(g.view.initialize(systemDefaultDevice)); err != nil {
 			return err
 		}
 	}
@@ -543,20 +541,20 @@ func (g *Graphics) draw(dst *Image, dstRegions []graphicsdriver.DstRegion, srcs 
 	)
 	switch fillRule {
 	case graphicsdriver.FillRuleFillAll:
-		s, err := shader.RenderPipelineState(&g.view, blend, noStencil, dst.screen)
+		s := mylog.Check2(shader.RenderPipelineState(&g.view, blend, noStencil, dst.screen))
 
 		noStencilRpss = s
 	case graphicsdriver.FillRuleNonZero:
-		s, err := shader.RenderPipelineState(&g.view, blend, incrementStencil, dst.screen)
+		s := mylog.Check2(shader.RenderPipelineState(&g.view, blend, incrementStencil, dst.screen))
 
 		incrementStencilRpss = s
 	case graphicsdriver.FillRuleEvenOdd:
-		s, err := shader.RenderPipelineState(&g.view, blend, invertStencil, dst.screen)
+		s := mylog.Check2(shader.RenderPipelineState(&g.view, blend, invertStencil, dst.screen))
 
 		invertStencilRpss = s
 	}
 	if fillRule != graphicsdriver.FillRuleFillAll {
-		s, err := shader.RenderPipelineState(&g.view, blend, drawWithStencil, dst.screen)
+		s := mylog.Check2(shader.RenderPipelineState(&g.view, blend, drawWithStencil, dst.screen))
 
 		drawWithStencilRpss = s
 	}
@@ -671,7 +669,7 @@ func (g *Graphics) DrawTriangles(dstID graphicsdriver.ImageID, srcIDs [graphics.
 		idx += n
 	}
 
-	if err := g.draw(dst, dstRegions, srcs, indexOffset, g.shaders[shaderID], uniformVars, blend, fillRule); err != nil {
+	if mylog.Check(g.draw(dst, dstRegions, srcs, indexOffset, g.shaders[shaderID], uniformVars, blend, fillRule)); err != nil {
 		return err
 	}
 
@@ -736,10 +734,8 @@ func (g *Graphics) MaxImageSize() int {
 }
 
 func (g *Graphics) NewShader(program *shaderir.Program) (graphicsdriver.Shader, error) {
-	s, err := newShader(g.view.getMTLDevice(), g.genNextShaderID(), program)
-	if err != nil {
-		return nil, err
-	}
+	s := mylog.Check2(newShader(g.view.getMTLDevice(), g.genNextShaderID(), program))
+
 	g.addShader(s)
 	return s, nil
 }

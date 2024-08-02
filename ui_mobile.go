@@ -23,6 +23,8 @@ import (
 	"runtime/debug"
 	"sync"
 	"sync/atomic"
+
+	"github.com/ddkwork/golibrary/mylog"
 )
 
 var (
@@ -60,7 +62,7 @@ func (u *UserInterface) Update() error {
 		return nil
 	}
 
-	if err := gamepad.Update(); err != nil {
+	if mylog.Check(gamepad.Update()); err != nil {
 		return err
 	}
 
@@ -114,7 +116,7 @@ func (u *UserInterface) Run(game Game, options *RunOptions) error {
 
 func (u *UserInterface) RunWithoutMainLoop(game Game, options *RunOptions) {
 	go func() {
-		if err := u.runMobile(game, options); err != nil {
+		if mylog.Check(u.runMobile(game, options)); err != nil {
 			u.errCh <- err
 		}
 	}()
@@ -127,7 +129,7 @@ func (u *UserInterface) runMobile(game Game, options *RunOptions) (err error) {
 	// TODO: Panic on other goroutines cannot be handled here.
 	defer func() {
 		if r := recover(); r != nil {
-			err = fmt.Errorf("%v\n%s", r, string(debug.Stack()))
+			mylog.Check(fmt.Errorf("%v\n%s", r, string(debug.Stack())))
 		}
 	}()
 
@@ -138,14 +140,14 @@ func (u *UserInterface) runMobile(game Game, options *RunOptions) (err error) {
 
 	u.context = newContext(game)
 
-	g, lib, err := newGraphicsDriver(&graphicsDriverCreatorImpl{}, options.GraphicsLibrary)
+	g, lib := mylog.Check3(newGraphicsDriver(&graphicsDriverCreatorImpl{}, options.GraphicsLibrary))
 
 	u.graphicsDriver = g
 	u.setGraphicsLibrary(lib)
 	close(u.graphicsLibraryInitCh)
 
 	for {
-		if err := u.update(); err != nil {
+		if mylog.Check(u.update()); err != nil {
 			return err
 		}
 	}
@@ -166,7 +168,7 @@ func (u *UserInterface) update() error {
 	}()
 
 	w, h := u.outsideSize()
-	if err := u.context.updateFrame(u.graphicsDriver, w, h, theMonitor.DeviceScaleFactor(), u); err != nil {
+	if mylog.Check(u.context.updateFrame(u.graphicsDriver, w, h, theMonitor.DeviceScaleFactor(), u)); err != nil {
 		return err
 	}
 	return nil

@@ -17,12 +17,11 @@ package gl
 import (
 	"fmt"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/ebitengine/purego"
 )
 
-var (
-	opengl uintptr
-)
+var opengl uintptr
 
 func (c *defaultContext) init() error {
 	lib, errGLES := purego.Dlopen("/System/Library/Frameworks/OpenGLES.framework/OpenGLES", purego.RTLD_LAZY|purego.RTLD_GLOBAL)
@@ -43,9 +42,7 @@ func (c *defaultContext) init() error {
 }
 
 func (c *defaultContext) getProcAddress(name string) (uintptr, error) {
-	proc, err := purego.Dlsym(opengl, name)
-	if err != nil {
-		return 0, err
-	}
+	proc := mylog.Check2(purego.Dlsym(opengl, name))
+
 	return proc, nil
 }

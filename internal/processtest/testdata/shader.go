@@ -19,6 +19,7 @@ package main
 import (
 	"fmt"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -37,14 +38,14 @@ func (g *Game) Update() error {
 
 	g.count++
 
-	s, err := ebiten.NewShader([]byte(fmt.Sprintf(`//kage:unit pixels
+	s := mylog.Check2(ebiten.NewShader([]byte(fmt.Sprintf(`//kage:unit pixels
 
 package main
 
 func Fragment(dstPos vec4, srcPos vec2, color vec4) vec4 {
 	return vec4(%d/255.0)
 }
-`, g.count)))
+`, g.count))))
 
 	// Use the shader to ensure that the shader is actually allocated.
 	g.img.DrawRectShader(1, 1, s, nil)
@@ -65,7 +66,7 @@ func (g *Game) Layout(w, h int) (int, int) {
 }
 
 func main() {
-	if err := ebiten.RunGame(&Game{}); err != nil {
+	if mylog.Check(ebiten.RunGame(&Game{})); err != nil {
 		panic(err)
 	}
 }

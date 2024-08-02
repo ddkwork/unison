@@ -13,6 +13,7 @@ import (
 	"errors"
 	"strings"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/unison/enums/align"
 )
@@ -271,8 +272,8 @@ func ErrorDialogWithMessage(primary, detail string) {
 
 // ErrorDialogWithPanel displays a standard error dialog with the specified panel.
 func ErrorDialogWithPanel(msgPanel Paneler) {
-	if dialog, err := NewDialog(DefaultDialogTheme.ErrorIcon, DefaultDialogTheme.ErrorIconInk, msgPanel,
-		[]*DialogButtonInfo{NewOKButtonInfo()}); err != nil {
+	if dialog := mylog.Check2(NewDialog(DefaultDialogTheme.ErrorIcon, DefaultDialogTheme.ErrorIconInk, msgPanel,
+		[]*DialogButtonInfo{NewOKButtonInfo()})); err != nil {
 		errs.Log(err)
 	} else {
 		dialog.RunModal()
@@ -287,8 +288,8 @@ func WarningDialogWithMessage(primary, detail string) {
 
 // WarningDialogWithPanel displays a standard error dialog with the specified panel.
 func WarningDialogWithPanel(msgPanel Paneler) {
-	if dialog, err := NewDialog(DefaultDialogTheme.WarningIcon, DefaultDialogTheme.WarningIconInk, msgPanel,
-		[]*DialogButtonInfo{NewOKButtonInfo()}); err != nil {
+	if dialog := mylog.Check2(NewDialog(DefaultDialogTheme.WarningIcon, DefaultDialogTheme.WarningIconInk, msgPanel,
+		[]*DialogButtonInfo{NewOKButtonInfo()})); err != nil {
 		errs.Log(err)
 	} else {
 		dialog.RunModal()
@@ -305,8 +306,8 @@ func QuestionDialog(primary, detail string) int {
 // QuestionDialogWithPanel displays a standard question dialog with the specified panel. This function returns
 // ids.ModalResponseOK if the OK button was pressed and ids.ModalResponseCancel if the Cancel button was pressed.
 func QuestionDialogWithPanel(msgPanel Paneler) int {
-	if dialog, err := NewDialog(DefaultDialogTheme.QuestionIcon, DefaultDialogTheme.QuestionIconInk, msgPanel,
-		[]*DialogButtonInfo{NewCancelButtonInfo(), NewOKButtonInfo()}); err != nil {
+	if dialog := mylog.Check2(NewDialog(DefaultDialogTheme.QuestionIcon, DefaultDialogTheme.QuestionIconInk, msgPanel,
+		[]*DialogButtonInfo{NewCancelButtonInfo(), NewOKButtonInfo()})); err != nil {
 		errs.Log(err)
 	} else {
 		return dialog.RunModal()
@@ -325,9 +326,9 @@ func YesNoDialog(primary, detail string) int {
 // This function returns ids.ModalResponseOK if the Yes button was pressed and ids.ModalResponseDiscard if the No button
 // was pressed.
 func YesNoDialogWithPanel(msgPanel Paneler) int {
-	if dialog, err := NewDialog(DefaultDialogTheme.QuestionIcon,
+	if dialog := mylog.Check2(NewDialog(DefaultDialogTheme.QuestionIcon,
 		DefaultDialogTheme.QuestionIconInk, msgPanel,
-		[]*DialogButtonInfo{NewNoButtonInfo(), NewYesButtonInfo()}); err != nil {
+		[]*DialogButtonInfo{NewNoButtonInfo(), NewYesButtonInfo()})); err != nil {
 		errs.Log(err)
 	} else {
 		return dialog.RunModal()
@@ -346,8 +347,8 @@ func YesNoCancelDialog(primary, detail string) int {
 // This function returns ids.ModalResponseOK if the Yes button was pressed, ids.ModalResponseDiscard if the No button
 // was pressed, and ids.ModalResponseCancel if the Cancel button was pressed.
 func YesNoCancelDialogWithPanel(msgPanel Paneler) int {
-	if dialog, err := NewDialog(DefaultDialogTheme.QuestionIcon, DefaultDialogTheme.QuestionIconInk, msgPanel,
-		[]*DialogButtonInfo{NewCancelButtonInfo(), NewNoButtonInfo(), NewYesButtonInfo()}); err != nil {
+	if dialog := mylog.Check2(NewDialog(DefaultDialogTheme.QuestionIcon, DefaultDialogTheme.QuestionIconInk, msgPanel,
+		[]*DialogButtonInfo{NewCancelButtonInfo(), NewNoButtonInfo(), NewYesButtonInfo()})); err != nil {
 		errs.Log(err)
 	} else {
 		return dialog.RunModal()

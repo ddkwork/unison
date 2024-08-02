@@ -15,9 +15,10 @@
 package packing_test
 
 import (
-	"github.com/richardwilkes/unison/internal/packing"
 	"image"
 	"testing"
+
+	"github.com/richardwilkes/unison/internal/packing"
 )
 
 func TestPage(t *testing.T) {

@@ -17,6 +17,7 @@ package mtl
 import (
 	"unsafe"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/ebitengine/purego"
 )
 
@@ -28,10 +29,8 @@ var (
 )
 
 func init() {
-	lib, err := purego.Dlopen("/usr/lib/libSystem.B.dylib", purego.RTLD_LAZY|purego.RTLD_GLOBAL)
-	if err != nil {
-		panic(err)
-	}
+	lib := mylog.Check2(purego.Dlopen("/usr/lib/libSystem.B.dylib", purego.RTLD_LAZY|purego.RTLD_GLOBAL))
+
 	libSystem = lib
 
 	purego.RegisterLibFunc(&dispatchDataCreate, libSystem, "dispatch_data_create")

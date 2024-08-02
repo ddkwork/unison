@@ -18,11 +18,13 @@ package opengl
 
 import (
 	"fmt"
+	"unsafe"
+
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/unison/internal/graphics"
 	"github.com/richardwilkes/unison/internal/graphicsdriver"
 	"github.com/richardwilkes/unison/internal/graphicsdriver/opengl/gl"
 	"github.com/richardwilkes/unison/internal/shaderir"
-	"unsafe"
 )
 
 type activatedTexture struct {
@@ -81,7 +83,7 @@ func (g *Graphics) End(present bool) error {
 	// The last uniforms must be reset before swapping the buffer (#2517).
 	if present {
 		g.state.resetLastUniforms()
-		if err := g.swapBuffers(); err != nil {
+		if mylog.Check(g.swapBuffers()); err != nil {
 			return err
 		}
 	}
@@ -129,10 +131,8 @@ func (g *Graphics) NewImage(width, height int) (graphicsdriver.Image, error) {
 	w := graphics.InternalImageSize(width)
 	h := graphics.InternalImageSize(height)
 	g.checkSize(w, h)
-	t, err := g.context.newTexture(w, h)
-	if err != nil {
-		return nil, err
-	}
+	t := mylog.Check2(g.context.newTexture(w, h))
+
 	i.texture = t
 	g.addImage(i)
 	return i, nil
@@ -166,10 +166,10 @@ func (g *Graphics) removeImage(img *Image) {
 }
 
 func (g *Graphics) Initialize() error {
-	if err := g.makeContextCurrent(); err != nil {
+	if mylog.Check(g.makeContextCurrent()); err != nil {
 		return err
 	}
-	if err := g.state.reset(&g.context); err != nil {
+	if mylog.Check(g.state.reset(&g.context)); err != nil {
 		return err
 	}
 	return nil
@@ -206,7 +206,7 @@ func (g *Graphics) DrawTriangles(dstID graphicsdriver.ImageID, srcIDs [graphics.
 
 	g.drawCalled = true
 
-	if err := destination.setViewport(); err != nil {
+	if mylog.Check(destination.setViewport()); err != nil {
 		return err
 	}
 	g.context.blend(blend)
@@ -249,7 +249,7 @@ func (g *Graphics) DrawTriangles(dstID graphicsdriver.ImageID, srcIDs [graphics.
 		imgs[i].native = g.images[srcID].texture
 	}
 
-	if err := g.useProgram(program, g.uniformVars, imgs); err != nil {
+	if mylog.Check(g.useProgram(program, g.uniformVars, imgs)); err != nil {
 		return err
 	}
 
@@ -259,7 +259,7 @@ func (g *Graphics) DrawTriangles(dstID graphicsdriver.ImageID, srcIDs [graphics.
 	g.uniformVars = g.uniformVars[:0]
 
 	if fillRule != graphicsdriver.FillRuleFillAll {
-		if err := destination.ensureStencilBuffer(); err != nil {
+		if mylog.Check(destination.ensureStencilBuffer()); err != nil {
 			return err
 		}
 		g.context.ctx.Enable(gl.STENCIL_TEST)
@@ -317,10 +317,8 @@ func (g *Graphics) MaxImageSize() int {
 }
 
 func (g *Graphics) NewShader(program *shaderir.Program) (graphicsdriver.Shader, error) {
-	s, err := newShader(g.genNextShaderID(), g, program)
-	if err != nil {
-		return nil, err
-	}
+	s := mylog.Check2(newShader(g.genNextShaderID(), g, program))
+
 	g.addShader(s)
 	return s, nil
 }

@@ -15,6 +15,7 @@
 package directx
 
 import (
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/unison/internal/graphicsdriver"
 	"github.com/richardwilkes/unison/internal/shaderir"
 )
@@ -77,10 +78,8 @@ func (s *shader12) pipelineState(blend graphicsdriver.Blend, stencilMode stencil
 		return state, nil
 	}
 
-	state, err := s.graphics.pipelineStates.newPipelineState(s.graphics.device, s.vertexShader, s.pixelShader, blend, stencilMode, screen)
-	if err != nil {
-		return nil, err
-	}
+	state := mylog.Check2(s.graphics.pipelineStates.newPipelineState(s.graphics.device, s.vertexShader, s.pixelShader, blend, stencilMode, screen))
+
 	if s.pipelineStates == nil {
 		s.pipelineStates = map[pipelineStateKey]*_ID3D12PipelineState{}
 	}

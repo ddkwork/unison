@@ -10,6 +10,7 @@
 package demo
 
 import (
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/toolbox/cmdline"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/unison"
@@ -24,12 +25,8 @@ func ShowAboutWindow(item unison.MenuItem) {
 	if aboutWindow == nil {
 
 		// Nope, so create it.
-		var err error
-		aboutWindow, err = unison.NewWindow(item.Title(), unison.NotResizableWindowOption())
-		if err != nil {
-			errs.Log(err)
-			return
-		}
+
+		aboutWindow = mylog.Check2(unison.NewWindow(item.Title(), unison.NotResizableWindowOption()))
 
 		// Clear our global when the window closes
 		aboutWindow.WillCloseCallback = func() { aboutWindow = nil }

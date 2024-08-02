@@ -12,6 +12,7 @@ package unison
 import (
 	_ "embed"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/toolbox/fatal"
 )
 
@@ -24,8 +25,8 @@ var (
 // MoveCursorImage returns the standard move cursor image.
 func MoveCursorImage() *Image {
 	if moveCursorImage == nil {
-		var err error
-		moveCursorImage, err = NewImageFromBytes(moveCursorImageData, 0.5)
+
+		moveCursorImage = mylog.Check2(NewImageFromBytes(moveCursorImageData, 0.5))
 		fatal.IfErr(err)
 	}
 	return moveCursorImage
@@ -40,8 +41,8 @@ var (
 // ResizeHorizontalCursorImage returns the standard horizontal resize cursor image.
 func ResizeHorizontalCursorImage() *Image {
 	if resizeHorizontalCursorImage == nil {
-		var err error
-		resizeHorizontalCursorImage, err = NewImageFromBytes(resizeHorizontalCursorImageData, 0.5)
+
+		resizeHorizontalCursorImage = mylog.Check2(NewImageFromBytes(resizeHorizontalCursorImageData, 0.5))
 		fatal.IfErr(err)
 	}
 	return resizeHorizontalCursorImage
@@ -56,8 +57,8 @@ var (
 // ResizeLeftDiagonalCursorImage returns the standard left diagonal resize cursor image.
 func ResizeLeftDiagonalCursorImage() *Image {
 	if resizeLeftDiagonalCursorImage == nil {
-		var err error
-		resizeLeftDiagonalCursorImage, err = NewImageFromBytes(resizeLeftDiagonalCursorImageData, 0.5)
+
+		resizeLeftDiagonalCursorImage = mylog.Check2(NewImageFromBytes(resizeLeftDiagonalCursorImageData, 0.5))
 		fatal.IfErr(err)
 	}
 	return resizeLeftDiagonalCursorImage
@@ -72,8 +73,8 @@ var (
 // ResizeRightDiagonalCursorImage returns the standard right diagonal resize cursor image.
 func ResizeRightDiagonalCursorImage() *Image {
 	if resizeRightDiagonalCursorImage == nil {
-		var err error
-		resizeRightDiagonalCursorImage, err = NewImageFromBytes(resizeRightDiagonalCursorImageData, 0.5)
+
+		resizeRightDiagonalCursorImage = mylog.Check2(NewImageFromBytes(resizeRightDiagonalCursorImageData, 0.5))
 		fatal.IfErr(err)
 	}
 	return resizeRightDiagonalCursorImage
@@ -88,8 +89,8 @@ var (
 // ResizeVerticalCursorImage returns the standard vertical resize cursor image.
 func ResizeVerticalCursorImage() *Image {
 	if resizeVerticalCursorImage == nil {
-		var err error
-		resizeVerticalCursorImage, err = NewImageFromBytes(resizeVerticalCursorImageData, 0.5)
+
+		resizeVerticalCursorImage = mylog.Check2(NewImageFromBytes(resizeVerticalCursorImageData, 0.5))
 		fatal.IfErr(err)
 	}
 	return resizeVerticalCursorImage

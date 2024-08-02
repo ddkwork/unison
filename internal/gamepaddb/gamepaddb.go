@@ -26,6 +26,8 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/ddkwork/golibrary/mylog"
 )
 
 type platform int
@@ -139,10 +141,7 @@ func parseLine(line string, platform platform) (id string, name string, buttons 
 			continue
 		}
 
-		gb, err := parseMappingElement(tks[1])
-		if err != nil {
-			return "", "", nil, nil
-		}
+		gb := mylog.Check2(parseMappingElement(tks[1]))
 
 		if b, ok := toStandardGamepadButton(tks[0]); ok {
 			if buttons == nil {
@@ -211,10 +210,7 @@ func parseMappingElement(str string) (mapping, error) {
 			offset = -offset
 		}
 
-		index, err := strconv.Atoi(numstr)
-		if err != nil {
-			return mapping{}, err
-		}
+		index := mylog.Check2(strconv.Atoi(numstr))
 
 		return mapping{
 			Type:       mappingTypeAxis,
@@ -224,10 +220,8 @@ func parseMappingElement(str string) (mapping, error) {
 		}, nil
 
 	case str[0] == 'b':
-		index, err := strconv.Atoi(str[1:])
-		if err != nil {
-			return mapping{}, err
-		}
+		index := mylog.Check2(strconv.Atoi(str[1:]))
+
 		return mapping{
 			Type:  mappingTypeButton,
 			Index: index,
@@ -238,14 +232,10 @@ func parseMappingElement(str string) (mapping, error) {
 		if len(tokens) < 2 {
 			return mapping{}, fmt.Errorf("gamepaddb: unexpected hat: %s", str)
 		}
-		index, err := strconv.Atoi(tokens[0])
-		if err != nil {
-			return mapping{}, err
-		}
-		hat, err := strconv.Atoi(tokens[1])
-		if err != nil {
-			return mapping{}, err
-		}
+		index := mylog.Check2(strconv.Atoi(tokens[0]))
+
+		hat := mylog.Check2(strconv.Atoi(tokens[1]))
+
 		return mapping{
 			Type:     mappingTypeHat,
 			Index:    index,
@@ -536,7 +526,7 @@ func Update(mappingData []byte) error {
 		}
 	}
 
-	if err := s.Err(); err != nil {
+	if mylog.Check(s.Err()); err != nil {
 		return err
 	}
 
@@ -557,10 +547,8 @@ func addAndroidDefaultMappings(id string) bool {
 		(1 << SDLControllerButtonX) |
 		(1 << SDLControllerButtonY))
 
-	idBytes, err := hex.DecodeString(id)
-	if err != nil {
-		return false
-	}
+	idBytes := mylog.Check2(hex.DecodeString(id))
+
 	buttonMask := uint16(idBytes[12]) | (uint16(idBytes[13]) << 8)
 	axisMask := uint16(idBytes[14]) | (uint16(idBytes[15]) << 8)
 	if buttonMask == 0 && axisMask == 0 {

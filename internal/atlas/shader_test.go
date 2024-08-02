@@ -15,16 +15,16 @@
 package atlas_test
 
 import (
-	"github.com/richardwilkes/unison/internal/atlas"
-	"github.com/richardwilkes/unison/internal/graphics"
-	"github.com/richardwilkes/unison/internal/graphicsdriver"
+	"github.com/richardwilkes/unison/internal/test"
 	"image"
 	"image/color"
 	"runtime"
 	"testing"
 
-	etesting "github.com/hajimehoshi/ebiten/v2/internal/testing"
-	"github.com/hajimehoshi/ebiten/v2/internal/ui"
+	"github.com/ddkwork/golibrary/mylog"
+	"github.com/richardwilkes/unison/internal/atlas"
+	"github.com/richardwilkes/unison/internal/graphics"
+	"github.com/richardwilkes/unison/internal/graphicsdriver"
 )
 
 func TestShaderFillTwice(t *testing.T) {
@@ -36,19 +36,17 @@ func TestShaderFillTwice(t *testing.T) {
 	is := graphics.QuadIndices()
 	dr := image.Rect(0, 0, w, h)
 	g := ui.Get().GraphicsDriverForTesting()
-	s0 := atlas.NewShader(etesting.ShaderProgramFill(0xff, 0xff, 0xff, 0xff))
+	s0 := atlas.NewShader(test.ShaderProgramFill(0xff, 0xff, 0xff, 0xff))
 	dst.DrawTriangles([graphics.ShaderSrcImageCount]*atlas.Image{}, vs, is, graphicsdriver.BlendCopy, dr, [graphics.ShaderSrcImageCount]image.Rectangle{}, s0, nil, graphicsdriver.FillRuleFillAll)
 
 	// Vertices must be recreated (#1755)
 	vs = quadVertices(w, h, 0, 0, 1)
-	s1 := atlas.NewShader(etesting.ShaderProgramFill(0x80, 0x80, 0x80, 0xff))
+	s1 := atlas.NewShader(test.ShaderProgramFill(0x80, 0x80, 0x80, 0xff))
 	dst.DrawTriangles([graphics.ShaderSrcImageCount]*atlas.Image{}, vs, is, graphicsdriver.BlendCopy, dr, [graphics.ShaderSrcImageCount]image.Rectangle{}, s1, nil, graphicsdriver.FillRuleFillAll)
 
 	pix := make([]byte, 4*w*h)
-	ok, err := dst.ReadPixels(g, pix, image.Rect(0, 0, w, h))
-	if err != nil {
-		t.Error(err)
-	}
+	ok := mylog.Check2(dst.ReadPixels(g, pix, image.Rect(0, 0, w, h)))
+
 	if !ok {
 		t.Fatal("ReadPixels failed")
 	}
@@ -76,10 +74,8 @@ func TestImageDrawTwice(t *testing.T) {
 	dst.DrawTriangles([graphics.ShaderSrcImageCount]*atlas.Image{src1}, vs, is, graphicsdriver.BlendCopy, dr, [graphics.ShaderSrcImageCount]image.Rectangle{}, atlas.NearestFilterShader, nil, graphicsdriver.FillRuleFillAll)
 
 	pix := make([]byte, 4*w*h)
-	ok, err := dst.ReadPixels(ui.Get().GraphicsDriverForTesting(), pix, image.Rect(0, 0, w, h))
-	if err != nil {
-		t.Error(err)
-	}
+	ok := mylog.Check2(dst.ReadPixels(ui.Get().GraphicsDriverForTesting(), pix, image.Rect(0, 0, w, h)))
+
 	if !ok {
 		t.Fatal("ReadPixels failed")
 	}
@@ -89,7 +85,7 @@ func TestImageDrawTwice(t *testing.T) {
 }
 
 func TestGCShader(t *testing.T) {
-	s := atlas.NewShader(etesting.ShaderProgramFill(0xff, 0xff, 0xff, 0xff))
+	s := atlas.NewShader(test.ShaderProgramFill(0xff, 0xff, 0xff, 0xff))
 
 	// Use the shader to initialize it.
 	const w, h = 1, 1

@@ -13,12 +13,13 @@ import (
 	"compress/zlib"
 	"encoding/binary"
 	"fmt"
-	"github.com/ddkwork/golibrary/mylog"
 	"hash"
 	"hash/crc32"
 	"image"
 	"image/color"
 	"io"
+
+	"github.com/ddkwork/golibrary/mylog"
 )
 
 // Color type, as per the PNG spec.
@@ -143,9 +144,7 @@ func (d *decoder) parseIHDR(length uint32) error {
 	if length != 13 {
 		return FormatError("bad IHDR length")
 	}
-	if _, err := io.ReadFull(d.r, d.tmp[:13]); err != nil {
-		return err
-	}
+  mylog.Check2(io.ReadFull(d.r, d.tmp[:13]));
 	d.crc.Write(d.tmp[:13])
 	if d.tmp[10] != 0 {
 		return UnsupportedError("compression method")
@@ -293,7 +292,7 @@ func (d *decoder) parsetRNS(length uint32) error {
 		if length > 256 {
 			return FormatError("bad tRNS length")
 		}
-		n, err := io.ReadFull(d.r, d.tmp[:length])
+		n := mylog.Check2(io.ReadFull(d.r, d.tmp[:length]))
 
 		d.crc.Write(d.tmp[:n])
 
@@ -326,14 +325,10 @@ func (d *decoder) Read(p []byte) (int, error) {
 	}
 	for d.idatLength == 0 {
 		// We have exhausted an IDAT chunk. Verify the checksum of that chunk.
-		if err := d.verifyChecksum(); err != nil {
-			return 0, err
-		}
+	  mylog.Check(d.verifyChecksum());
 		// Read the length and chunk type of the next chunk, and check that
 		// it is an IDAT chunk.
-		if _, err := io.ReadFull(d.r, d.tmp[:8]); err != nil {
-			return 0, err
-		}
+  mylog.Check2(io.ReadFull(d.r, d.tmp[:8]));
 		d.idatLength = binary.BigEndian.Uint32(d.tmp[:4])
 		if string(d.tmp[4:8]) != "IDAT" {
 			return 0, FormatError("not enough pixel data")
@@ -344,36 +339,27 @@ func (d *decoder) Read(p []byte) (int, error) {
 	if int(d.idatLength) < 0 {
 		return 0, UnsupportedError("IDAT chunk length overflow")
 	}
-	n, err := d.r.Read(p[:min(len(p), int(d.idatLength))])
+	n := mylog.Check2(d.r.Read(p[:min(len(p), int(d.idatLength))]))
 	d.crc.Write(p[:n])
 	d.idatLength -= uint32(n)
-	return n, err
+	return n, nil
 }
 
 // decode decodes the IDAT data into an image.
 func (d *decoder) decode() (image.Image, error) {
-	r, err := zlib.NewReader(d)
-	if err != nil {
-		return nil, err
-	}
+	r := mylog.Check2(zlib.NewReader(d))
+
 	defer r.Close()
 	var img image.Image
 	if d.interlace == itNone {
-		img, err = d.readImagePass(r, 0, false)
-		if err != nil {
-			return nil, err
-		}
+		img = mylog.Check2(d.readImagePass(r, 0, false))
 	} else if d.interlace == itAdam7 {
 		// Allocate a blank image of the full size.
-		img, err = d.readImagePass(nil, 0, true)
-		if err != nil {
-			return nil, err
-		}
+		img = mylog.Check2(d.readImagePass(nil, 0, true))
+
 		for pass := 0; pass < 7; pass++ {
-			imagePass, err := d.readImagePass(r, pass, false)
-			if err != nil {
-				return nil, err
-			}
+			imagePass := mylog.Check2(d.readImagePass(r, pass, false))
+
 			if imagePass != nil {
 				d.mergePassInto(img, imagePass, pass)
 			}
@@ -382,11 +368,11 @@ func (d *decoder) decode() (image.Image, error) {
 
 	// Check for EOF, to verify the zlib checksum.
 	n := 0
-	for i := 0; n == 0 && err == nil; i++ {
+	for i := 0; n == 0 ; i++ {
 		if i == 100 {
 			return nil, io.ErrNoProgress
 		}
-		n, err = r.Read(d.tmp[:1])
+		n = mylog.Check2(r.Read(d.tmp[:1]))
 	}
 	if err != nil && err != io.EOF {
 		return nil, FormatError(err.Error())
@@ -499,13 +485,7 @@ func (d *decoder) readImagePass(r io.Reader, pass int, allocateOnly bool) (image
 
 	for y := 0; y < height; y++ {
 		// Read the decompressed bytes.
-		_, err := io.ReadFull(r, cr)
-		if err != nil {
-			if err == io.EOF || err == io.ErrUnexpectedEOF {
-				return nil, FormatError("not enough pixel data")
-			}
-			return nil, err
-		}
+mylog.Check2( io.ReadFull(r, cr))
 
 		// Apply the filter.
 		cdat := cr[1:]
@@ -844,8 +824,8 @@ func (d *decoder) mergePassInto(dst image.Image, src image.Image, pass int) {
 
 func (d *decoder) parseIDAT(length uint32) (err error) {
 	d.idatLength = length
-	d.img, err = d.decode()
-	
+	d.img = mylog.Check2(d.decode())
+
 	return d.verifyChecksum()
 }
 
@@ -858,9 +838,7 @@ func (d *decoder) parseIEND(length uint32) error {
 
 func (d *decoder) parseChunk(configOnly bool) error {
 	// Read the length and chunk type.
-	if _, err := io.ReadFull(d.r, d.tmp[:8]); err != nil {
-		return err
-	}
+  mylog.Check2(io.ReadFull(d.r, d.tmp[:8]));
 	length := binary.BigEndian.Uint32(d.tmp[:4])
 	d.crc.Reset()
 	d.crc.Write(d.tmp[4:8])
@@ -922,7 +900,7 @@ func (d *decoder) parseChunk(configOnly bool) error {
 	// Ignore this chunk (of a known length).
 	var ignored [4096]byte
 	for length > 0 {
-		n, err := io.ReadFull(d.r, ignored[:min(len(ignored), int(length))])
+		n := mylog.Check2(io.ReadFull(d.r, ignored[:min(len(ignored), int(length))]))
 
 		d.crc.Write(ignored[:n])
 		length -= uint32(n)
@@ -931,9 +909,7 @@ func (d *decoder) parseChunk(configOnly bool) error {
 }
 
 func (d *decoder) verifyChecksum() error {
-	if _, err := io.ReadFull(d.r, d.tmp[:4]); err != nil {
-		return err
-	}
+  mylog.Check2(io.ReadFull(d.r, d.tmp[:4]));
 	if binary.BigEndian.Uint32(d.tmp[:4]) != d.crc.Sum32() {
 		return FormatError("invalid checksum")
 	}
@@ -941,8 +917,8 @@ func (d *decoder) verifyChecksum() error {
 }
 
 func (d *decoder) checkHeader() error {
-	_, err := io.ReadFull(d.r, d.tmp[:len(pngHeader)])
-	
+ mylog.Check2(io.ReadFull(d.r, d.tmp[:len(pngHeader)]))
+
 	if string(d.tmp[:len(pngHeader)]) != pngHeader {
 		return FormatError("not a PNG file")
 	}
@@ -956,19 +932,10 @@ func Decode(r io.Reader) (image.Image, error) {
 		r:   r,
 		crc: crc32.NewIEEE(),
 	}
-	if err := d.checkHeader(); err != nil {
-		if err == io.EOF {
-			err = io.ErrUnexpectedEOF
-		}
-		return nil, err
-	}
+	mylog.Check(d.checkHeader())
+
 	for d.stage != dsSeenIEND {
-		if err := d.parseChunk(false); err != nil {
-			if err == io.EOF {
-				err = io.ErrUnexpectedEOF
-			}
-			return nil, err
-		}
+		mylog.Check(d.parseChunk(false))
 	}
 	return d.img, nil
 }
@@ -980,20 +947,10 @@ func DecodeConfig(r io.Reader) (image.Config, error) {
 		r:   r,
 		crc: crc32.NewIEEE(),
 	}
-	if err := d.checkHeader(); err != nil {
-		if err == io.EOF {
-			err = io.ErrUnexpectedEOF
-		}
-		return image.Config{}, err
-	}
+	mylog.Check(d.checkHeader())
 
 	for {
-		if err := d.parseChunk(true); err != nil {
-			if err == io.EOF {
-				err = io.ErrUnexpectedEOF
-			}
-			return image.Config{}, err
-		}
+		mylog.Check(d.parseChunk(true))
 
 		if cbPaletted(d.cb) {
 			if d.stage >= dsSeentRNS {
@@ -1035,7 +992,6 @@ func DecodeConfig(r io.Reader) (image.Config, error) {
 }
 
 func init() {
-
 }
 
 func min(a, b int) int {

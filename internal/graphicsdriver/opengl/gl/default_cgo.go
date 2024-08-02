@@ -313,6 +313,8 @@ import "C"
 import (
 	"runtime"
 	"unsafe"
+
+	"github.com/ddkwork/golibrary/mylog"
 )
 
 type defaultContext struct {
@@ -394,7 +396,7 @@ type defaultContext struct {
 
 func NewDefaultContext() (Context, error) {
 	ctx := &defaultContext{}
-	if err := ctx.init(); err != nil {
+	if mylog.Check(ctx.init()); err != nil {
 		return nil, err
 	}
 	return ctx, nil

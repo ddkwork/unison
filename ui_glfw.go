@@ -19,18 +19,20 @@ package unison
 import (
 	"errors"
 	"fmt"
-	"github.com/richardwilkes/unison/internal/file"
-	"github.com/richardwilkes/unison/internal/gamepad"
-	"github.com/richardwilkes/unison/internal/graphicscommand"
-	"github.com/richardwilkes/unison/internal/graphicsdriver"
-	"github.com/richardwilkes/unison/internal/hook"
-	"github.com/richardwilkes/unison/internal/microsoftgdk"
 	"image"
 	"math"
 	"os"
 	"runtime"
 	"sync"
 	"time"
+
+	"github.com/ddkwork/golibrary/mylog"
+	"github.com/richardwilkes/unison/internal/file"
+	"github.com/richardwilkes/unison/internal/gamepad"
+	"github.com/richardwilkes/unison/internal/graphicscommand"
+	"github.com/richardwilkes/unison/internal/graphicsdriver"
+	"github.com/richardwilkes/unison/internal/hook"
+	"github.com/richardwilkes/unison/internal/microsoftgdk"
 
 	"github.com/richardwilkes/unison/internal/glfw"
 )
@@ -140,17 +142,17 @@ func (u *UserInterface) init() error {
 	}
 	u.iwindow.ui = u
 
-	if err := u.initializePlatform(); err != nil {
+	if mylog.Check(u.initializePlatform()); err != nil {
 		return err
 	}
-	if err := u.initializeGLFW(); err != nil {
+	if mylog.Check(u.initializeGLFW()); err != nil {
 		return err
 	}
-	if _, err := glfw.SetMonitorCallback(func(monitor *glfw.Monitor, event glfw.PeripheralEvent) {
-		if err := theMonitors.update(); err != nil {
+	if _ := mylog.Check2(glfw.SetMonitorCallback(func(monitor *glfw.Monitor, event glfw.PeripheralEvent) {
+		if mylog.Check(theMonitors.update()); err != nil {
 			u.setError(err)
 		}
-	}); err != nil {
+	})); err != nil {
 		return err
 	}
 
@@ -160,12 +162,12 @@ func (u *UserInterface) init() error {
 var glfwSystemCursors = map[CursorShape]*glfw.Cursor{}
 
 func (u *UserInterface) initializeGLFW() error {
-	if err := glfw.Init(); err != nil {
+	if mylog.Check(glfw.Init()); err != nil {
 		return err
 	}
 
 	// Update the monitor first. The monitor state is depended on various functions like initialMonitorByOS.
-	if err := theMonitors.update(); err != nil {
+	if mylog.Check(theMonitors.update()); err != nil {
 		return err
 	}
 
@@ -265,14 +267,14 @@ func (u *UserInterface) setWindowMonitor(monitor *Monitor) error {
 	fullscreen := u.isFullscreen()
 	// This is copied from setFullscreen. They should probably use a shared function.
 	if fullscreen {
-		if err := u.setFullscreen(false); err != nil {
+		if mylog.Check(u.setFullscreen(false)); err != nil {
 			return err
 		}
 		// Just after exiting fullscreen, the window state seems very unstable (#2758).
 		// Wait for a while with polling events.
 		if runtime.GOOS == "darwin" {
 			for i := 0; i < 60; i++ {
-				if err := glfw.PollEvents(); err != nil {
+				if mylog.Check(glfw.PollEvents()); err != nil {
 					return err
 				}
 				time.Sleep(time.Second / 60)
@@ -289,7 +291,7 @@ func (u *UserInterface) setWindowMonitor(monitor *Monitor) error {
 	mw = dipToGLFWPixel(mw, s)
 	mh = dipToGLFWPixel(mh, s)
 	px, py := InitialWindowPosition(int(mw), int(mh), int(w), int(h))
-	if err := u.window.SetPos(mx+px, my+py); err != nil {
+	if mylog.Check(u.window.SetPos(mx+px, my+py)); err != nil {
 		return err
 	}
 
@@ -297,7 +299,7 @@ func (u *UserInterface) setWindowMonitor(monitor *Monitor) error {
 		// Calling setFullscreen immediately might not work well, especially on Linux (#2778).
 		// Just wait a little bit. 1/30[s] seems enough in most cases.
 		time.Sleep(time.Second / 30)
-		if err := u.setFullscreen(true); err != nil {
+		if mylog.Check(u.setFullscreen(true)); err != nil {
 			return err
 		}
 	}
@@ -539,7 +541,7 @@ func (u *UserInterface) setWindowClosingHandled(handled bool) {
 		if u.isTerminated() {
 			return
 		}
-		if err := u.setDocumentEdited(handled); err != nil {
+		if mylog.Check(u.setDocumentEdited(handled)); err != nil {
 			u.setError(err)
 			return
 		}
@@ -599,7 +601,7 @@ func (u *UserInterface) SetFullscreen(fullscreen bool) {
 		if f == fullscreen {
 			return
 		}
-		if err := u.setFullscreen(fullscreen); err != nil {
+		if mylog.Check(u.setFullscreen(fullscreen)); err != nil {
 			u.setError(err)
 			return
 		}
@@ -655,7 +657,7 @@ func (u *UserInterface) SetFPSMode(mode FPSModeType) {
 			u.fpsMode = mode
 			return
 		}
-		if err := u.setFPSMode(mode); err != nil {
+		if mylog.Check(u.setFPSMode(mode)); err != nil {
 			u.setError(err)
 			return
 		}
@@ -668,7 +670,7 @@ func (u *UserInterface) ScheduleFrame() {
 	}
 	// As the main thread can be blocked, do not check the current FPS mode.
 	// PostEmptyEvent is concurrent safe.
-	if err := glfw.PostEmptyEvent(); err != nil {
+	if mylog.Check(glfw.PostEmptyEvent()); err != nil {
 		u.setError(err)
 		return
 	}
@@ -717,12 +719,12 @@ func (u *UserInterface) SetCursorMode(mode CursorMode) {
 		if u.isTerminated() {
 			return
 		}
-		if err := u.window.SetInputMode(glfw.CursorMode, driverCursorModeToGLFWCursorMode(mode)); err != nil {
+		if mylog.Check(u.window.SetInputMode(glfw.CursorMode, driverCursorModeToGLFWCursorMode(mode))); err != nil {
 			u.setError(err)
 			return
 		}
 		if mode == CursorModeVisible {
-			if err := u.window.SetCursor(glfwSystemCursors[u.getCursorShape()]); err != nil {
+			if mylog.Check(u.window.SetCursor(glfwSystemCursors[u.getCursorShape()])); err != nil {
 				u.setError(err)
 				return
 			}
@@ -750,7 +752,7 @@ func (u *UserInterface) SetCursorShape(shape CursorShape) {
 		if u.isTerminated() {
 			return
 		}
-		if err := u.window.SetCursor(glfwSystemCursors[shape]); err != nil {
+		if mylog.Check(u.window.SetCursor(glfwSystemCursors[shape])); err != nil {
 			u.setError(err)
 			return
 		}
@@ -770,7 +772,7 @@ func (u *UserInterface) createWindow() error {
 	s := monitor.DeviceScaleFactor()
 	width := int(dipToGLFWPixel(float64(ww), s))
 	height := int(dipToGLFWPixel(float64(wh), s))
-	window, err := glfw.CreateWindow(width, height, "", nil, nil)
+	window := mylog.Check2(glfw.CreateWindow(width, height, "", nil, nil))
 
 	u.window = window
 	// Set the running state true just a window is set (#2742).
@@ -792,44 +794,44 @@ func (u *UserInterface) createWindow() error {
 	if wy < 0 {
 		wy = 0
 	}
-	if err := u.setWindowPositionInDIP(wx, wy, monitor); err != nil {
+	if mylog.Check(u.setWindowPositionInDIP(wx, wy, monitor)); err != nil {
 		return err
 	}
 
 	// Though the size is already specified, call setWindowSizeInDIP explicitly to adjust member variables.
-	if err := u.setWindowSizeInDIP(ww, wh, true); err != nil {
+	if mylog.Check(u.setWindowSizeInDIP(ww, wh, true)); err != nil {
 		return err
 	}
 
-	if err := initializeWindowAfterCreation(window); err != nil {
+	if mylog.Check(initializeWindowAfterCreation(window)); err != nil {
 		return err
 	}
 
 	// Even just after a window creation, FramebufferSize callback might be invoked (#1847).
 	// Ensure to consume this callback.
-	if err := u.waitForFramebufferSizeCallback(u.window, nil); err != nil {
+	if mylog.Check(u.waitForFramebufferSizeCallback(u.window, nil)); err != nil {
 		return err
 	}
 
-	if err := u.window.SetInputMode(glfw.CursorMode, driverCursorModeToGLFWCursorMode(u.getInitCursorMode())); err != nil {
+	if mylog.Check(u.window.SetInputMode(glfw.CursorMode, driverCursorModeToGLFWCursorMode(u.getInitCursorMode()))); err != nil {
 		return err
 	}
-	if err := u.window.SetCursor(glfwSystemCursors[u.getCursorShape()]); err != nil {
+	if mylog.Check(u.window.SetCursor(glfwSystemCursors[u.getCursorShape()])); err != nil {
 		return err
 	}
-	if err := u.window.SetTitle(u.title); err != nil {
+	if mylog.Check(u.window.SetTitle(u.title)); err != nil {
 		return err
 	}
 	// Icons are set after every frame. They don't have to be cared here.
 
-	if err := u.updateWindowSizeLimits(); err != nil {
+	if mylog.Check(u.updateWindowSizeLimits()); err != nil {
 		return err
 	}
 
 	u.m.Lock()
 	closingHandled := u.windowClosingHandled
 	u.m.Unlock()
-	if err := u.setDocumentEdited(closingHandled); err != nil {
+	if mylog.Check(u.setDocumentEdited(closingHandled)); err != nil {
 		return err
 	}
 
@@ -847,17 +849,17 @@ func (u *UserInterface) registerWindowCloseCallback() error {
 			if !u.isWindowClosingHandled() {
 				return
 			}
-			if err := u.window.Focus(); err != nil {
+			if mylog.Check(u.window.Focus()); err != nil {
 				u.setError(err)
 				return
 			}
-			if err := u.window.SetShouldClose(false); err != nil {
+			if mylog.Check(u.window.SetShouldClose(false)); err != nil {
 				u.setError(err)
 				return
 			}
 		}
 	}
-	if _, err := u.window.SetCloseCallback(u.closeCallback); err != nil {
+	if _ := mylog.Check2(u.window.SetCloseCallback(u.closeCallback)); err != nil {
 		return err
 	}
 	return nil
@@ -885,13 +887,13 @@ func (u *UserInterface) registerWindowFramebufferSizeCallback() error {
 			s := m.DeviceScaleFactor()
 			ww := int(float64(w) / s)
 			wh := int(float64(h) / s)
-			if err := u.setWindowSizeInDIP(ww, wh, false); err != nil {
+			if mylog.Check(u.setWindowSizeInDIP(ww, wh, false)); err != nil {
 				u.setError(err)
 				return
 			}
 		}
 	}
-	if _, err := u.window.SetFramebufferSizeCallback(u.defaultFramebufferSizeCallback); err != nil {
+	if _ := mylog.Check2(u.window.SetFramebufferSizeCallback(u.defaultFramebufferSizeCallback)); err != nil {
 		return err
 	}
 	return nil
@@ -905,7 +907,7 @@ func (u *UserInterface) registerDropCallback() error {
 			u.inputState.DroppedFiles = file.NewVirtualFS(names)
 		}
 	}
-	if _, err := u.window.SetDropCallback(u.dropCallback); err != nil {
+	if _ := mylog.Check2(u.window.SetDropCallback(u.dropCallback)); err != nil {
 		return err
 	}
 	return nil
@@ -929,12 +931,12 @@ func (u *UserInterface) waitForFramebufferSizeCallback(window *glfw.Window, f fu
 			}
 		}
 	}
-	if _, err := window.SetFramebufferSizeCallback(u.framebufferSizeCallback); err != nil {
+	if _ := mylog.Check2(window.SetFramebufferSizeCallback(u.framebufferSizeCallback)); err != nil {
 		return err
 	}
 
 	if f != nil {
-		if err := f(); err != nil {
+		if mylog.Check(f()); err != nil {
 			return err
 		}
 	}
@@ -945,7 +947,7 @@ func (u *UserInterface) waitForFramebufferSizeCallback(window *glfw.Window, f fu
 
 event:
 	for {
-		if err := glfw.PollEvents(); err != nil {
+		if mylog.Check(glfw.PollEvents()); err != nil {
 			return err
 		}
 		select {
@@ -957,7 +959,7 @@ event:
 			time.Sleep(time.Millisecond)
 		}
 	}
-	if _, err := window.SetFramebufferSizeCallback(u.defaultFramebufferSizeCallback); err != nil {
+	if _ := mylog.Check2(window.SetFramebufferSizeCallback(u.defaultFramebufferSizeCallback)); err != nil {
 		return err
 	}
 
@@ -968,20 +970,20 @@ event:
 }
 
 func (u *UserInterface) initOnMainThread(options *RunOptions) error {
-	if err := glfw.WindowHint(glfw.AutoIconify, glfw.False); err != nil {
+	if mylog.Check(glfw.WindowHint(glfw.AutoIconify, glfw.False)); err != nil {
 		return err
 	}
 
 	// Window is shown after the first buffer swap (#2725).
-	if err := glfw.WindowHint(glfw.Visible, glfw.False); err != nil {
+	if mylog.Check(glfw.WindowHint(glfw.Visible, glfw.False)); err != nil {
 		return err
 	}
 
-	if err := glfw.WindowHintString(glfw.X11ClassName, options.X11ClassName); err != nil {
+	if mylog.Check(glfw.WindowHintString(glfw.X11ClassName, options.X11ClassName)); err != nil {
 		return err
 	}
 
-	if err := glfw.WindowHintString(glfw.X11InstanceName, options.X11InstanceName); err != nil {
+	if mylog.Check(glfw.WindowHintString(glfw.X11InstanceName, options.X11InstanceName)); err != nil {
 		return err
 	}
 
@@ -991,7 +993,7 @@ func (u *UserInterface) initOnMainThread(options *RunOptions) error {
 		if u.isInitWindowDecorated() {
 			decorated = glfw.True
 		}
-		if err := glfw.WindowHint(glfw.Decorated, decorated); err != nil {
+		if mylog.Check(glfw.WindowHint(glfw.Decorated, decorated)); err != nil {
 			return err
 		}
 	}
@@ -1000,13 +1002,13 @@ func (u *UserInterface) initOnMainThread(options *RunOptions) error {
 	if options.ScreenTransparent {
 		glfwTransparent = glfw.True
 	}
-	if err := glfw.WindowHint(glfw.TransparentFramebuffer, glfwTransparent); err != nil {
+	if mylog.Check(glfw.WindowHint(glfw.TransparentFramebuffer, glfwTransparent)); err != nil {
 		return err
 	}
 
-	g, lib, err := newGraphicsDriver(&graphicsDriverCreatorImpl{
+	g, lib := mylog.Check3(newGraphicsDriver(&graphicsDriverCreatorImpl{
 		transparent: options.ScreenTransparent,
-	}, options.GraphicsLibrary)
+	}, options.GraphicsLibrary))
 
 	u.graphicsDriver = g
 	u.setGraphicsLibrary(lib)
@@ -1021,7 +1023,7 @@ func (u *UserInterface) initOnMainThread(options *RunOptions) error {
 	if u.windowResizingMode == WindowResizingModeEnabled {
 		resizable = glfw.True
 	}
-	if err := glfw.WindowHint(glfw.Resizable, resizable); err != nil {
+	if mylog.Check(glfw.WindowHint(glfw.Resizable, resizable)); err != nil {
 		return err
 	}
 
@@ -1029,7 +1031,7 @@ func (u *UserInterface) initOnMainThread(options *RunOptions) error {
 	if u.isInitWindowFloating() {
 		floating = glfw.True
 	}
-	if err := glfw.WindowHint(glfw.Floating, floating); err != nil {
+	if mylog.Check(glfw.WindowHint(glfw.Floating, floating)); err != nil {
 		return err
 	}
 
@@ -1037,7 +1039,7 @@ func (u *UserInterface) initOnMainThread(options *RunOptions) error {
 	if options.InitUnfocused {
 		focused = glfw.False
 	}
-	if err := glfw.WindowHint(glfw.FocusOnShow, focused); err != nil {
+	if mylog.Check(glfw.WindowHint(glfw.FocusOnShow, focused)); err != nil {
 		return err
 	}
 
@@ -1045,29 +1047,29 @@ func (u *UserInterface) initOnMainThread(options *RunOptions) error {
 	if u.isInitWindowMousePassthrough() {
 		mousePassthrough = glfw.True
 	}
-	if err := glfw.WindowHint(glfw.MousePassthrough, mousePassthrough); err != nil {
+	if mylog.Check(glfw.WindowHint(glfw.MousePassthrough, mousePassthrough)); err != nil {
 		return err
 	}
 
 	// Set the window visible explicitly or the application freezes on Wayland (#974).
 	if os.Getenv("WAYLAND_DISPLAY") != "" {
-		if err := glfw.WindowHint(glfw.Visible, glfw.True); err != nil {
+		if mylog.Check(glfw.WindowHint(glfw.Visible, glfw.True)); err != nil {
 			return err
 		}
 	}
 
-	if err := u.createWindow(); err != nil {
+	if mylog.Check(u.createWindow()); err != nil {
 		return err
 	}
 
 	// Maximizing a window requires a proper size and position. Call Maximize here (#1117).
 	if u.isInitWindowMaximized() {
-		if err := u.window.Maximize(); err != nil {
+		if mylog.Check(u.window.Maximize()); err != nil {
 			return err
 		}
 	}
 
-	if err := u.setWindowResizingModeForOS(u.windowResizingMode); err != nil {
+	if mylog.Check(u.setWindowResizingModeForOS(u.windowResizingMode)); err != nil {
 		return err
 	}
 
@@ -1080,27 +1082,27 @@ func (u *UserInterface) initOnMainThread(options *RunOptions) error {
 	case interface{ SetGLFWWindow(window *glfw.Window) }:
 		g.SetGLFWWindow(u.window)
 	case interface{ SetWindow(uintptr) }:
-		w, err := u.nativeWindow()
+		w := mylog.Check2(u.nativeWindow())
 
 		g.SetWindow(w)
 	}
 
-	w, err := u.nativeWindow()
+	w := mylog.Check2(u.nativeWindow())
 
 	gamepad.SetNativeWindow(w)
 
 	// Register callbacks after the window initialization done.
 	// The callback might cause swapping frames, that assumes the window is already set (#2137).
-	if err := u.registerWindowCloseCallback(); err != nil {
+	if mylog.Check(u.registerWindowCloseCallback()); err != nil {
 		return err
 	}
-	if err := u.registerWindowFramebufferSizeCallback(); err != nil {
+	if mylog.Check(u.registerWindowFramebufferSizeCallback()); err != nil {
 		return err
 	}
-	if err := u.registerInputCallbacks(); err != nil {
+	if mylog.Check(u.registerInputCallbacks()); err != nil {
 		return err
 	}
-	if err := u.registerDropCallback(); err != nil {
+	if mylog.Check(u.registerDropCallback()); err != nil {
 		return err
 	}
 
@@ -1153,10 +1155,10 @@ func (u *UserInterface) setFPSMode(fpsMode FPSModeType) error {
 	if fpsMode == FPSModeVsyncOffMinimum {
 		sticky = glfw.False
 	}
-	if err := u.window.SetInputMode(glfw.StickyMouseButtonsMode, sticky); err != nil {
+	if mylog.Check(u.window.SetInputMode(glfw.StickyMouseButtonsMode, sticky)); err != nil {
 		return err
 	}
-	if err := u.window.SetInputMode(glfw.StickyKeysMode, sticky); err != nil {
+	if mylog.Check(u.window.SetInputMode(glfw.StickyKeysMode, sticky)); err != nil {
 		return err
 	}
 
@@ -1168,51 +1170,44 @@ func (u *UserInterface) setFPSMode(fpsMode FPSModeType) error {
 
 // update must be called from the main thread.
 func (u *UserInterface) update() (float64, float64, error) {
-	if err := u.error(); err != nil {
+	if mylog.Check(u.error()); err != nil {
 		return 0, 0, err
 	}
 
-	sc, err := u.window.ShouldClose()
-	if err != nil {
-		return 0, 0, err
-	}
+	sc := mylog.Check2(u.window.ShouldClose())
+
 	if sc {
 		return 0, 0, RegularTermination
 	}
 
 	// On macOS, one swapping buffers seems required before entering fullscreen (#2599).
 	if u.isInitFullscreen() && (u.bufferOnceSwapped || runtime.GOOS != "darwin") {
-		if err := u.setFullscreen(true); err != nil {
+		if mylog.Check(u.setFullscreen(true)); err != nil {
 			return 0, 0, err
 		}
 		u.setInitFullscreen(false)
 	}
 
 	if runtime.GOOS == "darwin" && u.bufferOnceSwapped {
-		var err error
 		u.darwinInitOnce.Do(func() {
 			// On macOS, window decoration should be initialized once after buffers are swapped (#2600).
 			decorated := glfw.False
 			if u.isInitWindowDecorated() {
 				decorated = glfw.True
 			}
-			if err = u.window.SetAttrib(glfw.Decorated, decorated); err != nil {
+			if mylog.Check(u.window.SetAttrib(glfw.Decorated, decorated)); err != nil {
 				return
 			}
 		})
-		if err != nil {
-			return 0, 0, err
-		}
 	}
 
 	if u.bufferOnceSwapped {
-		var err error
 		u.showWindowOnce.Do(func() {
 			// Show the window after first buffer swap to avoid flash of white especially on Windows.
-			if err = u.window.Show(); err != nil {
+			if mylog.Check(u.window.Show()); err != nil {
 				return
 			}
-			if err = u.window.Focus(); err != nil {
+			if mylog.Check(u.window.Focus()); err != nil {
 				return
 			}
 
@@ -1235,33 +1230,30 @@ func (u *UserInterface) update() (float64, float64, error) {
 
 			// Even though a framebuffer callback is not called, waitForFramebufferSizeCallback returns by timeout,
 			// so it is safe to use this.
-			if err = u.waitForFramebufferSizeCallback(u.window, func() error {
+			if mylog.Check(u.waitForFramebufferSizeCallback(u.window, func() error {
 				return u.window.SetSize(newW, newH)
-			}); err != nil {
+			})); err != nil {
 				return
 			}
 		})
-		if err != nil {
-			return 0, 0, err
-		}
 	}
 
 	// Initialize vsync after SetMonitor is called.
 	// Calling this inside setWindowSize didn't work (#1363).
 	// Also, setFPSMode has to be called after graphicscommand.SetRenderThread is called (#2714).
 	if !u.fpsModeInited {
-		if err := u.setFPSMode(u.fpsMode); err != nil {
+		if mylog.Check(u.setFPSMode(u.fpsMode)); err != nil {
 			return 0, 0, err
 		}
 	}
 
 	if u.fpsMode != FPSModeVsyncOffMinimum {
 		// TODO: Updating the input can be skipped when clock.Update returns 0 (#1367).
-		if err := glfw.PollEvents(); err != nil {
+		if mylog.Check(glfw.PollEvents()); err != nil {
 			return 0, 0, err
 		}
 	} else {
-		if err := glfw.WaitEvents(); err != nil {
+		if mylog.Check(glfw.WaitEvents()); err != nil {
 			return 0, 0, err
 		}
 	}
@@ -1278,25 +1270,23 @@ func (u *UserInterface) update() (float64, float64, error) {
 			break
 		}
 
-		shouldClose, err := u.window.ShouldClose()
-		if err != nil {
-			return 0, 0, err
-		}
+		shouldClose := mylog.Check2(u.window.ShouldClose())
+
 		if shouldClose {
 			break
 		}
 
-		if err := hook.SuspendAudio(); err != nil {
+		if mylog.Check(hook.SuspendAudio()); err != nil {
 			return 0, 0, err
 		}
 		// Wait for an arbitrary period to avoid busy loop.
 		time.Sleep(time.Second / 60)
-		if err := glfw.PollEvents(); err != nil {
+		if mylog.Check(glfw.PollEvents()); err != nil {
 			return 0, 0, err
 		}
 	}
 
-	if err := hook.ResumeAudio(); err != nil {
+	if mylog.Check(hook.ResumeAudio()); err != nil {
 		return 0, 0, err
 	}
 
@@ -1307,7 +1297,7 @@ func (u *UserInterface) loopGame() (ferr error) {
 	defer func() {
 		graphicscommand.Terminate()
 		u.mainThread.Call(func() {
-			if err := glfw.Terminate(); err != nil {
+			if mylog.Check(glfw.Terminate()); err != nil {
 				ferr = err
 			}
 			u.setTerminated()
@@ -1315,7 +1305,7 @@ func (u *UserInterface) loopGame() (ferr error) {
 	}()
 
 	for {
-		if err := u.updateGame(); err != nil {
+		if mylog.Check(u.updateGame()); err != nil {
 			return err
 		}
 	}
@@ -1340,19 +1330,17 @@ func (u *UserInterface) updateGame() error {
 
 	var outsideWidth, outsideHeight float64
 	var deviceScaleFactor float64
-	var err error
+
 	if u.mainThread.Call(func() {
-		outsideWidth, outsideHeight, err = u.update()
-		if err != nil {
-			return
-		}
+		outsideWidth, outsideHeight = mylog.Check3(u.update())
+
 		m := u.currentMonitor()
 		deviceScaleFactor = m.DeviceScaleFactor()
 	}); err != nil {
 		return err
 	}
 
-	if err := u.context.updateFrame(u.graphicsDriver, outsideWidth, outsideHeight, deviceScaleFactor, u); err != nil {
+	if mylog.Check(u.context.updateFrame(u.graphicsDriver, outsideWidth, outsideHeight, deviceScaleFactor, u)); err != nil {
 		return err
 	}
 
@@ -1414,7 +1402,7 @@ func (u *UserInterface) updateIconIfNeeded() error {
 	}
 
 	// Catch a possible error at 'At' (#2647).
-	if err := u.error(); err != nil {
+	if mylog.Check(u.error()); err != nil {
 		return err
 	}
 	u.mainThread.Call(func() {
@@ -1431,7 +1419,7 @@ func (u *UserInterface) updateWindowSizeLimits() error {
 	s := m.DeviceScaleFactor()
 	if minw < 0 {
 		// Always set the minimum window width.
-		mw, err := u.minimumWindowWidth()
+		mw := mylog.Check2(u.minimumWindowWidth())
 
 		minw = int(dipToGLFWPixel(float64(mw), s))
 	} else {
@@ -1452,12 +1440,12 @@ func (u *UserInterface) updateWindowSizeLimits() error {
 	} else {
 		maxh = int(dipToGLFWPixel(float64(maxh), s))
 	}
-	if err := u.window.SetSizeLimits(minw, minh, maxw, maxh); err != nil {
+	if mylog.Check(u.window.SetSizeLimits(minw, minh, maxw, maxh)); err != nil {
 		return err
 	}
 
 	// The window size limit affects the resizing mode, especially on macOS (#2260).
-	if err := u.setWindowResizingModeForOS(u.windowResizingMode); err != nil {
+	if mylog.Check(u.setWindowResizingModeForOS(u.windowResizingMode)); err != nil {
 		return err
 	}
 
@@ -1499,7 +1487,7 @@ func (u *UserInterface) setWindowSizeInDIP(width, height int, callSetSize bool) 
 	}
 
 	width, height = u.adjustWindowSizeBasedOnSizeLimitsInDIP(width, height)
-	m, err := u.minimumWindowWidth()
+	m := mylog.Check2(u.minimumWindowWidth())
 
 	if width < m {
 		width = m
@@ -1530,15 +1518,15 @@ func (u *UserInterface) setWindowSizeInDIP(width, height int, callSetSize bool) 
 		if oldW != newW || oldH != newH {
 			// Just after SetSize, GetSize is not reliable especially on Linux/UNIX.
 			// Let's wait for FramebufferSize callback in any cases.
-			if err := u.waitForFramebufferSizeCallback(u.window, func() error {
+			if mylog.Check(u.waitForFramebufferSizeCallback(u.window, func() error {
 				return u.window.SetSize(newW, newH)
-			}); err != nil {
+			})); err != nil {
 				return err
 			}
 		}
 	}
 
-	if err := u.updateWindowSizeLimits(); err != nil {
+	if mylog.Check(u.updateWindowSizeLimits()); err != nil {
 		return err
 	}
 	return nil
@@ -1567,44 +1555,40 @@ func (u *UserInterface) setFullscreen(fullscreen bool) error {
 
 	// Enter the fullscreen.
 	if fullscreen {
-		if err := u.disableWindowSizeLimits(); err != nil {
+		if mylog.Check(u.disableWindowSizeLimits()); err != nil {
 			return err
 		}
 
 		if x, y := u.origWindowPos(); x == invalidPos || y == invalidPos {
-			x, y, err := u.window.GetPos()
-			if err != nil {
-				return err
-			}
+			x, y := mylog.Check3(u.window.GetPos())
+
 			u.setOrigWindowPos(x, y)
 		}
 
 		if u.isNativeFullscreenAvailable() {
-			if err := u.setNativeFullscreen(fullscreen); err != nil {
+			if mylog.Check(u.setNativeFullscreen(fullscreen)); err != nil {
 				return err
 			}
 		} else {
-			m, err := u.currentMonitor()
-			if err != nil {
-				return err
-			}
+			m := mylog.Check2(u.currentMonitor())
+
 			if m == nil {
 				return nil
 			}
 
 			vm := m.videoMode
-			if err := u.window.SetMonitor(m.m, 0, 0, vm.Width, vm.Height, vm.RefreshRate); err != nil {
+			if mylog.Check(u.window.SetMonitor(m.m, 0, 0, vm.Width, vm.Height, vm.RefreshRate)); err != nil {
 				return err
 			}
 		}
-		if err := u.adjustViewSizeAfterFullscreen(); err != nil {
+		if mylog.Check(u.adjustViewSizeAfterFullscreen()); err != nil {
 			return err
 		}
 		return nil
 	}
 
 	// Exit the fullscreen.
-	if err := u.updateWindowSizeLimits(); err != nil {
+	if mylog.Check(u.updateWindowSizeLimits()); err != nil {
 		return err
 	}
 
@@ -1612,21 +1596,21 @@ func (u *UserInterface) setFullscreen(fullscreen bool) error {
 	// TODO: Why?
 	origX, origY := u.origWindowPos()
 
-	m, err := u.currentMonitor()
+	m := mylog.Check2(u.currentMonitor())
 
 	s := m.DeviceScaleFactor()
 	ww := int(dipToGLFWPixel(float64(u.origWindowWidthInDIP), s))
 	wh := int(dipToGLFWPixel(float64(u.origWindowHeightInDIP), s))
 	if u.isNativeFullscreenAvailable() {
-		if err := u.setNativeFullscreen(false); err != nil {
+		if mylog.Check(u.setNativeFullscreen(false)); err != nil {
 			return err
 		}
 		// Adjust the window size later (after adjusting the position).
 	} else {
-		m, err := u.window.GetMonitor()
+		m := mylog.Check2(u.window.GetMonitor())
 
 		if !u.isNativeFullscreenAvailable() && m != nil {
-			if err := u.window.SetMonitor(nil, 0, 0, ww, wh, 0); err != nil {
+			if mylog.Check(u.window.SetMonitor(nil, 0, 0, ww, wh, 0)); err != nil {
 				return err
 			}
 		}
@@ -1635,22 +1619,22 @@ func (u *UserInterface) setFullscreen(fullscreen bool) error {
 	// glfw.PollEvents is necessary for macOS to enable (*glfw.Window).SetPos and SetSize (#2296).
 	// This polling causes issues on Linux and Windows when rapidly toggling fullscreen, so we only run it under macOS.
 	if runtime.GOOS == "darwin" {
-		if err := glfw.PollEvents(); err != nil {
+		if mylog.Check(glfw.PollEvents()); err != nil {
 			return err
 		}
 	}
 
 	if origX != invalidPos && origY != invalidPos {
-		if err := u.window.SetPos(origX, origY); err != nil {
+		if mylog.Check(u.window.SetPos(origX, origY)); err != nil {
 			return err
 		}
 		// Dirty hack for macOS (#703). Rendering doesn't work correctly with one SetPos, but
 		// work with two or more SetPos.
 		if runtime.GOOS == "darwin" {
-			if err := u.window.SetPos(origX+1, origY); err != nil {
+			if mylog.Check(u.window.SetPos(origX+1, origY)); err != nil {
 				return err
 			}
-			if err := u.window.SetPos(origX, origY); err != nil {
+			if mylog.Check(u.window.SetPos(origX, origY)); err != nil {
 				return err
 			}
 		}
@@ -1660,7 +1644,7 @@ func (u *UserInterface) setFullscreen(fullscreen bool) error {
 	if u.isNativeFullscreenAvailable() {
 		// Set the window size after the position. The order matters.
 		// In the opposite order, the window size might not be correct when going back from fullscreen with multi monitors.
-		if err := u.window.SetSize(ww, wh); err != nil {
+		if mylog.Check(u.window.SetSize(ww, wh)); err != nil {
 			return err
 		}
 	}
@@ -1669,10 +1653,8 @@ func (u *UserInterface) setFullscreen(fullscreen bool) error {
 }
 
 func (u *UserInterface) minimumWindowWidth() (int, error) {
-	a, err := u.window.GetAttrib(glfw.Decorated)
-	if err != nil {
-		return 0, err
-	}
+	a := mylog.Check2(u.window.GetAttrib(glfw.Decorated))
+
 	if a == glfw.False {
 		return 1, nil
 	}
@@ -1739,31 +1721,31 @@ func (u *UserInterface) Window() Window {
 
 // maximizeWindow must be called from the main thread.
 func (u *UserInterface) maximizeWindow() error {
-	n, err := u.isNativeFullscreen()
+	n := mylog.Check2(u.isNativeFullscreen())
 
 	if n {
 		return nil
 	}
 
-	f, err := u.isFullscreen()
+	f := mylog.Check2(u.isFullscreen())
 
 	if f {
 		return nil
 	}
 
-	if err := u.window.Maximize(); err != nil {
+	if mylog.Check(u.window.Maximize()); err != nil {
 		return err
 	}
 
 	// On Linux/UNIX, maximizing might not finish even though Maximize returns. Just wait for its finish.
 	// Do not check this in the fullscreen since apparently the condition can never be true.
 	for {
-		a, err := u.window.GetAttrib(glfw.Maximized)
+		a := mylog.Check2(u.window.GetAttrib(glfw.Maximized))
 
 		if a == glfw.True {
 			break
 		}
-		if err := glfw.PollEvents(); err != nil {
+		if mylog.Check(glfw.PollEvents()); err != nil {
 			return err
 		}
 	}
@@ -1774,24 +1756,24 @@ func (u *UserInterface) maximizeWindow() error {
 // iconifyWindow must be called from the main thread.
 func (u *UserInterface) iconifyWindow() error {
 	// Iconifying a native fullscreen window on macOS is forbidden.
-	n, err := u.isNativeFullscreen()
+	n := mylog.Check2(u.isNativeFullscreen())
 
 	if n {
 		return nil
 	}
 
-	if err := u.window.Iconify(); err != nil {
+	if mylog.Check(u.window.Iconify()); err != nil {
 		return err
 	}
 
 	// On Linux/UNIX, iconifying might not finish even though Iconify returns. Just wait for its finish.
 	for {
-		a, err := u.window.GetAttrib(glfw.Iconified)
+		a := mylog.Check2(u.window.GetAttrib(glfw.Iconified))
 
 		if a == glfw.True {
 			break
 		}
-		if err := glfw.PollEvents(); err != nil {
+		if mylog.Check(glfw.PollEvents()); err != nil {
 			return err
 		}
 	}
@@ -1801,7 +1783,7 @@ func (u *UserInterface) iconifyWindow() error {
 
 // restoreWindow must be called from the main thread.
 func (u *UserInterface) restoreWindow() error {
-	if err := u.window.Restore(); err != nil {
+	if mylog.Check(u.window.Restore()); err != nil {
 		return err
 	}
 
@@ -1809,18 +1791,14 @@ func (u *UserInterface) restoreWindow() error {
 	// On macOS, the restoring state might be the same as the maximized state. Skip this.
 	if runtime.GOOS != "darwin" {
 		for {
-			maximized, err := u.window.GetAttrib(glfw.Maximized)
-			if err != nil {
-				return err
-			}
-			iconified, err := u.window.GetAttrib(glfw.Iconified)
-			if err != nil {
-				return err
-			}
+			maximized := mylog.Check2(u.window.GetAttrib(glfw.Maximized))
+
+			iconified := mylog.Check2(u.window.GetAttrib(glfw.Iconified))
+
 			if maximized == glfw.False && iconified == glfw.False {
 				break
 			}
-			if err := glfw.PollEvents(); err != nil {
+			if mylog.Check(glfw.PollEvents()); err != nil {
 				return err
 			}
 			time.Sleep(time.Second / 60)
@@ -1840,13 +1818,13 @@ func (u *UserInterface) setWindowDecorated(decorated bool) error {
 	if decorated {
 		v = glfw.True
 	}
-	if err := u.window.SetAttrib(glfw.Decorated, v); err != nil {
+	if mylog.Check(u.window.SetAttrib(glfw.Decorated, v)); err != nil {
 		return err
 	}
 
 	// The title can be lost when the decoration is gone. Recover this.
 	if decorated {
-		if err := u.window.SetTitle(u.title); err != nil {
+		if mylog.Check(u.window.SetTitle(u.title)); err != nil {
 			return err
 		}
 	}
@@ -1864,7 +1842,7 @@ func (u *UserInterface) setWindowFloating(floating bool) error {
 	if floating {
 		v = glfw.True
 	}
-	if err := u.window.SetAttrib(glfw.Floating, v); err != nil {
+	if mylog.Check(u.window.SetAttrib(glfw.Floating, v)); err != nil {
 		return err
 	}
 
@@ -1887,10 +1865,10 @@ func (u *UserInterface) setWindowResizingMode(mode WindowResizingMode) error {
 	if mode == WindowResizingModeEnabled {
 		v = glfw.True
 	}
-	if err := u.window.SetAttrib(glfw.Resizable, v); err != nil {
+	if mylog.Check(u.window.SetAttrib(glfw.Resizable, v)); err != nil {
 		return err
 	}
-	if err := u.setWindowResizingModeForOS(mode); err != nil {
+	if mylog.Check(u.setWindowResizingModeForOS(mode)); err != nil {
 		return err
 	}
 
@@ -1908,7 +1886,7 @@ func (u *UserInterface) setWindowPositionInDIP(x, y int, monitor *Monitor) error
 		return nil
 	}
 
-	f, err := u.isFullscreen()
+	f := mylog.Check2(u.isFullscreen())
 
 	mx := monitor.boundsInGLFWPixels.Min.X
 	my := monitor.boundsInGLFWPixels.Min.Y
@@ -1918,7 +1896,7 @@ func (u *UserInterface) setWindowPositionInDIP(x, y int, monitor *Monitor) error
 	if x, y := u.adjustWindowPosition(mx+int(xf), my+int(yf), monitor); f {
 		u.setOrigWindowPos(x, y)
 	} else {
-		if err := u.window.SetPos(x, y); err != nil {
+		if mylog.Check(u.window.SetPos(x, y)); err != nil {
 			return err
 		}
 	}
@@ -1957,7 +1935,7 @@ func (u *UserInterface) setWindowMousePassthrough(enabled bool) error {
 	if enabled {
 		v = glfw.True
 	}
-	if err := u.window.SetAttrib(glfw.MousePassthrough, v); err != nil {
+	if mylog.Check(u.window.SetAttrib(glfw.MousePassthrough, v)); err != nil {
 		return err
 	}
 	return nil

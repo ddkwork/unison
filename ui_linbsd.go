@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"runtime"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/jezek/xgb"
 	"github.com/jezek/xgb/randr"
 	"github.com/jezek/xgb/xproto"
@@ -37,7 +38,7 @@ type graphicsDriverCreatorImpl struct {
 }
 
 func (g *graphicsDriverCreatorImpl) newAuto() (graphicsdriver.Graphics, GraphicsLibrary, error) {
-	graphics, err := g.newOpenGL()
+	graphics := mylog.Check2(g.newOpenGL())
 	return graphics, GraphicsLibraryOpenGL, err
 }
 
@@ -59,10 +60,8 @@ func (*graphicsDriverCreatorImpl) newPlayStation5() (graphicsdriver.Graphics, er
 
 // glfwMonitorSizeInGLFWPixels must be called from the main thread.
 func glfwMonitorSizeInGLFWPixels(m *glfw.Monitor) (int, int, error) {
-	vm, err := m.GetVideoMode()
-	if err != nil {
-		return 0, 0, err
-	}
+	vm := mylog.Check2(m.GetVideoMode())
+
 	physWidth, physHeight := vm.Width, vm.Height
 
 	// TODO: if glfw/glfw#1961 gets fixed, this function may need revising.
@@ -73,39 +72,33 @@ func glfwMonitorSizeInGLFWPixels(m *glfw.Monitor) (int, int, error) {
 	// for Ebitengine's `(*Monitor).Size()` public API.
 	// Also at the moment we need this prior to switching to fullscreen, but that might be replaceable.
 	// So this function computes the ratio of physical per logical pixels.
-	xconn, err := xgb.NewConn()
-	if err != nil {
-		// No X11 connection?
-		// Assume we're on pure Wayland then.
-		// GLFW/Wayland shouldn't be having this issue.
-		return physWidth, physHeight, nil
-	}
+	xconn := mylog.Check2(xgb.NewConn())
+
+	// No X11 connection?
+	// Assume we're on pure Wayland then.
+	// GLFW/Wayland shouldn't be having this issue.
+
 	defer xconn.Close()
 
-	if err := randr.Init(xconn); err != nil {
+	if mylog.Check(randr.Init(xconn)); err != nil {
 		// No RANDR extension? No problem.
 		return physWidth, physHeight, nil
 	}
 
 	root := xproto.Setup(xconn).DefaultScreen(xconn).Root
-	res, err := randr.GetScreenResourcesCurrent(xconn, root).Reply()
-	if err != nil {
-		// Likely means RANDR is not working. No problem.
-		return physWidth, physHeight, nil
-	}
+	res := mylog.Check2(randr.GetScreenResourcesCurrent(xconn, root).Reply())
 
-	monitorX, monitorY, err := m.GetPos()
-	if err != nil {
-		// TODO: Is it OK to ignore this error?
-		return physWidth, physHeight, nil
-	}
+	// Likely means RANDR is not working. No problem.
+
+	monitorX, monitorY := mylog.Check3(m.GetPos())
+
+	// TODO: Is it OK to ignore this error?
 
 	for _, crtc := range res.Crtcs[:res.NumCrtcs] {
-		info, err := randr.GetCrtcInfo(xconn, crtc, res.ConfigTimestamp).Reply()
-		if err != nil {
-			// This Crtc is bad. Maybe just got disconnected?
-			continue
-		}
+		info := mylog.Check2(randr.GetCrtcInfo(xconn, crtc, res.ConfigTimestamp).Reply())
+
+		// This Crtc is bad. Maybe just got disconnected?
+
 		if info.NumOutputs == 0 {
 			// This Crtc is not connected to any output.
 			// In other words, a disabled monitor.
@@ -133,18 +126,15 @@ func (u *UserInterface) adjustWindowPosition(x, y int, monitor *Monitor) (int, i
 }
 
 func initialMonitorByOS() (*Monitor, error) {
-	xconn, err := xgb.NewConn()
-	if err != nil {
-		// Assume we're on pure Wayland then.
-		return nil, nil
-	}
+	xconn := mylog.Check2(xgb.NewConn())
+
+	// Assume we're on pure Wayland then.
+
 	defer xconn.Close()
 
 	root := xproto.Setup(xconn).DefaultScreen(xconn).Root
-	rep, err := xproto.QueryPointer(xconn, root).Reply()
-	if err != nil {
-		return nil, err
-	}
+	rep := mylog.Check2(xproto.QueryPointer(xconn, root).Reply())
+
 	x, y := int(rep.RootX), int(rep.RootY)
 
 	// Find the monitor including the cursor.
@@ -184,7 +174,7 @@ func (u *UserInterface) setWindowResizingModeForOS(mode WindowResizingMode) erro
 func initializeWindowAfterCreation(w *glfw.Window) error {
 	// Show the window once before getting the position of the window.
 	// On Linux/Unix, the window position is not reliable before showing.
-	if err := w.Show(); err != nil {
+	if mylog.Check(w.Show()); err != nil {
 		return err
 	}
 

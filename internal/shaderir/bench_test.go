@@ -15,17 +15,17 @@
 package shaderir_test
 
 import (
+	"testing"
+
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/unison/internal/builtinshader"
 	"github.com/richardwilkes/unison/internal/graphics"
-	"testing"
 )
 
 func BenchmarkFilter(b *testing.B) {
 	src := builtinshader.ShaderSource(builtinshader.FilterNearest, builtinshader.AddressUnsafe, false)
-	s, err := graphics.CompileShader(src)
-	if err != nil {
-		b.Fatal(err)
-	}
+	s := mylog.Check2(graphics.CompileShader(src))
+
 	uniforms := make([]uint32, graphics.PreservedUniformUint32Count)
 	for i := 0; i < b.N; i++ {
 		s.FilterUniformVariables(uniforms)

@@ -15,10 +15,12 @@
 package directx
 
 import (
+	"unsafe"
+
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/unison/internal/graphics"
 	"github.com/richardwilkes/unison/internal/graphicsdriver"
 	"github.com/richardwilkes/unison/internal/shaderir"
-	"unsafe"
 )
 
 type shader11 struct {
@@ -78,19 +80,19 @@ func (s *shader11) disposeImpl() {
 }
 
 func (s *shader11) use(uniforms []uint32, srcs [graphics.ShaderSrcImageCount]*image11) error {
-	vs, err := s.ensureVertexShader()
+	vs := mylog.Check2(s.ensureVertexShader())
 
 	s.graphics.deviceContext.VSSetShader(vs, nil)
 
-	ps, err := s.ensurePixelShader()
+	ps := mylog.Check2(s.ensurePixelShader())
 
 	s.graphics.deviceContext.PSSetShader(ps, nil)
 
-	il, err := s.ensureInputLayout()
+	il := mylog.Check2(s.ensureInputLayout())
 
 	s.graphics.deviceContext.IASetInputLayout(il)
 
-	cb, err := s.ensureConstantBuffer()
+	cb := mylog.Check2(s.ensureConstantBuffer())
 
 	s.graphics.deviceContext.VSSetConstantBuffers(0, []*_ID3D11Buffer{cb})
 	s.graphics.deviceContext.PSSetConstantBuffers(0, []*_ID3D11Buffer{cb})
@@ -98,7 +100,7 @@ func (s *shader11) use(uniforms []uint32, srcs [graphics.ShaderSrcImageCount]*im
 	// Send the constant buffer data.
 	uniforms = adjustUniforms(s.uniformTypes, s.uniformOffsets, uniforms)
 	var mapped _D3D11_MAPPED_SUBRESOURCE
-	if err := s.graphics.deviceContext.Map(unsafe.Pointer(cb), 0, _D3D11_MAP_WRITE_DISCARD, 0, &mapped); err != nil {
+	if mylog.Check(s.graphics.deviceContext.Map(unsafe.Pointer(cb), 0, _D3D11_MAP_WRITE_DISCARD, 0, &mapped)); err != nil {
 		return err
 	}
 	copy(unsafe.Slice((*uint32)(mapped.pData), len(uniforms)), uniforms)
@@ -110,7 +112,7 @@ func (s *shader11) use(uniforms []uint32, srcs [graphics.ShaderSrcImageCount]*im
 		if src == nil {
 			continue
 		}
-		srv, err := src.getShaderResourceView()
+		srv := mylog.Check2(src.getShaderResourceView())
 
 		srvs[i] = srv
 	}
@@ -124,10 +126,8 @@ func (s *shader11) ensureInputLayout() (*_ID3D11InputLayout, error) {
 		return s.inputLayout, nil
 	}
 
-	i, err := s.graphics.device.CreateInputLayout(inputElementDescsForDX11, s.vertexShaderBlob.GetBufferPointer(), s.vertexShaderBlob.GetBufferSize())
-	if err != nil {
-		return nil, err
-	}
+	i := mylog.Check2(s.graphics.device.CreateInputLayout(inputElementDescsForDX11, s.vertexShaderBlob.GetBufferPointer(), s.vertexShaderBlob.GetBufferSize()))
+
 	s.inputLayout = i
 	return i, nil
 }
@@ -137,10 +137,8 @@ func (s *shader11) ensureVertexShader() (*_ID3D11VertexShader, error) {
 		return s.vertexShader, nil
 	}
 
-	vs, err := s.graphics.device.CreateVertexShader(s.vertexShaderBlob.GetBufferPointer(), s.vertexShaderBlob.GetBufferSize(), nil)
-	if err != nil {
-		return nil, err
-	}
+	vs := mylog.Check2(s.graphics.device.CreateVertexShader(s.vertexShaderBlob.GetBufferPointer(), s.vertexShaderBlob.GetBufferSize(), nil))
+
 	s.vertexShader = vs
 	return vs, nil
 }
@@ -150,10 +148,8 @@ func (s *shader11) ensurePixelShader() (*_ID3D11PixelShader, error) {
 		return s.pixelShader, nil
 	}
 
-	ps, err := s.graphics.device.CreatePixelShader(s.pixelShaderBlob.GetBufferPointer(), s.pixelShaderBlob.GetBufferSize(), nil)
-	if err != nil {
-		return nil, err
-	}
+	ps := mylog.Check2(s.graphics.device.CreatePixelShader(s.pixelShaderBlob.GetBufferPointer(), s.pixelShaderBlob.GetBufferSize(), nil))
+
 	s.pixelShader = ps
 	return ps, nil
 }
@@ -170,15 +166,13 @@ func (s *shader11) ensureConstantBuffer() (*_ID3D11Buffer, error) {
 		return s.constantBuffer, nil
 	}
 
-	cb, err := s.graphics.device.CreateBuffer(&_D3D11_BUFFER_DESC{
+	cb := mylog.Check2(s.graphics.device.CreateBuffer(&_D3D11_BUFFER_DESC{
 		ByteWidth:      alignUp16(uint32(constantBufferSize(s.uniformTypes, s.uniformOffsets)) * 4),
 		Usage:          _D3D11_USAGE_DYNAMIC,
 		BindFlags:      uint32(_D3D11_BIND_CONSTANT_BUFFER),
 		CPUAccessFlags: uint32(_D3D11_CPU_ACCESS_WRITE),
-	}, nil)
-	if err != nil {
-		return nil, err
-	}
+	}, nil))
+
 	s.constantBuffer = cb
 	return cb, nil
 }

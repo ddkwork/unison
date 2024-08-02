@@ -16,7 +16,10 @@
 
 package main
 
-import "github.com/hajimehoshi/ebiten/v2"
+import (
+	"github.com/ddkwork/golibrary/mylog"
+	"github.com/hajimehoshi/ebiten/v2"
+)
 
 type Game struct {
 	count int
@@ -37,10 +40,8 @@ func Fragment(dstPos vec4, srcPos vec2, color vec4) vec4 {
 
 	if g.count < 8 {
 		go func() {
-			s, err := ebiten.NewShader([]byte(shaderData))
-			if err != nil {
-				panic(err)
-			}
+			s := mylog.Check2(ebiten.NewShader([]byte(shaderData)))
+
 			s.Deallocate()
 		}()
 		return nil
@@ -57,7 +58,7 @@ func (g *Game) Layout(width, height int) (int, int) {
 }
 
 func main() {
-	if err := ebiten.RunGame(&Game{}); err != nil {
+	if mylog.Check(ebiten.RunGame(&Game{})); err != nil {
 		panic(err)
 	}
 }

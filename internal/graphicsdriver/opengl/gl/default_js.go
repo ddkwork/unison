@@ -460,7 +460,6 @@ func (c *defaultContext) GetShaderi(shader uint32, pname uint32) int {
 	default:
 		panic(fmt.Sprintf("gl: unexpected return type at GetShaderi: %v", v))
 	}
-
 }
 
 func (c *defaultContext) GetUniformLocation(program uint32, name string) int32 {

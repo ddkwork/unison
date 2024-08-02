@@ -13,6 +13,8 @@ import (
 	"net/url"
 	"path"
 	"strings"
+
+	"github.com/ddkwork/golibrary/mylog"
 )
 
 // CanRead returns true if the format can be read.
@@ -189,7 +191,7 @@ func ForUTI(uti string) Enum {
 
 // Distill a file path or URL string into one that likely has an image we can read, or an empty string.
 func Distill(filePathOrURL string) string {
-	if u, err := url.Parse(filePathOrURL); err == nil {
+	if u := mylog.Check2(url.Parse(filePathOrURL)); err == nil {
 		switch u.Scheme {
 		case "file":
 			if e := ForPath(filePathOrURL); e.CanRead() {

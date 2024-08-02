@@ -16,9 +16,10 @@ package builtinshader
 
 import (
 	"bytes"
-	"fmt"
 	"sync"
 	"text/template"
+
+	"github.com/ddkwork/golibrary/mylog"
 )
 
 type Filter int
@@ -139,7 +140,7 @@ func ShaderSource(filter Filter, address Address, useColorM bool) []byte {
 	}
 
 	var buf bytes.Buffer
-	if err := tmpl.Execute(&buf, struct {
+	mylog.Check(tmpl.Execute(&buf, struct {
 		Filter             Filter
 		FilterNearest      Filter
 		FilterLinear       Filter
@@ -157,9 +158,7 @@ func ShaderSource(filter Filter, address Address, useColorM bool) []byte {
 		AddressClampToZero: AddressClampToZero,
 		AddressRepeat:      AddressRepeat,
 		UseColorM:          useColorM,
-	}); err != nil {
-		panic(fmt.Sprintf("builtinshader: tmpl.Execute failed: %v", err))
-	}
+	}))
 
 	b := buf.Bytes()
 	shaders[filter][address][c] = b

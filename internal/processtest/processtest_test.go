@@ -27,33 +27,28 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/ddkwork/golibrary/mylog"
 )
 
 func isWSL() (bool, error) {
 	if runtime.GOOS != "windows" {
 		return false, nil
 	}
-	abs, err := filepath.Abs(".")
-	if err != nil {
-		return false, err
-	}
+	abs := mylog.Check2(filepath.Abs("."))
+
 	return strings.HasPrefix(abs, `\\wsl$\`), nil
 }
 
 func TestPrograms(t *testing.T) {
-	wsl, err := isWSL()
-	if err != nil {
-		t.Fatal(err)
-	}
+	wsl := mylog.Check2(isWSL())
+
 	if wsl {
 		t.Skip("WSL doesn't support LockFileEx (#1864)")
 	}
 
 	dir := "testdata"
-	ents, err := os.ReadDir(dir)
-	if err != nil {
-		t.Fatal(err)
-	}
+	ents := mylog.Check2(os.ReadDir(dir))
 
 	tmpdir := t.TempDir()
 
@@ -74,7 +69,7 @@ func TestPrograms(t *testing.T) {
 			defer m.Unlock()
 
 			bin := filepath.Join(tmpdir, n)
-			if out, err := exec.Command("go", "build", "-o", bin, filepath.Join(dir, n)).CombinedOutput(); err != nil {
+			if out := mylog.Check2(exec.Command("go", "build", "-o", bin, filepath.Join(dir, n)).CombinedOutput()); err != nil {
 				t.Fatalf("%v\n%s", err, string(out))
 			}
 
@@ -84,7 +79,7 @@ func TestPrograms(t *testing.T) {
 			cmd := exec.CommandContext(ctx, bin)
 			stderr := &bytes.Buffer{}
 			cmd.Stderr = stderr
-			if err := cmd.Run(); err != nil {
+			if mylog.Check(cmd.Run()); err != nil {
 				t.Errorf("%v\n%s", err, stderr)
 			}
 		})

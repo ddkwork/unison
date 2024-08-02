@@ -20,6 +20,7 @@ import (
 	"image"
 	"runtime"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/unison/internal/glfw"
 )
 
@@ -58,7 +59,7 @@ func (w *glfwWindow) SetDecorated(decorated bool) {
 		if w.ui.isTerminated() {
 			return
 		}
-		if err := w.ui.setWindowDecorated(decorated); err != nil {
+		if mylog.Check(w.ui.setWindowDecorated(decorated)); err != nil {
 			w.ui.setError(err)
 			return
 		}
@@ -99,7 +100,7 @@ func (w *glfwWindow) SetResizingMode(mode WindowResizingMode) {
 		if w.ui.isTerminated() {
 			return
 		}
-		if err := w.ui.setWindowResizingMode(mode); err != nil {
+		if mylog.Check(w.ui.setWindowResizingMode(mode)); err != nil {
 			w.ui.setError(err)
 			return
 		}
@@ -136,7 +137,7 @@ func (w *glfwWindow) SetFloating(floating bool) {
 		if w.ui.isTerminated() {
 			return
 		}
-		if err := w.ui.setWindowFloating(floating); err != nil {
+		if mylog.Check(w.ui.setWindowFloating(floating)); err != nil {
 			w.ui.setError(err)
 			return
 		}
@@ -188,7 +189,7 @@ func (w *glfwWindow) Maximize() {
 		if w.ui.isTerminated() {
 			return
 		}
-		if err := w.ui.maximizeWindow(); err != nil {
+		if mylog.Check(w.ui.maximizeWindow()); err != nil {
 			w.ui.setError(err)
 			return
 		}
@@ -219,7 +220,7 @@ func (w *glfwWindow) Minimize() {
 		if w.ui.isTerminated() {
 			return
 		}
-		if err := w.ui.iconifyWindow(); err != nil {
+		if mylog.Check(w.ui.iconifyWindow()); err != nil {
 			w.ui.setError(err)
 			return
 		}
@@ -241,7 +242,7 @@ func (w *glfwWindow) Restore() {
 		if w.ui.isTerminated() {
 			return
 		}
-		if err := w.ui.restoreWindow(); err != nil {
+		if mylog.Check(w.ui.restoreWindow()); err != nil {
 			w.ui.setError(err)
 			return
 		}
@@ -263,7 +264,7 @@ func (w *glfwWindow) SetMonitor(monitor *Monitor) {
 		if w.ui.isTerminated() {
 			return
 		}
-		if err := w.ui.setWindowMonitor(monitor); err != nil {
+		if mylog.Check(w.ui.setWindowMonitor(monitor)); err != nil {
 			w.ui.setError(err)
 			return
 		}
@@ -314,7 +315,7 @@ func (w *glfwWindow) SetPosition(x, y int) {
 			return
 		}
 		m := w.ui.currentMonitor()
-		if err := w.ui.setWindowPositionInDIP(x, y, m); err != nil {
+		if mylog.Check(w.ui.setWindowPositionInDIP(x, y, m)); err != nil {
 			w.ui.setError(err)
 			return
 		}
@@ -358,7 +359,7 @@ func (w *glfwWindow) SetSize(width, height int) {
 		if m && runtime.GOOS != "darwin" {
 			return
 		}
-		if err := w.ui.setWindowSizeInDIP(width, height, true); err != nil {
+		if mylog.Check(w.ui.setWindowSizeInDIP(width, height, true)); err != nil {
 			w.ui.setError(err)
 			return
 		}
@@ -384,7 +385,7 @@ func (w *glfwWindow) SetSizeLimits(minw, minh, maxw, maxh int) {
 		if w.ui.isTerminated() {
 			return
 		}
-		if err := w.ui.updateWindowSizeLimits(); err != nil {
+		if mylog.Check(w.ui.updateWindowSizeLimits()); err != nil {
 			w.ui.setError(err)
 			return
 		}
@@ -414,7 +415,7 @@ func (w *glfwWindow) SetTitle(title string) {
 		if w.ui.isTerminated() {
 			return
 		}
-		if err := w.ui.setWindowTitle(title); err != nil {
+		if mylog.Check(w.ui.setWindowTitle(title)); err != nil {
 			w.ui.setError(err)
 			return
 		}
@@ -441,7 +442,7 @@ func (w *glfwWindow) SetMousePassthrough(enabled bool) {
 		if w.ui.isTerminated() {
 			return
 		}
-		if err := w.ui.setWindowMousePassthrough(enabled); err != nil {
+		if mylog.Check(w.ui.setWindowMousePassthrough(enabled)); err != nil {
 			w.ui.setError(err)
 			return
 		}

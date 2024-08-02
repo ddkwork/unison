@@ -16,11 +16,12 @@ package shader
 
 import (
 	"fmt"
-	"github.com/richardwilkes/unison/internal/shaderir"
 	"go/ast"
 	gconstant "go/constant"
 	"go/token"
 	"strings"
+
+	"github.com/richardwilkes/unison/internal/shaderir"
 )
 
 func (cs *compileState) forceToInt(node ast.Node, expr *shaderir.Expr) bool {

@@ -395,6 +395,7 @@ import (
 	"time"
 	"unsafe"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/xio/fs"
 	"github.com/richardwilkes/toolbox/xmath/geom"
@@ -469,8 +470,10 @@ func (s String) Release() {
 	C.CFRelease(C.CFTypeRef(s))
 }
 
-type MutableArray C.CFMutableArrayRef
-type Array C.CFArrayRef
+type (
+	MutableArray C.CFMutableArrayRef
+	Array        C.CFArrayRef
+)
 
 func NewArrayFromStringSlice(slice []string) Array {
 	a := C.CFArrayCreateMutable(0, C.long(len(slice)), &C.kCFTypeArrayCallBacks)
@@ -503,11 +506,8 @@ func (a Array) ArrayOfURLToStringSlice() []string {
 	result := make([]string, 0, count)
 	for i := 0; i < count; i++ {
 		urlStr := a.URLAtIndex(i).AbsoluteString()
-		u, err := url.Parse(urlStr)
-		if err != nil {
-			errs.Log(errs.NewWithCause("unable to parse URL", err), "url", urlStr)
-			continue
-		}
+		u := mylog.Check2(url.Parse(urlStr))
+
 		result = append(result, u.Path)
 	}
 	return result

@@ -12,6 +12,7 @@ package demo
 import (
 	"fmt"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/toolbox/tid"
 	"github.com/richardwilkes/unison"
 	"github.com/richardwilkes/unison/enums/align"
@@ -26,10 +27,7 @@ var tableCounter int
 func NewDemoTableWindow(where unison.Point) (*unison.Window, error) {
 	// Create the window
 	tableCounter++
-	wnd, err := unison.NewWindow(fmt.Sprintf("Table #%d", tableCounter))
-	if err != nil {
-		return nil, err
-	}
+	wnd := mylog.Check2(unison.NewWindow(fmt.Sprintf("Table #%d", tableCounter)))
 
 	// Install our menus
 	installDefaultMenus(wnd)

@@ -21,13 +21,14 @@ import (
 	"image"
 	"runtime"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/hajimehoshi/ebiten/v2/internal/graphicsdriver/playstation5"
 )
 
 type graphicsDriverCreatorImpl struct{}
 
 func (g *graphicsDriverCreatorImpl) newAuto() (graphicsdriver.Graphics, GraphicsLibrary, error) {
-	graphics, err := g.newPlayStation5()
+	graphics := mylog.Check2(g.newPlayStation5())
 	return graphics, GraphicsLibraryPlayStation5, err
 }
 
@@ -70,7 +71,7 @@ func (u *UserInterface) init() error {
 func (u *UserInterface) initOnMainThread(options *RunOptions) error {
 	u.setRunning(true)
 
-	g, lib, err := newGraphicsDriver(&graphicsDriverCreatorImpl{}, options.GraphicsLibrary)
+	g, lib := mylog.Check3(newGraphicsDriver(&graphicsDriverCreatorImpl{}, options.GraphicsLibrary))
 
 	u.graphicsDriver = g
 	u.setGraphicsLibrary(lib)
@@ -80,7 +81,7 @@ func (u *UserInterface) initOnMainThread(options *RunOptions) error {
 
 func (u *UserInterface) loopGame() error {
 	for {
-		if err := u.context.updateFrame(u.graphicsDriver, screenWidth, screenHeight, theMonitor.DeviceScaleFactor(), u); err != nil {
+		if mylog.Check(u.context.updateFrame(u.graphicsDriver, screenWidth, screenHeight, theMonitor.DeviceScaleFactor(), u)); err != nil {
 			return err
 		}
 	}

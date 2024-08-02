@@ -21,6 +21,7 @@ import (
 	"sync"
 	"sync/atomic"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/unison/internal/glfw"
 )
 
@@ -128,9 +129,7 @@ func (m *monitors) update() error {
 		for i := 0; i < 5; i++ {
 			// An error can happen e.g. when entering a screensaver on Windows (#2488).
 			sx, _ := m.GetContentScale()
-			if err != nil {
-				continue
-			}
+
 			if sx == 0 {
 				continue
 			}
@@ -140,7 +139,7 @@ func (m *monitors) update() error {
 
 		videoMode := m.GetVideoMode()
 		name := m.GetName()
-		w, h, err := glfwMonitorSizeInGLFWPixels(m)
+		w, h := mylog.Check3(glfwMonitorSizeInGLFWPixels(m))
 
 		b := image.Rect(x, y, x+w, y+h)
 		newMonitors = append(newMonitors, &Monitor{

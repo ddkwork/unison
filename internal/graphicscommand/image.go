@@ -16,15 +16,17 @@ package graphicscommand
 
 import (
 	"fmt"
-	"github.com/richardwilkes/unison/internal/debug"
-	"github.com/richardwilkes/unison/internal/graphics"
-	"github.com/richardwilkes/unison/internal/graphicsdriver"
-	"github.com/richardwilkes/unison/internal/png"
 	"image"
 	"io"
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/ddkwork/golibrary/mylog"
+	"github.com/richardwilkes/unison/internal/debug"
+	"github.com/richardwilkes/unison/internal/graphics"
+	"github.com/richardwilkes/unison/internal/graphicsdriver"
+	"github.com/richardwilkes/unison/internal/png"
 )
 
 // Image represents an image that is implemented with OpenGL.
@@ -153,7 +155,7 @@ func (i *Image) ReadPixels(graphicsDriver graphicsdriver.Graphics, args []graphi
 		args: args,
 	}
 	theCommandQueueManager.enqueueCommand(c)
-	if err := theCommandQueueManager.flush(graphicsDriver, false); err != nil {
+	if mylog.Check(theCommandQueueManager.flush(graphicsDriver, false)); err != nil {
 		return err
 	}
 	return nil
@@ -197,12 +199,12 @@ func (i *Image) dumpTo(w io.Writer, graphicsDriver graphicsdriver.Graphics, blac
 	}
 
 	pix := make([]byte, 4*i.width*i.height)
-	if err := i.ReadPixels(graphicsDriver, []graphicsdriver.PixelsArgs{
+	if mylog.Check(i.ReadPixels(graphicsDriver, []graphicsdriver.PixelsArgs{
 		{
 			Pixels: pix,
 			Region: image.Rect(0, 0, i.width, i.height),
 		},
-	}); err != nil {
+	})); err != nil {
 		return err
 	}
 
@@ -212,11 +214,11 @@ func (i *Image) dumpTo(w io.Writer, graphicsDriver graphicsdriver.Graphics, blac
 		}
 	}
 
-	if err := png.Encode(w, (&image.RGBA{
+	if mylog.Check(png.Encode(w, (&image.RGBA{
 		Pix:    pix,
 		Stride: 4 * i.width,
 		Rect:   image.Rect(0, 0, i.width, i.height),
-	}).SubImage(rect)); err != nil {
+	}).SubImage(rect))); err != nil {
 		return err
 	}
 

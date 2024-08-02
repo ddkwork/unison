@@ -22,6 +22,7 @@ import (
 	"image/color"
 	"log"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -78,7 +79,7 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 }
 
 func main() {
-	if err := ebiten.RunGame(&Game{}); err != nil {
+	if mylog.Check(ebiten.RunGame(&Game{})); err != nil {
 		log.Fatal(err)
 	}
 }

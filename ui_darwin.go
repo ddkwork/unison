@@ -22,6 +22,7 @@ import (
 	"reflect"
 	"unsafe"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/ebitengine/purego/objc"
 
 	"github.com/hajimehoshi/ebiten/v2/internal/cocoa"
@@ -48,7 +49,7 @@ func (u *UserInterface) initializePlatform() error {
 		}
 		id.Send(sel_setOrigResizable, false)
 	}
-	d, err := objc.RegisterClass(
+	d := mylog.Check2(objc.RegisterClass(
 		"EbitengineWindowDelegate",
 		objc.GetClass("NSObject"),
 		[]*objc.Protocol{objc.GetProtocol("NSWindowDelegate")},
@@ -122,7 +123,7 @@ func (u *UserInterface) initializePlatform() error {
 			{
 				Cmd: sel_windowWillEnterFullScreen,
 				Fn: func(id objc.ID, cmd objc.SEL, notification objc.ID) {
-					if err := u.setOrigWindowPosWithCurrentPos(); err != nil {
+					if mylog.Check(u.setOrigWindowPosWithCurrentPos()); err != nil {
 						u.setError(err)
 						return
 					}
@@ -142,7 +143,7 @@ func (u *UserInterface) initializePlatform() error {
 					// Even a window has a size limitation, a window can be fullscreen by calling SetFullscreen(true).
 					// In this case, the window size limitation is disabled temporarily.
 					// When exiting from fullscreen, reset the window size limitation.
-					if err := u.updateWindowSizeLimits(); err != nil {
+					if mylog.Check(u.updateWindowSizeLimits()); err != nil {
 						u.setError(err)
 						return
 					}
@@ -156,7 +157,7 @@ func (u *UserInterface) initializePlatform() error {
 				},
 			},
 		},
-	)
+	))
 
 	class_EbitengineWindowDelegate = d
 
@@ -197,10 +198,8 @@ func (*graphicsDriverCreatorImpl) newPlayStation5() (graphicsdriver.Graphics, er
 
 // glfwMonitorSizeInGLFWPixels must be called from the main thread.
 func glfwMonitorSizeInGLFWPixels(m *glfw.Monitor) (int, int, error) {
-	vm, err := m.GetVideoMode()
-	if err != nil {
-		return 0, 0, err
-	}
+	vm := mylog.Check2(m.GetVideoMode())
+
 	return vm.Width, vm.Height, nil
 }
 
@@ -279,10 +278,8 @@ func initialMonitorByOS() (*Monitor, error) {
 }
 
 func monitorFromWindowByOS(w *glfw.Window) (*Monitor, error) {
-	cocoaWindow, err := w.GetCocoaWindow()
-	if err != nil {
-		return nil, err
-	}
+	cocoaWindow := mylog.Check2(w.GetCocoaWindow())
+
 	window := cocoa.NSWindow{ID: objc.ID(cocoaWindow)}
 	pool := cocoa.NSAutoreleasePool_new()
 	screen := cocoa.NSScreen_mainScreen()
@@ -296,10 +293,8 @@ func monitorFromWindowByOS(w *glfw.Window) (*Monitor, error) {
 	aID := uintptr(screenID.UnsignedIntValue()) // CGDirectDisplayID
 	pool.Release()
 	for _, m := range theMonitors.append(nil) {
-		cocoaMonitor, err := m.m.GetCocoaMonitor()
-		if err != nil {
-			return nil, err
-		}
+		cocoaMonitor := mylog.Check2(m.m.GetCocoaMonitor())
+
 		if cocoaMonitor == aID {
 			return m, nil
 		}
@@ -312,10 +307,8 @@ func (u *UserInterface) nativeWindow() (uintptr, error) {
 }
 
 func (u *UserInterface) isNativeFullscreen() (bool, error) {
-	w, err := u.window.GetCocoaWindow()
-	if err != nil {
-		return false, err
-	}
+	w := mylog.Check2(u.window.GetCocoaWindow())
+
 	return cocoa.NSWindow{ID: objc.ID(w)}.StyleMask()&cocoa.NSWindowStyleMaskFullScreen != 0, nil
 }
 
@@ -327,10 +320,10 @@ func (u *UserInterface) isNativeFullscreenAvailable() bool {
 
 func (u *UserInterface) setNativeFullscreen(fullscreen bool) error {
 	// Toggling fullscreen might ignore events like keyUp. Ensure that events are fired.
-	if err := glfw.WaitEventsTimeout(0.1); err != nil {
+	if mylog.Check(glfw.WaitEventsTimeout(0.1)); err != nil {
 		return err
 	}
-	w, err := u.window.GetCocoaWindow()
+	w := mylog.Check2(u.window.GetCocoaWindow())
 
 	window := cocoa.NSWindow{ID: objc.ID(w)}
 	if window.StyleMask()&cocoa.NSWindowStyleMaskFullScreen != 0 == fullscreen {
@@ -359,7 +352,7 @@ func (u *UserInterface) adjustViewSizeAfterFullscreen() error {
 		return nil
 	}
 
-	w, err := u.window.GetCocoaWindow()
+	w := mylog.Check2(u.window.GetCocoaWindow())
 
 	window := cocoa.NSWindow{ID: objc.ID(w)}
 	if window.StyleMask()&cocoa.NSWindowStyleMaskFullScreen == 0 {
@@ -404,7 +397,7 @@ func (u *UserInterface) setWindowResizingModeForOS(mode WindowResizingMode) erro
 	} else {
 		collectionBehavior |= cocoa.NSWindowCollectionBehaviorFullScreenNone
 	}
-	w, err := u.window.GetCocoaWindow()
+	w := mylog.Check2(u.window.GetCocoaWindow())
 
 	objc.ID(w).Send(sel_setCollectionBehavior, collectionBehavior)
 	return nil
@@ -413,7 +406,7 @@ func (u *UserInterface) setWindowResizingModeForOS(mode WindowResizingMode) erro
 func initializeWindowAfterCreation(w *glfw.Window) error {
 	// TODO: Register NSWindowWillEnterFullScreenNotification and so on.
 	// Enable resizing temporary before making the window fullscreen.
-	cocoaWindow, err := w.GetCocoaWindow()
+	cocoaWindow := mylog.Check2(w.GetCocoaWindow())
 
 	nswindow := objc.ID(cocoaWindow)
 	delegate := objc.ID(class_EbitengineWindowDelegate).Send(sel_alloc).Send(sel_initWithOrigDelegate, nswindow.Send(sel_delegate))
@@ -427,7 +420,7 @@ func (u *UserInterface) skipTaskbar() error {
 
 // setDocumentEdited must be called from the main thread.
 func (u *UserInterface) setDocumentEdited(edited bool) error {
-	w, err := u.window.GetCocoaWindow()
+	w := mylog.Check2(u.window.GetCocoaWindow())
 
 	objc.ID(w).Send(sel_setDocumentEdited, edited)
 	return nil

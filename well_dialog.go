@@ -13,6 +13,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/unison/enums/align"
@@ -84,12 +85,8 @@ func showWellDialog(w *Well) {
 		d.addColorSelector(right)
 	}
 
-	var err error
-	d.dialog, err = NewDialog(nil, nil, d.panel, []*DialogButtonInfo{NewCancelButtonInfo(), NewOKButtonInfo()})
-	if err != nil {
-		errs.Log(err)
-		return
-	}
+	d.dialog = mylog.Check2(NewDialog(nil, nil, d.panel, []*DialogButtonInfo{NewCancelButtonInfo(), NewOKButtonInfo()}))
+
 	d.dialog.Window().SetTitle(i18n.Text("Choose an ink"))
 	if d.dialog.RunModal() == ModalResponseOK {
 		w.SetInk(d.ink)
@@ -119,11 +116,8 @@ func (d *wellDialog) addPatternSelector(parent *Panel) {
 				ErrorDialogWithMessage(unable, "Invalid image file")
 				return
 			}
-			img, err := d.well.loadImage(imageSpec)
-			if err != nil {
-				ErrorDialogWithError(unable, err)
-				return
-			}
+			img := mylog.Check2(d.well.loadImage(imageSpec))
+
 			if d.well.ValidateImageCallback != nil {
 				img = d.well.ValidateImageCallback(img)
 			}
@@ -239,14 +233,11 @@ func (d *wellDialog) addChannelField(parent *Panel, title string, value int, adj
 		}
 		var v int
 		if strings.HasSuffix(text, "%") {
-			percentage, err := extractColorPercentage(text)
-			if err != nil {
-				return false
-			}
+			percentage := mylog.Check2(extractColorPercentage(text))
+
 			v = clamp0To1AndScale255(percentage)
 		} else {
-			var err error
-			if v, err = strconv.Atoi(text); err != nil || v < 0 || v > 255 {
+			if v = mylog.Check2(strconv.Atoi(text)); err != nil || v < 0 || v > 255 {
 				return false
 			}
 		}
@@ -296,12 +287,11 @@ func (d *wellDialog) addHueField(parent *Panel, color Color) *Field {
 		}
 		var percentage float32
 		if strings.HasSuffix(text, "%") {
-			var err error
-			if percentage, err = extractColorPercentage(text); err != nil {
+			if percentage = mylog.Check2(extractColorPercentage(text)); err != nil {
 				return false
 			}
 		} else {
-			v, err := strconv.Atoi(text)
+			v := mylog.Check2(strconv.Atoi(text))
 			if err != nil || v < 0 || v > 360 {
 				return false
 			}
@@ -354,10 +344,8 @@ func (d *wellDialog) addPercentageField(parent *Panel, title string, value float
 		if !strings.HasSuffix(text, "%") {
 			text += "%"
 		}
-		percentage, err := extractColorPercentage(text)
-		if err != nil {
-			return false
-		}
+		percentage := mylog.Check2(extractColorPercentage(text))
+
 		if !d.syncing {
 			color, ok := d.ink.(Color)
 			if !ok {
@@ -398,10 +386,8 @@ func (d *wellDialog) addCSSField(parent *Panel, color Color) *Field {
 	})
 	field.ValidateCallback = func() bool {
 		if !d.syncing {
-			adjustedColor, err := ColorDecode(field.Text())
-			if err != nil {
-				return false
-			}
+			adjustedColor := mylog.Check2(ColorDecode(field.Text()))
+
 			d.ink = adjustedColor
 			d.sync()
 		}

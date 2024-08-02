@@ -25,6 +25,7 @@ import (
 	"runtime"
 	"unsafe"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/ebitengine/purego"
 	"github.com/ebitengine/purego/objc"
 
@@ -52,25 +53,13 @@ type MetalLayer struct {
 //
 // Reference: https://developer.apple.com/documentation/quartzcore/cametallayer?language=objc.
 func NewMetalLayer() (MetalLayer, error) {
-	coreGraphics, err := purego.Dlopen("/System/Library/Frameworks/CoreGraphics.framework/CoreGraphics", purego.RTLD_LAZY|purego.RTLD_GLOBAL)
-	if err != nil {
-		return MetalLayer{}, err
-	}
+	coreGraphics := mylog.Check2(purego.Dlopen("/System/Library/Frameworks/CoreGraphics.framework/CoreGraphics", purego.RTLD_LAZY|purego.RTLD_GLOBAL))
 
-	cgColorSpaceCreateWithName, err := purego.Dlsym(coreGraphics, "CGColorSpaceCreateWithName")
-	if err != nil {
-		return MetalLayer{}, err
-	}
+	cgColorSpaceCreateWithName := mylog.Check2(purego.Dlsym(coreGraphics, "CGColorSpaceCreateWithName"))
 
-	cgColorSpaceRelease, err := purego.Dlsym(coreGraphics, "CGColorSpaceRelease")
-	if err != nil {
-		return MetalLayer{}, err
-	}
+	cgColorSpaceRelease := mylog.Check2(purego.Dlsym(coreGraphics, "CGColorSpaceRelease"))
 
-	kCGColorSpaceDisplayP3, err := purego.Dlsym(coreGraphics, "kCGColorSpaceDisplayP3")
-	if err != nil {
-		return MetalLayer{}, err
-	}
+	kCGColorSpaceDisplayP3 := mylog.Check2(purego.Dlsym(coreGraphics, "kCGColorSpaceDisplayP3"))
 
 	layer := objc.ID(objc.GetClass("CAMetalLayer")).Send(objc.RegisterName("new"))
 	if runtime.GOOS != "ios" {
@@ -150,7 +139,7 @@ func (ml MetalLayer) SetDisplaySyncEnabled(enabled bool) {
 // Reference: https://developer.apple.com/documentation/quartzcore/cametallayer/1478174-drawablesize?language=objc.
 func (ml MetalLayer) SetDrawableSize(width, height int) {
 	// TODO: once objc supports calling functions with struct arguments replace this with just a ID.Send call
-	var sel_setDrawableSize = objc.RegisterName("setDrawableSize:")
+	sel_setDrawableSize := objc.RegisterName("setDrawableSize:")
 	sig := cocoa.NSMethodSignature_instanceMethodSignatureForSelector(objc.ID(objc.GetClass("CAMetalLayer")), sel_setDrawableSize)
 	inv := cocoa.NSInvocation_invocationWithMethodSignature(sig)
 	inv.SetTarget(ml.metalLayer)

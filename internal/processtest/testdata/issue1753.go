@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"image/color"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -33,13 +34,13 @@ func (g *Game) Update() error {
 
 	switch g.phase {
 	case 0:
-		s, err := ebiten.NewShader([]byte(`package main
+		s := mylog.Check2(ebiten.NewShader([]byte(`package main
 
 var Color vec4
 
 func Fragment(dstPos vec4, srcPos vec2, color vec4) vec4 {
 	return Color
-}`))
+}`)))
 
 		g.dst = ebiten.NewImage(w, h)
 
@@ -61,14 +62,14 @@ func Fragment(dstPos vec4, srcPos vec2, color vec4) vec4 {
 		g.phase++
 
 	case 1:
-		s, err := ebiten.NewShader([]byte(`package main
+		s := mylog.Check2(ebiten.NewShader([]byte(`package main
 
 var Dummy float
 var A, B, G, R float
 
 func Fragment(dstPos vec4, srcPos vec2, color vec4) vec4 {
 	return vec4(R, G, B, A)
-}`))
+}`)))
 
 		op := &ebiten.DrawRectShaderOptions{}
 		op.Blend = ebiten.BlendCopy
@@ -98,7 +99,7 @@ func (g *Game) Layout(width, height int) (int, int) {
 }
 
 func main() {
-	if err := ebiten.RunGame(&Game{}); err != nil {
+	if mylog.Check(ebiten.RunGame(&Game{})); err != nil {
 		panic(err)
 	}
 }

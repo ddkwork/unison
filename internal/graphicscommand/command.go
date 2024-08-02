@@ -16,12 +16,14 @@ package graphicscommand
 
 import (
 	"fmt"
-	"github.com/richardwilkes/unison/internal/graphics"
-	"github.com/richardwilkes/unison/internal/graphicsdriver"
-	"github.com/richardwilkes/unison/internal/shaderir"
 	"image"
 	"math"
 	"strings"
+
+	"github.com/ddkwork/golibrary/mylog"
+	"github.com/richardwilkes/unison/internal/graphics"
+	"github.com/richardwilkes/unison/internal/graphicsdriver"
+	"github.com/richardwilkes/unison/internal/shaderir"
 )
 
 // command represents a drawing command.
@@ -241,7 +243,7 @@ func (c *writePixelsCommand) Exec(commandQueue *commandQueue, graphicsDriver gra
 			Region: a.region,
 		})
 	}
-	if err := c.dst.image.WritePixels(args); err != nil {
+	if mylog.Check(c.dst.image.WritePixels(args)); err != nil {
 		return err
 	}
 	return nil
@@ -258,7 +260,7 @@ type readPixelsCommand struct {
 
 // Exec executes a readPixelsCommand.
 func (c *readPixelsCommand) Exec(commandQueue *commandQueue, graphicsDriver graphicsdriver.Graphics, indexOffset int) error {
-	if err := c.img.image.ReadPixels(c.args); err != nil {
+	if mylog.Check(c.img.image.ReadPixels(c.args)); err != nil {
 		return err
 	}
 	return nil
@@ -324,11 +326,10 @@ func (c *newImageCommand) String() string {
 
 // Exec executes a newImageCommand.
 func (c *newImageCommand) Exec(commandQueue *commandQueue, graphicsDriver graphicsdriver.Graphics, indexOffset int) error {
-	var err error
 	if c.screen {
-		c.result.image, err = graphicsDriver.NewScreenFramebufferImage(c.width, c.height)
+		c.result.image = mylog.Check2(graphicsDriver.NewScreenFramebufferImage(c.width, c.height))
 	} else {
-		c.result.image, err = graphicsDriver.NewImage(c.width, c.height)
+		c.result.image = mylog.Check2(graphicsDriver.NewImage(c.width, c.height))
 	}
 	return err
 }
@@ -349,7 +350,7 @@ func (c *newShaderCommand) String() string {
 
 // Exec executes a newShaderCommand.
 func (c *newShaderCommand) Exec(commandQueue *commandQueue, graphicsDriver graphicsdriver.Graphics, indexOffset int) error {
-	s, err := graphicsDriver.NewShader(c.ir)
+	s := mylog.Check2(graphicsDriver.NewShader(c.ir))
 
 	c.result.shader = s
 	return nil
@@ -362,7 +363,7 @@ func (c *newShaderCommand) NeedsSync() bool {
 // InitializeGraphicsDriverState initialize the current graphics driver state.
 func InitializeGraphicsDriverState(graphicsDriver graphicsdriver.Graphics) (err error) {
 	runOnRenderThread(func() {
-		err = graphicsDriver.Initialize()
+		mylog.Check(graphicsDriver.Initialize())
 	}, true)
 	return
 }
@@ -372,7 +373,7 @@ func InitializeGraphicsDriverState(graphicsDriver graphicsdriver.Graphics) (err 
 func ResetGraphicsDriverState(graphicsDriver graphicsdriver.Graphics) (err error) {
 	if r, ok := graphicsDriver.(graphicsdriver.Resetter); ok {
 		runOnRenderThread(func() {
-			err = r.Reset()
+			mylog.Check(r.Reset())
 		}, true)
 	}
 	return nil

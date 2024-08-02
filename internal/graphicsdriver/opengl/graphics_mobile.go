@@ -16,16 +16,15 @@
 
 package opengl
 
-type graphicsPlatform struct {
-}
+import "github.com/ddkwork/golibrary/mylog"
+
+type graphicsPlatform struct{}
 
 // NewGraphics creates an implementation of graphicsdriver.Graphics for OpenGL.
 // The returned graphics value is nil iff the error is not nil.
 func NewGraphics() (graphicsdriver.Graphics, error) {
-	ctx, err := gl.NewDefaultContext()
-	if err != nil {
-		return nil, err
-	}
+	ctx := mylog.Check2(gl.NewDefaultContext())
+
 	return newGraphics(ctx), nil
 }
 

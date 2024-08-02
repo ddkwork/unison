@@ -16,6 +16,7 @@ package msl
 
 import (
 	"fmt"
+
 	"github.com/richardwilkes/unison/internal/shaderir"
 )
 

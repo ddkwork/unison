@@ -22,6 +22,7 @@ import (
 	"text/template"
 	"unicode"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/toolbox/fatal"
 	"github.com/richardwilkes/toolbox/txt"
 	"golang.org/x/text/cases"
@@ -378,7 +379,7 @@ func main() {
 }
 
 func removeExistingGenFiles() {
-	root, err := filepath.Abs(rootDir)
+	root := mylog.Check2(filepath.Abs(rootDir))
 	fatal.IfErr(err)
 	fatal.IfErr(filepath.Walk(root, func(path string, info os.FileInfo, _ error) error {
 		name := info.Name()
@@ -396,7 +397,7 @@ func removeExistingGenFiles() {
 }
 
 func processSourceTemplate(tmplName string, info *enumInfo) {
-	tmpl, err := template.New(tmplName).Funcs(template.FuncMap{
+	tmpl := mylog.Check2(template.New(tmplName).Funcs(template.FuncMap{
 		"add":          add,
 		"emptyIfTrue":  emptyIfTrue,
 		"fileLeaf":     filepath.Base,
@@ -405,13 +406,13 @@ func processSourceTemplate(tmplName string, info *enumInfo) {
 		"toCamelCase":  txt.ToCamelCase,
 		"toIdentifier": toIdentifier,
 		"wrapComment":  wrapComment,
-	}).ParseFiles(tmplName)
+	}).ParseFiles(tmplName))
 	fatal.IfErr(err)
 	var buffer bytes.Buffer
 	writeGeneratedFromComment(&buffer, tmplName)
 	fatal.IfErr(tmpl.Execute(&buffer, info))
 	var data []byte
-	if data, err = format.Source(buffer.Bytes()); err != nil {
+	if data = mylog.Check2(format.Source(buffer.Bytes())); err != nil {
 		fmt.Println("unable to format source file: " + filepath.Join(info.Pkg, info.Name+genSuffix))
 		data = buffer.Bytes()
 	}
@@ -421,7 +422,7 @@ func processSourceTemplate(tmplName string, info *enumInfo) {
 }
 
 func writeGeneratedFromComment(w io.Writer, tmplName string) {
-	_, err := fmt.Fprintf(w, "// Code generated from \"%s\" - DO NOT EDIT.\n\n", tmplName)
+	_ := mylog.Check2(fmt.Fprintf(w, "// Code generated from \"%s\" - DO NOT EDIT.\n\n", tmplName))
 	fatal.IfErr(err)
 }
 

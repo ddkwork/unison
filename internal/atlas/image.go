@@ -16,17 +16,19 @@ package atlas
 
 import (
 	"fmt"
+	"image"
+	"math"
+	"math/bits"
+	"runtime"
+	"sync"
+
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/unison/internal/debug"
 	"github.com/richardwilkes/unison/internal/graphics"
 	"github.com/richardwilkes/unison/internal/graphicscommand"
 	"github.com/richardwilkes/unison/internal/graphicsdriver"
 	"github.com/richardwilkes/unison/internal/packing"
 	"github.com/richardwilkes/unison/internal/shaderir"
-	"image"
-	"math"
-	"math/bits"
-	"runtime"
-	"sync"
 )
 
 var (
@@ -630,7 +632,7 @@ func (i *Image) ReadPixels(graphicsDriver graphicsdriver.Graphics, pixels []byte
 	// To prevent memory leaks, flush the deferred functions here.
 	flushDeferred()
 
-	if err := i.readPixels(graphicsDriver, pixels, region); err != nil {
+	if mylog.Check(i.readPixels(graphicsDriver, pixels, region)); err != nil {
 		return false, err
 	}
 	return true, nil
@@ -644,12 +646,12 @@ func (i *Image) readPixels(graphicsDriver graphicsdriver.Graphics, pixels []byte
 		return nil
 	}
 
-	if err := i.backend.image.ReadPixels(graphicsDriver, []graphicsdriver.PixelsArgs{
+	if mylog.Check(i.backend.image.ReadPixels(graphicsDriver, []graphicsdriver.PixelsArgs{
 		{
 			Pixels: pixels,
 			Region: region.Add(i.regionWithPadding().Min),
 		},
-	}); err != nil {
+	})); err != nil {
 		return err
 	}
 	return nil
@@ -872,7 +874,7 @@ func SwapBuffers(graphicsDriver graphicsdriver.Graphics) error {
 		}
 		graphicscommand.LogImagesInfo(imgs)
 	}
-	if err := graphicscommand.FlushCommands(graphicsDriver, true); err != nil {
+	if mylog.Check(graphicscommand.FlushCommands(graphicsDriver, true)); err != nil {
 		return err
 	}
 	return nil
@@ -895,12 +897,9 @@ func BeginFrame(graphicsDriver graphicsdriver.Graphics) error {
 
 	inFrame = true
 
-	var err error
 	initOnce.Do(func() {
-		err = graphicscommand.InitializeGraphicsDriverState(graphicsDriver)
-		if err != nil {
-			return
-		}
+		mylog.Check(graphicscommand.InitializeGraphicsDriverState(graphicsDriver))
+
 		if len(theBackends) != 0 {
 			panic("atlas: all the images must be not on an atlas before the game starts")
 		}

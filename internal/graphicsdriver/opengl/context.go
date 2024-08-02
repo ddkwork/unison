@@ -19,13 +19,15 @@ package opengl
 import (
 	"errors"
 	"fmt"
+	"image"
+	"runtime"
+	"sync"
+
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/unison/internal/graphicsdriver"
 	"github.com/richardwilkes/unison/internal/graphicsdriver/opengl/gl"
 	"github.com/richardwilkes/unison/internal/shaderir"
 	"github.com/richardwilkes/unison/internal/shaderir/glsl"
-	"image"
-	"runtime"
-	"sync"
 )
 
 type blendFactor int
@@ -181,7 +183,7 @@ func (c *context) reset() error {
 	var err1 error
 	c.initOnce.Do(func() {
 		// Load OpenGL functions after WGL is initialized especially for Windows (#2452).
-		if err := c.ctx.LoadFunctions(); err != nil {
+		if mylog.Check(c.ctx.LoadFunctions()); err != nil {
 			err1 = err
 			return
 		}

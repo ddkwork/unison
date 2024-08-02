@@ -24,6 +24,8 @@ import (
 	"errors"
 	"runtime"
 	"sync"
+
+	"github.com/ddkwork/golibrary/mylog"
 )
 
 type graphicsDriverCreatorImpl struct {
@@ -31,7 +33,7 @@ type graphicsDriverCreatorImpl struct {
 }
 
 func (g *graphicsDriverCreatorImpl) newAuto() (graphicsdriver.Graphics, GraphicsLibrary, error) {
-	graphics, err := g.newOpenGL()
+	graphics := mylog.Check2(g.newOpenGL())
 	return graphics, GraphicsLibraryOpenGL, err
 }
 
@@ -73,9 +75,9 @@ func (u *UserInterface) initOnMainThread(options *RunOptions) error {
 	u.setRunning(true)
 
 	n := C.ebitengine_Initialize()
-	g, lib, err := newGraphicsDriver(&graphicsDriverCreatorImpl{
+	g, lib := mylog.Check3(newGraphicsDriver(&graphicsDriverCreatorImpl{
 		nativeWindow: n,
-	}, options.GraphicsLibrary)
+	}, options.GraphicsLibrary))
 
 	u.graphicsDriver = g
 	u.setGraphicsLibrary(lib)
@@ -89,7 +91,7 @@ func (u *UserInterface) loopGame() error {
 	for {
 		recordProfilerHeartbeat()
 
-		if err := u.context.updateFrame(u.graphicsDriver, float64(C.kScreenWidth), float64(C.kScreenHeight), theMonitor.DeviceScaleFactor(), u); err != nil {
+		if mylog.Check(u.context.updateFrame(u.graphicsDriver, float64(C.kScreenWidth), float64(C.kScreenHeight), theMonitor.DeviceScaleFactor(), u)); err != nil {
 			return err
 		}
 	}

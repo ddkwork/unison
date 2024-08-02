@@ -17,6 +17,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/toolbox/atexit"
 	"github.com/richardwilkes/toolbox/cmdline"
 	"github.com/richardwilkes/toolbox/errs"
@@ -37,7 +38,7 @@ func main() {
 }
 
 func scan(duration time.Duration, output string) {
-	f, err := os.Create(output)
+	f := mylog.Check2(os.Create(output))
 	fatal.IfErr(err)
 	log.SetOutput(&xio.TeeWriter{Writers: []io.Writer{f, os.Stdout}})
 	pm := &printing.PrintManager{}
@@ -54,7 +55,7 @@ func scan(duration time.Duration, output string) {
 		}
 		slog.Info("found printer", "name", printer.Name, "host", printer.Host, "port", printer.Port)
 		var a *printing.PrinterAttributes
-		if a, err = printer.Attributes(duration, true); err != nil {
+		if a = mylog.Check2(printer.Attributes(duration, true)); err != nil {
 			errs.Log(err)
 			continue
 		}

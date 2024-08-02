@@ -13,6 +13,7 @@ import (
 	_ "embed"
 	"fmt"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/unison"
 	"github.com/richardwilkes/unison/enums/align"
 	"github.com/richardwilkes/unison/enums/behavior"
@@ -27,10 +28,7 @@ var markdownCounter int
 func NewDemoMarkdownWindow(where unison.Point) (*unison.Window, error) {
 	// Create the window
 	markdownCounter++
-	wnd, err := unison.NewWindow(fmt.Sprintf("Table #%d", markdownCounter))
-	if err != nil {
-		return nil, err
-	}
+	wnd := mylog.Check2(unison.NewWindow(fmt.Sprintf("Table #%d", markdownCounter)))
 
 	// Install our menus
 	installDefaultMenus(wnd)

@@ -16,6 +16,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/fatal"
 )
@@ -98,7 +99,7 @@ type SVG struct {
 // element) and panics if an error would be generated. The 'size' should be gotten from the original SVG's 'viewBox'
 // parameter.
 func MustSVG(size Size, svg string) *SVG {
-	s, err := NewSVG(size, svg)
+	s := mylog.Check2(NewSVG(size, svg))
 	fatal.IfErr(err)
 	return s
 }
@@ -106,10 +107,8 @@ func MustSVG(size Size, svg string) *SVG {
 // NewSVG creates a new SVG the given svg path string (the contents of a single "d" attribute from an SVG "path"
 // element). The 'size' should be gotten from the original SVG's 'viewBox' parameter.
 func NewSVG(size Size, svg string) (*SVG, error) {
-	unscaledPath, err := NewPathFromSVGString(svg)
-	if err != nil {
-		return nil, err
-	}
+	unscaledPath := mylog.Check2(NewPathFromSVGString(svg))
+
 	return &SVG{
 		size:          size,
 		unscaledPath:  unscaledPath,
@@ -121,7 +120,7 @@ func NewSVG(size Size, svg string) (*SVG, error) {
 // valid SVG file data. Note that this only reads a very small subset of an SVG currently. Specifically, the "viewBox"
 // attribute and any "d" attributes from enclosed SVG "path" elements.
 func MustSVGFromContentString(content string) *SVG {
-	s, err := NewSVGFromContentString(content)
+	s := mylog.Check2(NewSVGFromContentString(content))
 	fatal.IfErr(err)
 	return s
 }
@@ -137,7 +136,7 @@ func NewSVGFromContentString(content string) (*SVG, error) {
 // file data. Note that this only reads a very small subset of an SVG currently. Specifically, the "viewBox" attribute
 // and any "d" attributes from enclosed SVG "path" elements.
 func MustSVGFromReader(r io.Reader) *SVG {
-	s, err := NewSVGFromReader(r)
+	s := mylog.Check2(NewSVGFromReader(r))
 	fatal.IfErr(err)
 	return s
 }
@@ -152,7 +151,7 @@ func NewSVGFromReader(r io.Reader) (*SVG, error) {
 			Path string `xml:"d,attr"`
 		} `xml:"path"`
 	}
-	if err := xml.NewDecoder(r).Decode(&svgXML); err != nil {
+	if mylog.Check(xml.NewDecoder(r).Decode(&svgXML)); err != nil {
 		return nil, errs.NewWithCause("unable to decode SVG", err)
 	}
 	svg := &SVG{scaledPathMap: make(map[Size]*Path)}
@@ -161,19 +160,19 @@ func NewSVGFromReader(r io.Reader) (*SVG, error) {
 		width = parts[2]
 		height = parts[3]
 	}
-	v, err := strconv.ParseFloat(width, 64)
+	v := mylog.Check2(strconv.ParseFloat(width, 64))
 	if err != nil || v < 1 || v > 4096 {
 		return nil, errs.NewWithCause("unable to determine SVG width", err)
 	}
 	svg.size.Width = float32(v)
-	v, err = strconv.ParseFloat(height, 64)
+	v = mylog.Check2(strconv.ParseFloat(height, 64))
 	if err != nil || v < 1 || v > 4096 {
 		return nil, errs.NewWithCause("unable to determine SVG height", err)
 	}
 	svg.size.Height = float32(v)
 	for i, svgPath := range svgXML.Paths {
 		var p *Path
-		if p, err = NewPathFromSVGString(svgPath.Path); err != nil {
+		if p = mylog.Check2(NewPathFromSVGString(svgPath.Path)); err != nil {
 			return nil, errs.NewWithCausef(err, "unable to decode SVG: path element #%d", i)
 		}
 		if svg.unscaledPath == nil {

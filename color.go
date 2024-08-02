@@ -16,6 +16,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/toolbox/xmath"
 	"github.com/richardwilkes/unison/enums/paintstyle"
 )
@@ -118,7 +119,7 @@ func fromLinear(value float64) float32 {
 
 // MustColorDecode is the same as ColorDecode(), but returns Black if an error occurs.
 func MustColorDecode(buffer string) Color {
-	c, _ := ColorDecode(buffer) //nolint:errcheck // Intentional dropping of the error
+	c := mylog.Check2(ColorDecode(buffer)) //nolint:errcheck // Intentional dropping of the error
 	return c
 }
 
@@ -141,30 +142,26 @@ func ColorDecode(buffer string) (Color, error) {
 		buffer = buffer[1:]
 		switch len(buffer) {
 		case 3:
-			red, err := strconv.ParseInt(buffer[0:1], 16, 64)
-			if err != nil {
-				return 0, ErrColorDecode
-			}
+			red := mylog.Check2(strconv.ParseInt(buffer[0:1], 16, 64))
+
 			var green int64
-			if green, err = strconv.ParseInt(buffer[1:2], 16, 64); err != nil {
+			if green = mylog.Check2(strconv.ParseInt(buffer[1:2], 16, 64)); err != nil {
 				return 0, ErrColorDecode
 			}
 			var blue int64
-			if blue, err = strconv.ParseInt(buffer[2:3], 16, 64); err != nil {
+			if blue = mylog.Check2(strconv.ParseInt(buffer[2:3], 16, 64)); err != nil {
 				return 0, ErrColorDecode
 			}
 			return RGB(int((red<<4)|red), int((green<<4)|green), int((blue<<4)|blue)), nil
 		case 6:
-			red, err := strconv.ParseInt(strings.TrimSpace(buffer[0:2]), 16, 64)
-			if err != nil {
-				return 0, ErrColorDecode
-			}
+			red := mylog.Check2(strconv.ParseInt(strings.TrimSpace(buffer[0:2]), 16, 64))
+
 			var green int64
-			if green, err = strconv.ParseInt(strings.TrimSpace(buffer[2:4]), 16, 64); err != nil {
+			if green = mylog.Check2(strconv.ParseInt(strings.TrimSpace(buffer[2:4]), 16, 64)); err != nil {
 				return 0, ErrColorDecode
 			}
 			var blue int64
-			if blue, err = strconv.ParseInt(strings.TrimSpace(buffer[4:6]), 16, 64); err != nil {
+			if blue = mylog.Check2(strconv.ParseInt(strings.TrimSpace(buffer[4:6]), 16, 64)); err != nil {
 				return 0, ErrColorDecode
 			}
 			return RGB(int(red), int(green), int(blue)), nil
@@ -172,16 +169,16 @@ func ColorDecode(buffer string) (Color, error) {
 	case strings.HasPrefix(buffer, "rgb(") && strings.HasSuffix(buffer, ")"):
 		parts := strings.SplitN(strings.TrimSpace(buffer[4:len(buffer)-1]), ",", 4)
 		if len(parts) == 3 {
-			red, err := strconv.Atoi(strings.TrimSpace(parts[0]))
+			red := mylog.Check2(strconv.Atoi(strings.TrimSpace(parts[0])))
 			if err != nil || red < 0 || red > 255 {
 				return 0, ErrColorDecode
 			}
 			var green int
-			if green, err = strconv.Atoi(strings.TrimSpace(parts[1])); err != nil || green < 0 || green > 255 {
+			if green = mylog.Check2(strconv.Atoi(strings.TrimSpace(parts[1]))); err != nil || green < 0 || green > 255 {
 				return 0, ErrColorDecode
 			}
 			var blue int
-			if blue, err = strconv.Atoi(strings.TrimSpace(parts[2])); err != nil || blue < 0 || blue > 255 {
+			if blue = mylog.Check2(strconv.Atoi(strings.TrimSpace(parts[2]))); err != nil || blue < 0 || blue > 255 {
 				return 0, ErrColorDecode
 			}
 			return RGB(red, green, blue), nil
@@ -189,20 +186,20 @@ func ColorDecode(buffer string) (Color, error) {
 	case strings.HasPrefix(buffer, "rgba(") && strings.HasSuffix(buffer, ")"):
 		parts := strings.SplitN(strings.TrimSpace(buffer[5:len(buffer)-1]), ",", 5)
 		if len(parts) == 4 {
-			red, err := strconv.Atoi(strings.TrimSpace(parts[0]))
+			red := mylog.Check2(strconv.Atoi(strings.TrimSpace(parts[0])))
 			if err != nil || red < 0 || red > 255 {
 				return 0, ErrColorDecode
 			}
 			var green int
-			if green, err = strconv.Atoi(strings.TrimSpace(parts[1])); err != nil || green < 0 || green > 255 {
+			if green = mylog.Check2(strconv.Atoi(strings.TrimSpace(parts[1]))); err != nil || green < 0 || green > 255 {
 				return 0, ErrColorDecode
 			}
 			var blue int
-			if blue, err = strconv.Atoi(strings.TrimSpace(parts[2])); err != nil || blue < 0 || blue > 255 {
+			if blue = mylog.Check2(strconv.Atoi(strings.TrimSpace(parts[2]))); err != nil || blue < 0 || blue > 255 {
 				return 0, ErrColorDecode
 			}
 			var alpha float64
-			if alpha, err = strconv.ParseFloat(strings.TrimSpace(parts[3]), 32); err != nil || alpha < 0 || alpha > 1 {
+			if alpha = mylog.Check2(strconv.ParseFloat(strings.TrimSpace(parts[3]), 32)); err != nil || alpha < 0 || alpha > 1 {
 				return 0, ErrColorDecode
 			}
 			return ARGB(float32(alpha), red, green, blue), nil
@@ -210,16 +207,16 @@ func ColorDecode(buffer string) (Color, error) {
 	case strings.HasPrefix(buffer, "hsl(") && strings.HasSuffix(buffer, ")"):
 		parts := strings.SplitN(strings.TrimSpace(buffer[4:len(buffer)-1]), ",", 4)
 		if len(parts) == 3 {
-			hue, err := strconv.ParseInt(strings.TrimSpace(parts[0]), 10, 64)
+			hue := mylog.Check2(strconv.ParseInt(strings.TrimSpace(parts[0]), 10, 64))
 			if err != nil || hue < 0 || hue > 359 {
 				return 0, ErrColorDecode
 			}
 			var saturation float32
-			if saturation, err = extractColorPercentage(parts[1]); err != nil {
+			if saturation = mylog.Check2(extractColorPercentage(parts[1])); err != nil {
 				return 0, ErrColorDecode
 			}
 			var brightness float32
-			if brightness, err = extractColorPercentage(parts[2]); err != nil {
+			if brightness = mylog.Check2(extractColorPercentage(parts[2])); err != nil {
 				return 0, ErrColorDecode
 			}
 			return HSB(float32(hue)/360, saturation, brightness), nil
@@ -227,20 +224,20 @@ func ColorDecode(buffer string) (Color, error) {
 	case strings.HasPrefix(buffer, "hsla(") && strings.HasSuffix(buffer, ")"):
 		parts := strings.SplitN(strings.TrimSpace(buffer[5:len(buffer)-1]), ",", 5)
 		if len(parts) == 4 {
-			hue, err := strconv.ParseInt(strings.TrimSpace(parts[0]), 10, 64)
+			hue := mylog.Check2(strconv.ParseInt(strings.TrimSpace(parts[0]), 10, 64))
 			if err != nil || hue < 0 || hue > 359 {
 				return 0, ErrColorDecode
 			}
 			var saturation float32
-			if saturation, err = extractColorPercentage(parts[1]); err != nil {
+			if saturation = mylog.Check2(extractColorPercentage(parts[1])); err != nil {
 				return 0, ErrColorDecode
 			}
 			var brightness float32
-			if brightness, err = extractColorPercentage(parts[2]); err != nil {
+			if brightness = mylog.Check2(extractColorPercentage(parts[2])); err != nil {
 				return 0, ErrColorDecode
 			}
 			var alpha float64
-			if alpha, err = strconv.ParseFloat(strings.TrimSpace(parts[3]), 32); err != nil || alpha < 0 || alpha > 1 {
+			if alpha = mylog.Check2(strconv.ParseFloat(strings.TrimSpace(parts[3]), 32)); err != nil || alpha < 0 || alpha > 1 {
 				return 0, ErrColorDecode
 			}
 			return HSBA(float32(hue)/360, saturation, brightness, float32(alpha)), nil
@@ -252,7 +249,7 @@ func ColorDecode(buffer string) (Color, error) {
 func extractColorPercentage(buffer string) (float32, error) {
 	buffer = strings.TrimSpace(buffer)
 	if strings.HasSuffix(buffer, "%") {
-		if value, err := strconv.Atoi(strings.TrimSpace(buffer[:len(buffer)-1])); err == nil {
+		if value := mylog.Check2(strconv.Atoi(strings.TrimSpace(buffer[:len(buffer)-1]))); err == nil {
 			percentage := float32(value) / 100
 			if percentage >= 0 && percentage <= 1 {
 				return percentage, nil
@@ -304,7 +301,7 @@ func (c Color) MarshalText() ([]byte, error) {
 
 // UnmarshalText implements encoding.TextUnmarshaler.
 func (c *Color) UnmarshalText(text []byte) error {
-	color, err := ColorDecode(string(text))
+	color := mylog.Check2(ColorDecode(string(text)))
 
 	*c = color
 	return nil

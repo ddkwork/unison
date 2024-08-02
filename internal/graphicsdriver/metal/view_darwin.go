@@ -17,6 +17,7 @@ package metal
 import (
 	"sync"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/hajimehoshi/ebiten/v2/internal/graphicsdriver/metal/ca"
 	"github.com/hajimehoshi/ebiten/v2/internal/graphicsdriver/metal/mtl"
 )
@@ -61,7 +62,7 @@ func (v *view) colorPixelFormat() mtl.PixelFormat {
 func (v *view) initialize(device mtl.Device) error {
 	v.device = device
 
-	ml, err := ca.NewMetalLayer()
+	ml := mylog.Check2(ca.NewMetalLayer())
 
 	v.ml = ml
 	v.ml.SetDevice(v.device)
@@ -87,10 +88,9 @@ func (v *view) initialize(device mtl.Device) error {
 }
 
 func (v *view) nextDrawable() ca.MetalDrawable {
-	d, err := v.ml.NextDrawable()
-	if err != nil {
-		// Drawable is nil. This can happen at the initial state. Let's wait and see.
-		return ca.MetalDrawable{}
-	}
+	d := mylog.Check2(v.ml.NextDrawable())
+
+	// Drawable is nil. This can happen at the initial state. Let's wait and see.
+
 	return d
 }

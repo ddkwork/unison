@@ -17,6 +17,8 @@ package graphics
 import (
 	"bytes"
 	"fmt"
+
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/unison/internal/shader"
 	"github.com/richardwilkes/unison/internal/shaderir"
 )
@@ -161,14 +163,9 @@ func __vertex(dstPos vec2, srcPos vec2, color vec4) (vec4, vec2, vec4) {
 }
 
 func completeShaderSource(fragmentSrc []byte) ([]byte, error) {
-	unit, err := shader.ParseCompilerDirectives(fragmentSrc)
-	if err != nil {
-		return nil, err
-	}
-	suffix, err := shaderSuffix(unit)
-	if err != nil {
-		return nil, err
-	}
+	unit := mylog.Check2(shader.ParseCompilerDirectives(fragmentSrc))
+
+	suffix := mylog.Check2(shaderSuffix(unit))
 
 	var buf bytes.Buffer
 	buf.Write(fragmentSrc)
@@ -178,19 +175,13 @@ func completeShaderSource(fragmentSrc []byte) ([]byte, error) {
 }
 
 func CompileShader(fragmentSrc []byte) (*shaderir.Program, error) {
-	src, err := completeShaderSource(fragmentSrc)
-	if err != nil {
-		return nil, err
-	}
+	src := mylog.Check2(completeShaderSource(fragmentSrc))
 
 	const (
 		vert = "__vertex"
 		frag = "Fragment"
 	)
-	ir, err := shader.Compile(src, vert, frag, ShaderSrcImageCount)
-	if err != nil {
-		return nil, err
-	}
+	ir := mylog.Check2(shader.Compile(src, vert, frag, ShaderSrcImageCount))
 
 	if ir.VertexFunc.Block == nil {
 		return nil, fmt.Errorf("graphics: vertex shader entry point '%s' is missing", vert)
@@ -203,9 +194,7 @@ func CompileShader(fragmentSrc []byte) (*shaderir.Program, error) {
 }
 
 func CalcSourceHash(fragmentSrc []byte) (shaderir.SourceHash, error) {
-	src, err := completeShaderSource(fragmentSrc)
-	if err != nil {
-		return shaderir.SourceHash{}, err
-	}
+	src := mylog.Check2(completeShaderSource(fragmentSrc))
+
 	return shaderir.CalcSourceHash(src), nil
 }

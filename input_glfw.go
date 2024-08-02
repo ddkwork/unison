@@ -19,6 +19,7 @@ package unison
 import (
 	"math"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/unison/internal/glfw"
 )
 
@@ -31,22 +32,22 @@ var glfwMouseButtonToMouseButton = map[glfw.MouseButton]MouseButton{
 }
 
 func (u *UserInterface) registerInputCallbacks() error {
-	if _, err := u.window.SetCharModsCallback(func(w *glfw.Window, char rune, mods glfw.ModifierKey) {
+	if _ := mylog.Check2(u.window.SetCharModsCallback(func(w *glfw.Window, char rune, mods glfw.ModifierKey) {
 		// As this function is called from GLFW callbacks, the current thread is main.
 		u.m.Lock()
 		defer u.m.Unlock()
 		u.inputState.appendRune(char)
-	}); err != nil {
+	})); err != nil {
 		return err
 	}
 
-	if _, err := u.window.SetScrollCallback(func(w *glfw.Window, xoff float64, yoff float64) {
+	if _ := mylog.Check2(u.window.SetScrollCallback(func(w *glfw.Window, xoff float64, yoff float64) {
 		// As this function is called from GLFW callbacks, the current thread is main.
 		u.m.Lock()
 		defer u.m.Unlock()
 		u.inputState.WheelX += xoff
 		u.inputState.WheelY += yoff
-	}); err != nil {
+	})); err != nil {
 		return err
 	}
 
@@ -54,9 +55,8 @@ func (u *UserInterface) registerInputCallbacks() error {
 }
 
 func (u *UserInterface) updateInputState() error {
-	var err error
 	u.mainThread.Call(func() {
-		err = u.updateInputStateImpl()
+		mylog.Check(u.updateInputStateImpl())
 	})
 	return err
 }
@@ -67,12 +67,12 @@ func (u *UserInterface) updateInputStateImpl() error {
 	defer u.m.Unlock()
 
 	for uk, gk := range uiKeyToGLFWKey {
-		s, err := u.window.GetKey(gk)
+		s := mylog.Check2(u.window.GetKey(gk))
 
 		u.inputState.KeyPressed[uk] = s == glfw.Press
 	}
 	for gb, ub := range glfwMouseButtonToMouseButton {
-		s, err := u.window.GetMouseButton(gb)
+		s := mylog.Check2(u.window.GetMouseButton(gb))
 
 		u.inputState.MouseButtonPressed[ub] = s == glfw.Press
 	}
@@ -90,7 +90,7 @@ func (u *UserInterface) updateInputStateImpl() error {
 		cx2, cy2 := u.context.logicalPositionToClientPosition(cx, cy, s)
 		cx2 = dipToGLFWPixel(cx2, s)
 		cy2 = dipToGLFWPixel(cy2, s)
-		if err := u.window.SetCursorPos(cx2, cy2); err != nil {
+		if mylog.Check(u.window.SetCursorPos(cx2, cy2)); err != nil {
 			return err
 		}
 	} else {
@@ -105,7 +105,7 @@ func (u *UserInterface) updateInputStateImpl() error {
 		u.inputState.CursorX, u.inputState.CursorY = cx, cy
 	}
 
-	if err := gamepad.Update(); err != nil {
+	if mylog.Check(gamepad.Update()); err != nil {
 		return err
 	}
 	return nil
@@ -126,7 +126,7 @@ func (u *UserInterface) KeyName(key Key) string {
 		if u.isTerminated() {
 			return
 		}
-		n, err := glfw.GetKeyName(gk, 0)
+		n := mylog.Check2(glfw.GetKeyName(gk, 0))
 
 		name = n
 	})

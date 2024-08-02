@@ -19,6 +19,7 @@ import (
 	"unsafe"
 
 	"github.com/cespare/xxhash/v2"
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/toolbox"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/softref"
@@ -44,10 +45,8 @@ func NewImageFromFilePathOrURL(filePathOrURL string, scale float32) (*Image, err
 // NewImageFromFilePathOrURLWithContext creates a new image from data retrieved from the file path or URL. The
 // http.DefaultClient will be used if the data is remote.
 func NewImageFromFilePathOrURLWithContext(ctx context.Context, filePathOrURL string, scale float32) (*Image, error) {
-	data, err := xio.RetrieveDataWithContext(ctx, filePathOrURL)
-	if err != nil {
-		return nil, errs.NewWithCause(filePathOrURL, err)
-	}
+	data := mylog.Check2(xio.RetrieveDataWithContext(ctx, filePathOrURL))
+
 	return NewImageFromBytes(data, scale)
 }
 
@@ -65,10 +64,8 @@ func NewImageFromBytes(buffer []byte, scale float32) (*Image, error) {
 	if img == nil {
 		return nil, errs.New("unable to decode image data")
 	}
-	hash, err := hashImageData(skia.ImageGetWidth(img), skia.ImageGetHeight(img), scale, buffer)
-	if err != nil {
-		return nil, errs.Wrap(err)
-	}
+	hash := mylog.Check2(hashImageData(skia.ImageGetWidth(img), skia.ImageGetHeight(img), scale, buffer))
+
 	return newImage(img, scale, hash)
 }
 
@@ -92,10 +89,8 @@ func NewImageFromPixels(width, height int, pixels []byte, scale float32) (*Image
 	if img == nil {
 		return nil, errs.New("unable to create image")
 	}
-	hash, err := hashImageData(width, height, scale, pixels)
-	if err != nil {
-		return nil, errs.Wrap(err)
-	}
+	hash := mylog.Check2(hashImageData(width, height, scale, pixels))
+
 	return newImage(img, scale, hash)
 }
 
@@ -326,10 +321,10 @@ func hashImageData(width, height int, scale float32, data []byte) (uint64, error
 	binary.LittleEndian.PutUint32(buffer[:4], math.Float32bits(scale))
 	binary.LittleEndian.PutUint32(buffer[4:8], uint32(width))
 	binary.LittleEndian.PutUint32(buffer[8:12], uint32(height))
-	if _, err := s.Write(buffer[:]); err != nil {
+	if _ := mylog.Check2(s.Write(buffer[:])); err != nil {
 		return 0, errs.Wrap(err)
 	}
-	if _, err := s.Write(data); err != nil {
+	if _ := mylog.Check2(s.Write(data)); err != nil {
 		return 0, errs.Wrap(err)
 	}
 	return s.Sum64(), nil

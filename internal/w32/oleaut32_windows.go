@@ -12,6 +12,8 @@ package w32
 import (
 	"syscall"
 	"unsafe"
+
+	"github.com/ddkwork/golibrary/mylog"
 )
 
 var (
@@ -20,10 +22,8 @@ var (
 )
 
 func SysAllocString(str string) *int16 {
-	p, err := syscall.UTF16PtrFromString(str)
-	if err != nil {
-		return nil
-	}
+	p := mylog.Check2(syscall.UTF16PtrFromString(str))
+
 	r1, _, _ := sysAllocStringProc.Call(uintptr(unsafe.Pointer(p)))
 	return (*int16)(unsafe.Pointer(r1))
 }

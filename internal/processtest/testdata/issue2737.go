@@ -25,6 +25,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/audio"
 )
@@ -110,10 +111,8 @@ func main() {
 	ctx := audio.NewContext(48000)
 	var players []*audio.Player
 	for i := 0; i < game.playerCount; i++ {
-		p, err := ctx.NewPlayer(&emptyStream{length: 48000 * 2 * 2})
-		if err != nil {
-			panic(err)
-		}
+		p := mylog.Check2(ctx.NewPlayer(&emptyStream{length: 48000 * 2 * 2}))
+
 		players = append(players, p)
 
 		// Play players in different goroutines from the game's goroutine in order to call the context's gcPlayers and addPlayer
@@ -134,7 +133,7 @@ func main() {
 		}()
 	}
 
-	if err := ebiten.RunGame(game); err != nil {
+	if mylog.Check(ebiten.RunGame(game)); err != nil {
 		panic(err)
 	}
 }

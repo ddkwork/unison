@@ -6,8 +6,9 @@
 package glfw
 
 import (
-	"github.com/ddkwork/golibrary/mylog"
 	"sort"
+
+	"github.com/ddkwork/golibrary/mylog"
 )
 
 func abs(x int) uint {
@@ -39,7 +40,7 @@ func (v *VidMode) equals(other *VidMode) bool {
 
 func (m *Monitor) refreshVideoModes() error {
 	m.modes = m.modes[:0]
-	modes, err := m.platformAppendVideoModes(m.modes)
+	modes := mylog.Check2(m.platformAppendVideoModes(m.modes))
 
 	sort.Slice(modes, func(i, j int) bool {
 		a := modes[i]
@@ -78,11 +79,11 @@ func inputMonitor(monitor *Monitor, action PeripheralEvent, placement int) error
 		for _, window := range _glfw.windows {
 			if window.monitor == monitor {
 				width, height := window.platformGetWindowSize()
-				if err := window.platformSetWindowMonitor(nil, 0, 0, width, height, 0); err != nil {
+				if mylog.Check(window.platformSetWindowMonitor(nil, 0, 0, width, height, 0)); err != nil {
 					return err
 				}
 				xoff, yoff, _, _ := window.platformGetWindowFrameSize()
-				if err := window.platformSetWindowPos(xoff, yoff); err != nil {
+				if mylog.Check(window.platformSetWindowPos(xoff, yoff)); err != nil {
 					return err
 				}
 			}
@@ -109,7 +110,7 @@ func (m *Monitor) inputMonitorWindow(window *Window) {
 }
 
 func (m *Monitor) chooseVideoMode(desired *VidMode) (*VidMode, error) {
-	if err := m.refreshVideoModes(); err != nil {
+	if mylog.Check(m.refreshVideoModes()); err != nil {
 		return nil, err
 	}
 

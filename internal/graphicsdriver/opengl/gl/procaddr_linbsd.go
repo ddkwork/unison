@@ -21,6 +21,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/ebitengine/purego"
 )
 
@@ -49,7 +50,7 @@ func (c *defaultContext) init() error {
 		// [1] https://github.com/glfw/glfw/commit/55aad3c37b67f17279378db52da0a3ab81bbf26d
 		// [2] https://github.com/glfw/glfw/commit/c18851f52ec9704eb06464058a600845ec1eada1
 		for _, name := range []string{"libGL.so", "libGL.so.2", "libGL.so.1", "libGL.so.0"} {
-			lib, err := purego.Dlopen(name, purego.RTLD_LAZY|purego.RTLD_GLOBAL)
+			lib := mylog.Check2(purego.Dlopen(name, purego.RTLD_LAZY|purego.RTLD_GLOBAL))
 			if err == nil {
 				libGL = lib
 				return nil
@@ -60,7 +61,7 @@ func (c *defaultContext) init() error {
 
 	// Try OpenGL ES.
 	for _, name := range []string{"libGLESv2.so", "libGLESv2.so.2", "libGLESv2.so.1", "libGLESv2.so.0"} {
-		lib, err := purego.Dlopen(name, purego.RTLD_LAZY|purego.RTLD_GLOBAL)
+		lib := mylog.Check2(purego.Dlopen(name, purego.RTLD_LAZY|purego.RTLD_GLOBAL))
 		if err == nil {
 			libGLES = lib
 			c.isES = true
@@ -83,9 +84,9 @@ var glXGetProcAddress func(name string) uintptr
 
 func getProcAddressGL(name string) (uintptr, error) {
 	if glXGetProcAddress == nil {
-		if _, err := purego.Dlsym(libGL, "glXGetProcAddress"); err == nil {
+		if _ := mylog.Check2(purego.Dlsym(libGL, "glXGetProcAddress")); err == nil {
 			purego.RegisterLibFunc(&glXGetProcAddress, libGL, "glXGetProcAddress")
-		} else if _, err := purego.Dlsym(libGL, "glXGetProcAddressARB"); err == nil {
+		} else if _ := mylog.Check2(purego.Dlsym(libGL, "glXGetProcAddressARB")); err == nil {
 			purego.RegisterLibFunc(&glXGetProcAddress, libGL, "glXGetProcAddressARB")
 		}
 	}
@@ -97,9 +98,7 @@ func getProcAddressGL(name string) (uintptr, error) {
 }
 
 func getProcAddressGLES(name string) (uintptr, error) {
-	proc, err := purego.Dlsym(libGLES, name)
-	if err != nil {
-		return 0, err
-	}
+	proc := mylog.Check2(purego.Dlsym(libGLES, name))
+
 	return proc, nil
 }

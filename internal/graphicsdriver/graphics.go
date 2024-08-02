@@ -16,9 +16,10 @@ package graphicsdriver
 
 import (
 	"fmt"
+	"image"
+
 	"github.com/richardwilkes/unison/internal/graphics"
 	"github.com/richardwilkes/unison/internal/shaderir"
-	"image"
 )
 
 type DstRegion struct {

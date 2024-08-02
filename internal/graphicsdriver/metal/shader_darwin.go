@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/hajimehoshi/ebiten/v2/internal/graphicsdriver/metal/mtl"
 )
 
@@ -76,7 +77,7 @@ func newShader(device mtl.Device, id graphicsdriver.ShaderID, program *shaderir.
 		ir:   program,
 		rpss: map[shaderRpsKey]mtl.RenderPipelineState{},
 	}
-	if err := s.init(device); err != nil {
+	if mylog.Check(s.init(device)); err != nil {
 		return nil, err
 	}
 	return s, nil
@@ -101,32 +102,20 @@ func (s *Shader) Dispose() {
 func (s *Shader) init(device mtl.Device) error {
 	var src string
 	if libBin := thePrecompiledLibraries.get(s.ir.SourceHash); len(libBin) > 0 {
-		lib, err := device.NewLibraryWithData(libBin)
+		lib := mylog.Check2(device.NewLibraryWithData(libBin))
 
 		s.lib = lib
 	} else {
 		src = msl.Compile(s.ir)
-		lib, err := device.NewLibraryWithSource(src, mtl.CompileOptions{})
-		if err != nil {
-			return fmt.Errorf("metal: device.MakeLibrary failed: %w, source: %s", err, src)
-		}
+		lib := mylog.Check2(device.NewLibraryWithSource(src, mtl.CompileOptions{}))
+
 		s.lib = lib
 	}
 
-	vs, err := s.lib.NewFunctionWithName(msl.VertexName)
-	if err != nil {
-		if src != "" {
-			return fmt.Errorf("metal: lib.MakeFunction for vertex failed: %w, source: %s", err, src)
-		}
-		return fmt.Errorf("metal: lib.MakeFunction for vertex failed: %w", err)
-	}
-	fs, err := s.lib.NewFunctionWithName(msl.FragmentName)
-	if err != nil {
-		if src != "" {
-			return fmt.Errorf("metal: lib.MakeFunction for fragment failed: %w, source: %s", err, src)
-		}
-		return fmt.Errorf("metal: lib.MakeFunction for fragment failed: %w", err)
-	}
+	vs := mylog.Check2(s.lib.NewFunctionWithName(msl.VertexName))
+
+	fs := mylog.Check2(s.lib.NewFunctionWithName(msl.FragmentName))
+
 	s.fs = fs
 	s.vs = vs
 	return nil
@@ -171,10 +160,7 @@ func (s *Shader) RenderPipelineState(view *view, blend graphicsdriver.Blend, ste
 		rpld.ColorAttachments[0].WriteMask = mtl.ColorWriteMaskNone
 	}
 
-	rps, err := view.getMTLDevice().NewRenderPipelineStateWithDescriptor(rpld)
-	if err != nil {
-		return mtl.RenderPipelineState{}, err
-	}
+	rps := mylog.Check2(view.getMTLDevice().NewRenderPipelineStateWithDescriptor(rpld))
 
 	s.rpss[key] = rps
 	return rps, nil

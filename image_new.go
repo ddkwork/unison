@@ -15,12 +15,14 @@
 package unison
 
 import (
+	"image"
+	"math"
+
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/unison/internal/atlas"
 	"github.com/richardwilkes/unison/internal/graphics"
 	"github.com/richardwilkes/unison/internal/graphicsdriver"
 	"github.com/richardwilkes/unison/internal/mipmap"
-	"image"
-	"math"
 )
 
 // panicOnErrorOnReadingPixels indicates whether reading pixels panics on an error or not.
@@ -121,7 +123,7 @@ func (i *Image) ReadPixels(pixels []byte, region image.Rectangle) {
 
 	i.flushBigOffscreenBufferIfNeeded()
 
-	if err := i.ui.readPixels(i.mipmap, pixels, region); err != nil {
+	if mylog.Check(i.ui.readPixels(i.mipmap, pixels, region)); err != nil {
 		if panicOnErrorOnReadingPixels {
 			panic(err)
 		}

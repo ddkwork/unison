@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"image/color"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -55,7 +56,7 @@ func main() {
 	ebiten.SetWindowTitle("Test")
 	ebiten.SetScreenClearedEveryFrame(false)
 
-	if err := ebiten.RunGame(&Game{}); err != nil {
+	if mylog.Check(ebiten.RunGame(&Game{})); err != nil {
 		panic(err)
 	}
 }

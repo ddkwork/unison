@@ -20,6 +20,8 @@ import (
 	"errors"
 	"fmt"
 	"os"
+
+	"github.com/ddkwork/golibrary/mylog"
 )
 
 // Note: There are many cryptic caveats to proper error handling here.
@@ -30,7 +32,7 @@ var lastError = make(chan error, 1)
 
 //export goErrorCB
 func goErrorCB(code C.int, desc *C.char) {
-	err := fmt.Errorf("glfw: %s: %w", C.GoString(desc), ErrorCode(code))
+	mylog.Check(fmt.Errorf("glfw: %s: %w", C.GoString(desc), ErrorCode(code)))
 	select {
 	case lastError <- err:
 	default:

@@ -19,6 +19,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/toolbox"
 	"github.com/richardwilkes/toolbox/desktop"
 	"github.com/richardwilkes/toolbox/errs"
@@ -797,17 +798,15 @@ func ReviseTarget(workingDir, target string, altLinkPrefixes []string) (string, 
 	if HasURLPrefix(target) {
 		return target, nil
 	}
-	revised, err := url.PathUnescape(target)
-	if err != nil {
-		return target, errs.Wrap(err)
-	}
+	revised := mylog.Check2(url.PathUnescape(target))
+
 	if HasAnyPrefix(altLinkPrefixes, revised) {
 		return revised, nil
 	}
 	if workingDir == "" {
 		workingDir = "."
 	}
-	if revised, err = filepath.Abs(filepath.Join(workingDir, revised)); err != nil {
+	if revised = mylog.Check2(filepath.Abs(filepath.Join(workingDir, revised))); err != nil {
 		return target, errs.Wrap(err)
 	}
 	return revised, nil
@@ -822,11 +821,8 @@ func (m *Markdown) retrieveImage(target string, label *Label) *Image {
 	if m.WorkingDirProvider != nil {
 		workingDir = m.WorkingDirProvider(m)
 	}
-	revisedTarget, err := ReviseTarget(workingDir, target, m.AltLinkPrefixes)
-	if err != nil {
-		errs.Log(err, "workingDir", workingDir, "target", target, "altLinkPrefixes", m.AltLinkPrefixes)
-		return nil
-	}
+	revisedTarget := mylog.Check2(ReviseTarget(workingDir, target, m.AltLinkPrefixes))
+
 	img, ok := m.imgCache[revisedTarget]
 	if !ok {
 		result := make(chan *Image, 1)
@@ -834,7 +830,7 @@ func (m *Markdown) retrieveImage(target string, label *Label) *Image {
 			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 			defer cancel()
 			scale := 1 / PrimaryDisplay().ScaleX
-			if img, err = NewImageFromFilePathOrURLWithContext(ctx, revisedTarget, scale); err != nil {
+			if img = mylog.Check2(NewImageFromFilePathOrURLWithContext(ctx, revisedTarget, scale)); err != nil {
 				result <- nil
 				errs.Log(err, "path", revisedTarget, "scale", scale)
 			} else {
@@ -1003,7 +999,7 @@ func (m *Markdown) finishTextRow() {
 // links.
 func DefaultMarkdownLinkHandler(_ Paneler, target string) {
 	if HasURLPrefix(target) {
-		if err := desktop.Open(target); err != nil {
+		if mylog.Check(desktop.Open(target)); err != nil {
 			ErrorDialogWithError(i18n.Text("Opening the link failed"), err)
 		}
 	}

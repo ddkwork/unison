@@ -55,6 +55,8 @@ import "C"
 import (
 	"image"
 	"unsafe"
+
+	"github.com/ddkwork/golibrary/mylog"
 )
 
 // Cursor represents a cursor.
@@ -120,7 +122,7 @@ func goDropCB(window unsafe.Pointer, count C.int, names **C.char) { // TODO: The
 // GetInputMode returns the value of an input option of the window.
 func (w *Window) GetInputMode(mode InputMode) (int, error) {
 	ret := int(C.glfwGetInputMode(w.data, C.int(mode)))
-	if err := fetchErrorIgnoringPlatformError(); err != nil {
+	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
 		return 0, err
 	}
 	return ret, nil
@@ -129,7 +131,7 @@ func (w *Window) GetInputMode(mode InputMode) (int, error) {
 // SetInputMode sets an input option for the window.
 func (w *Window) SetInputMode(mode InputMode, value int) error {
 	C.glfwSetInputMode(w.data, C.int(mode), C.int(value))
-	if err := fetchErrorIgnoringPlatformError(); err != nil {
+	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
 		return err
 	}
 	return nil
@@ -173,7 +175,7 @@ func GetKeyScancode(key Key) int {
 // Unicode character callback instead.
 func (w *Window) GetKey(key Key) (Action, error) {
 	ret := Action(C.glfwGetKey(w.data, C.int(key)))
-	if err := fetchErrorIgnoringPlatformError(); err != nil {
+	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
 		return 0, err
 	}
 	return ret, nil
@@ -184,7 +186,7 @@ func (w *Window) GetKey(key Key) (Action, error) {
 // If the key is glfw.KeyUnknown, the scancode is used, otherwise the scancode is ignored.
 func GetKeyName(key Key, scancode int) (string, error) {
 	ret := C.glfwGetKeyName(C.int(key), C.int(scancode))
-	if err := fetchErrorIgnoringPlatformError(); err != nil {
+	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
 		return "", err
 	}
 	return C.GoString(ret), nil
@@ -197,7 +199,7 @@ func GetKeyName(key Key, scancode int) (string, error) {
 // even if the mouse button has already been released.
 func (w *Window) GetMouseButton(button MouseButton) (Action, error) {
 	ret := Action(C.glfwGetMouseButton(w.data, C.int(button)))
-	if err := fetchErrorIgnoringPlatformError(); err != nil {
+	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
 		return 0, err
 	}
 	return ret, nil
@@ -214,7 +216,7 @@ func (w *Window) GetMouseButton(button MouseButton) (Action, error) {
 func (w *Window) GetCursorPos() (x, y float64, err error) {
 	var xpos, ypos C.double
 	C.glfwGetCursorPos(w.data, &xpos, &ypos)
-	if err := fetchErrorIgnoringPlatformError(); err != nil {
+	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
 		return 0, 0, err
 	}
 	return float64(xpos), float64(ypos), nil
@@ -228,7 +230,7 @@ func (w *Window) GetCursorPos() (x, y float64, err error) {
 // unbounded and limited only by the minimum and maximum values of a double.
 func (w *Window) SetCursorPos(xpos, ypos float64) error {
 	C.glfwSetCursorPos(w.data, C.double(xpos), C.double(ypos))
-	if err := fetchErrorIgnoringPlatformError(); err != nil {
+	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
 		return err
 	}
 	return nil
@@ -250,7 +252,7 @@ func CreateCursor(img image.Image, xhot, yhot int) (*Cursor, error) {
 	defer free()
 
 	c := C.glfwCreateCursor(&glfwImg, C.int(xhot), C.int(yhot))
-	if err := fetchErrorIgnoringPlatformError(); err != nil {
+	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
 		return nil, err
 	}
 
@@ -261,7 +263,7 @@ func CreateCursor(img image.Image, xhot, yhot int) (*Cursor, error) {
 // that can be set for a window with SetCursor.
 func CreateStandardCursor(shape StandardCursor) (*Cursor, error) {
 	c := C.glfwCreateStandardCursor(C.int(shape))
-	if err := fetchErrorIgnoringPlatformError(); err != nil {
+	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
 		return nil, err
 	}
 	return &Cursor{c}, nil
@@ -271,7 +273,7 @@ func CreateStandardCursor(shape StandardCursor) (*Cursor, error) {
 // Any remaining cursors will be destroyed by Terminate.
 func (c *Cursor) Destroy() error {
 	C.glfwDestroyCursor(c.data)
-	if err := fetchErrorIgnoringPlatformError(); err != nil {
+	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
 		return err
 	}
 	return nil
@@ -288,7 +290,7 @@ func (w *Window) SetCursor(c *Cursor) error {
 	} else {
 		C.glfwSetCursor(w.data, c.data)
 	}
-	if err := fetchErrorIgnoringPlatformError(); err != nil {
+	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
 		return err
 	}
 	return nil
@@ -317,7 +319,7 @@ func (w *Window) SetKeyCallback(cbfun KeyCallback) (previous KeyCallback, err er
 	} else {
 		C.glfwSetKeyCallbackCB(w.data)
 	}
-	if err := fetchErrorIgnoringPlatformError(); err != nil {
+	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
 		return nil, err
 	}
 	return previous, nil
@@ -348,7 +350,7 @@ func (w *Window) SetCharCallback(cbfun CharCallback) (previous CharCallback, err
 	} else {
 		C.glfwSetCharCallbackCB(w.data)
 	}
-	if err := fetchErrorIgnoringPlatformError(); err != nil {
+	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
 		return nil, err
 	}
 	return previous, nil
@@ -377,7 +379,7 @@ func (w *Window) SetCharModsCallback(cbfun CharModsCallback) (previous CharModsC
 	} else {
 		C.glfwSetCharModsCallbackCB(w.data)
 	}
-	if err := fetchErrorIgnoringPlatformError(); err != nil {
+	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
 		return nil, err
 	}
 	return previous, nil
@@ -402,7 +404,7 @@ func (w *Window) SetMouseButtonCallback(cbfun MouseButtonCallback) (previous Mou
 	} else {
 		C.glfwSetMouseButtonCallbackCB(w.data)
 	}
-	if err := fetchErrorIgnoringPlatformError(); err != nil {
+	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
 		return nil, err
 	}
 	return previous, nil
@@ -422,7 +424,7 @@ func (w *Window) SetCursorPosCallback(cbfun CursorPosCallback) (previous CursorP
 	} else {
 		C.glfwSetCursorPosCallbackCB(w.data)
 	}
-	if err := fetchErrorIgnoringPlatformError(); err != nil {
+	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
 		return nil, err
 	}
 	return previous, nil
@@ -441,7 +443,7 @@ func (w *Window) SetCursorEnterCallback(cbfun CursorEnterCallback) (previous Cur
 	} else {
 		C.glfwSetCursorEnterCallbackCB(w.data)
 	}
-	if err := fetchErrorIgnoringPlatformError(); err != nil {
+	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
 		return nil, err
 	}
 	return previous, nil
@@ -460,7 +462,7 @@ func (w *Window) SetScrollCallback(cbfun ScrollCallback) (previous ScrollCallbac
 	} else {
 		C.glfwSetScrollCallbackCB(w.data)
 	}
-	if err := fetchErrorIgnoringPlatformError(); err != nil {
+	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
 		return nil, err
 	}
 	return previous, nil
@@ -479,7 +481,7 @@ func (w *Window) SetDropCallback(cbfun DropCallback) (previous DropCallback, err
 	} else {
 		C.glfwSetDropCallbackCB(w.data)
 	}
-	if err := fetchErrorIgnoringPlatformError(); err != nil {
+	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
 		return nil, err
 	}
 	return previous, nil

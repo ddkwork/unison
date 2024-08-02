@@ -14,6 +14,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/xio"
 	"github.com/richardwilkes/unison/enums/thememode"
@@ -29,12 +30,9 @@ func platformEarlyInit() {
 
 func platformLateInit() {
 	keyPath := `Software\Microsoft\Windows\CurrentVersion\Themes\Personalize`
-	k, err := registry.OpenKey(registry.CURRENT_USER, keyPath, syscall.KEY_NOTIFY|registry.QUERY_VALUE)
-	if err != nil {
-		errs.Log(errs.NewWithCause("unable to open dark mode key", err), "key", "CURRENT_USER", "path", keyPath)
-		return
-	}
-	if err = updateTheme(k, true); err != nil {
+	k := mylog.Check2(registry.OpenKey(registry.CURRENT_USER, keyPath, syscall.KEY_NOTIFY|registry.QUERY_VALUE))
+
+	if mylog.Check(updateTheme(k, true)); err != nil {
 		errs.Log(err)
 		xio.CloseIgnoringErrors(k)
 		return
@@ -42,7 +40,7 @@ func platformLateInit() {
 	go func() {
 		for {
 			w32.RegNotifyChangeKeyValue(k, false, w32.RegNotifyChangeName|w32.RegNotifyChangeLastSet, 0, false)
-			if err = updateTheme(k, false); err != nil {
+			if mylog.Check(updateTheme(k, false)); err != nil {
 				errs.Log(err)
 				xio.CloseIgnoringErrors(k)
 				return
@@ -71,10 +69,8 @@ func platformDoubleClickInterval() time.Duration {
 }
 
 func updateTheme(k registry.Key, sync bool) error {
-	val, _, err := k.GetIntegerValue("AppsUseLightTheme")
-	if err != nil {
-		return errs.NewWithCause("unable to retrieve current dark mode value", err)
-	}
+	val, _ := mylog.Check3(k.GetIntegerValue("AppsUseLightTheme"))
+
 	var swapped bool
 	if val == 0 {
 		swapped = atomic.CompareAndSwapUint32(&appUsesLightThemeValue, 1, 0)

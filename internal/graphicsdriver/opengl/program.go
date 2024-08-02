@@ -18,12 +18,14 @@ package opengl
 
 import (
 	"fmt"
-	"github.com/richardwilkes/unison/internal/graphics"
-	"github.com/richardwilkes/unison/internal/graphicsdriver/opengl/gl"
-	"github.com/richardwilkes/unison/internal/shaderir"
 	"math"
 	"runtime"
 	"unsafe"
+
+	"github.com/ddkwork/golibrary/mylog"
+	"github.com/richardwilkes/unison/internal/graphics"
+	"github.com/richardwilkes/unison/internal/graphicsdriver/opengl/gl"
+	"github.com/richardwilkes/unison/internal/shaderir"
 )
 
 const floatSizeInBytes = 4
@@ -132,7 +134,7 @@ type openGLState struct {
 
 // reset resets or initializes the OpenGL state.
 func (s *openGLState) reset(context *context) error {
-	if err := context.reset(); err != nil {
+	if mylog.Check(context.reset()); err != nil {
 		return err
 	}
 

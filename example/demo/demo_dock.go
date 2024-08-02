@@ -12,6 +12,7 @@ package demo
 import (
 	"fmt"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/unison"
 	"github.com/richardwilkes/unison/enums/align"
 	"github.com/richardwilkes/unison/enums/side"
@@ -23,10 +24,7 @@ var dockCounter int
 func NewDemoDockWindow(where unison.Point) (*unison.Window, error) {
 	// Create the window
 	dockCounter++
-	wnd, err := unison.NewWindow(fmt.Sprintf("Dock #%d", dockCounter))
-	if err != nil {
-		return nil, err
-	}
+	wnd := mylog.Check2(unison.NewWindow(fmt.Sprintf("Dock #%d", dockCounter)))
 
 	// Install our menus
 	installDefaultMenus(wnd)

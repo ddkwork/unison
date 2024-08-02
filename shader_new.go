@@ -16,11 +16,12 @@ package unison
 
 import (
 	"fmt"
+	"math"
+	"reflect"
+
 	"github.com/richardwilkes/unison/internal/atlas"
 	"github.com/richardwilkes/unison/internal/graphics"
 	"github.com/richardwilkes/unison/internal/shaderir"
-	"math"
-	"reflect"
 )
 
 type Shader struct {

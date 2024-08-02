@@ -16,10 +16,12 @@ package directx
 
 import (
 	"fmt"
-	"github.com/richardwilkes/unison/internal/graphics"
-	"github.com/richardwilkes/unison/internal/graphicsdriver"
 	"math"
 	"unsafe"
+
+	"github.com/ddkwork/golibrary/mylog"
+	"github.com/richardwilkes/unison/internal/graphics"
+	"github.com/richardwilkes/unison/internal/graphicsdriver"
 )
 
 var inputElementDescsForDX12 = []_D3D12_INPUT_ELEMENT_DESC{
@@ -133,12 +135,12 @@ func (p *pipelineStates) initialize(device *_ID3D12Device) (ferr error) {
 	// Create a CBV/SRV/UAV descriptor heap.
 	//   5n+0:        constants
 	//   5n+m (1<=4): textures
-	shaderH, err := device.CreateDescriptorHeap(&_D3D12_DESCRIPTOR_HEAP_DESC{
+	shaderH := mylog.Check2(device.CreateDescriptorHeap(&_D3D12_DESCRIPTOR_HEAP_DESC{
 		Type:           _D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
 		NumDescriptors: frameCount * numDescriptorsPerFrame * numConstantBufferAndSourceTextures,
 		Flags:          _D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE,
 		NodeMask:       0,
-	})
+	}))
 
 	p.shaderDescriptorHeap = shaderH
 	defer func() {
@@ -149,16 +151,16 @@ func (p *pipelineStates) initialize(device *_ID3D12Device) (ferr error) {
 	}()
 	p.shaderDescriptorSize = device.GetDescriptorHandleIncrementSize(_D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV)
 
-	samplerH, err := device.CreateDescriptorHeap(&_D3D12_DESCRIPTOR_HEAP_DESC{
+	samplerH := mylog.Check2(device.CreateDescriptorHeap(&_D3D12_DESCRIPTOR_HEAP_DESC{
 		Type:           _D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER,
 		NumDescriptors: 1,
 		Flags:          _D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE,
 		NodeMask:       0,
-	})
+	}))
 
 	p.samplerDescriptorHeap = samplerH
 
-	h, err := p.samplerDescriptorHeap.GetCPUDescriptorHandleForHeapStart()
+	h := mylog.Check2(p.samplerDescriptorHeap.GetCPUDescriptorHandleForHeapStart())
 
 	device.CreateSampler(&_D3D12_SAMPLER_DESC{
 		Filter:         _D3D12_FILTER_MIN_MAG_MIP_POINT,
@@ -205,12 +207,12 @@ func (p *pipelineStates) drawTriangles(device *_ID3D12Device, commandList *_ID3D
 		}
 	}
 	if cb == nil {
-		var err error
-		cb, err = createBuffer(device, uint64(bufferSize), _D3D12_HEAP_TYPE_UPLOAD)
+
+		cb = mylog.Check2(createBuffer(device, uint64(bufferSize), _D3D12_HEAP_TYPE_UPLOAD))
 
 		p.constantBuffers[frameIndex][idx] = cb
 
-		h, err := p.shaderDescriptorHeap.GetCPUDescriptorHandleForHeapStart()
+		h := mylog.Check2(p.shaderDescriptorHeap.GetCPUDescriptorHandleForHeapStart())
 
 		offset := int32(numConstantBufferAndSourceTextures * (frameIndex*numDescriptorsPerFrame + idx))
 		h.Offset(offset, p.shaderDescriptorSize)
@@ -219,7 +221,7 @@ func (p *pipelineStates) drawTriangles(device *_ID3D12Device, commandList *_ID3D
 			SizeInBytes:    bufferSize,
 		}, h)
 
-		m, err = cb.Map(0, &_D3D12_RANGE{0, 0})
+		m = mylog.Check2(cb.Map(0, &_D3D12_RANGE{0, 0}))
 
 		p.constantBufferMaps[frameIndex][idx] = m
 	}
@@ -227,7 +229,7 @@ func (p *pipelineStates) drawTriangles(device *_ID3D12Device, commandList *_ID3D
 		return fmt.Errorf("directx: ID3D12Resource::Map failed")
 	}
 
-	h, err := p.shaderDescriptorHeap.GetCPUDescriptorHandleForHeapStart()
+	h := mylog.Check2(p.shaderDescriptorHeap.GetCPUDescriptorHandleForHeapStart())
 
 	offset := int32(numConstantBufferAndSourceTextures * (frameIndex*numDescriptorsPerFrame + idx))
 	h.Offset(offset, p.shaderDescriptorSize)
@@ -249,7 +251,7 @@ func (p *pipelineStates) drawTriangles(device *_ID3D12Device, commandList *_ID3D
 	// Update the constant buffer.
 	copy(unsafe.Slice((*uint32)(unsafe.Pointer(m)), len(uniforms)), uniforms)
 
-	rs, err := p.ensureRootSignature(device)
+	rs := mylog.Check2(p.ensureRootSignature(device))
 
 	commandList.SetGraphicsRootSignature(rs)
 
@@ -259,17 +261,17 @@ func (p *pipelineStates) drawTriangles(device *_ID3D12Device, commandList *_ID3D
 	})
 
 	// Match the indices with rootParams in graphicsPipelineState.
-	gh, err := p.shaderDescriptorHeap.GetGPUDescriptorHandleForHeapStart()
+	gh := mylog.Check2(p.shaderDescriptorHeap.GetGPUDescriptorHandleForHeapStart())
 
 	gh.Offset(offset, p.shaderDescriptorSize)
 	commandList.SetGraphicsRootDescriptorTable(0, gh)
 	commandList.SetGraphicsRootDescriptorTable(1, gh)
-	sh, err := p.samplerDescriptorHeap.GetGPUDescriptorHandleForHeapStart()
+	sh := mylog.Check2(p.samplerDescriptorHeap.GetGPUDescriptorHandleForHeapStart())
 
 	commandList.SetGraphicsRootDescriptorTable(2, sh)
 
 	if fillRule == graphicsdriver.FillRuleFillAll {
-		s, err := shader.pipelineState(blend, noStencil, screen)
+		s := mylog.Check2(shader.pipelineState(blend, noStencil, screen))
 
 		commandList.SetPipelineState(s)
 	}
@@ -287,26 +289,20 @@ func (p *pipelineStates) drawTriangles(device *_ID3D12Device, commandList *_ID3D
 		case graphicsdriver.FillRuleFillAll:
 			commandList.DrawIndexedInstanced(uint32(dstRegion.IndexCount), 1, uint32(indexOffset), 0, 0)
 		case graphicsdriver.FillRuleNonZero:
-			s, err := shader.pipelineState(blend, incrementStencil, screen)
-			if err != nil {
-				return err
-			}
+			s := mylog.Check2(shader.pipelineState(blend, incrementStencil, screen))
+
 			commandList.SetPipelineState(s)
 			commandList.DrawIndexedInstanced(uint32(dstRegion.IndexCount), 1, uint32(indexOffset), 0, 0)
 		case graphicsdriver.FillRuleEvenOdd:
-			s, err := shader.pipelineState(blend, invertStencil, screen)
-			if err != nil {
-				return err
-			}
+			s := mylog.Check2(shader.pipelineState(blend, invertStencil, screen))
+
 			commandList.SetPipelineState(s)
 			commandList.DrawIndexedInstanced(uint32(dstRegion.IndexCount), 1, uint32(indexOffset), 0, 0)
 		}
 
 		if fillRule != graphicsdriver.FillRuleFillAll {
-			s, err := shader.pipelineState(blend, drawWithStencil, screen)
-			if err != nil {
-				return err
-			}
+			s := mylog.Check2(shader.pipelineState(blend, drawWithStencil, screen))
+
 			commandList.SetPipelineState(s)
 			commandList.DrawIndexedInstanced(uint32(dstRegion.IndexCount), 1, uint32(indexOffset), 0, 0)
 		}
@@ -372,22 +368,18 @@ func (p *pipelineStates) ensureRootSignature(device *_ID3D12Device) (rootSignatu
 	}
 
 	// Create a root signature.
-	sig, err := _D3D12SerializeRootSignature(&_D3D12_ROOT_SIGNATURE_DESC{
+	sig := mylog.Check2(_D3D12SerializeRootSignature(&_D3D12_ROOT_SIGNATURE_DESC{
 		NumParameters:     uint32(len(rootParams)),
 		pParameters:       &rootParams[0],
 		NumStaticSamplers: 0,
 		pStaticSamplers:   nil,
 		Flags:             _D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT,
-	}, _D3D_ROOT_SIGNATURE_VERSION_1_0)
-	if err != nil {
-		return nil, err
-	}
+	}, _D3D_ROOT_SIGNATURE_VERSION_1_0))
+
 	defer sig.Release()
 
-	rs, err := device.CreateRootSignature(0, sig.GetBufferPointer(), sig.GetBufferSize())
-	if err != nil {
-		return nil, err
-	}
+	rs := mylog.Check2(device.CreateRootSignature(0, sig.GetBufferPointer(), sig.GetBufferSize()))
+
 	defer func() {
 		if ferr != nil {
 			rootSignature.Release()
@@ -400,10 +392,8 @@ func (p *pipelineStates) ensureRootSignature(device *_ID3D12Device) (rootSignatu
 }
 
 func (p *pipelineStates) newPipelineState(device *_ID3D12Device, vsh, psh *_ID3DBlob, blend graphicsdriver.Blend, stencilMode stencilMode, screen bool) (state *_ID3D12PipelineState, ferr error) {
-	rootSignature, err := p.ensureRootSignature(device)
-	if err != nil {
-		return nil, err
-	}
+	rootSignature := mylog.Check2(p.ensureRootSignature(device))
+
 	defer func() {
 		if ferr != nil {
 			rootSignature.Release()
@@ -520,10 +510,8 @@ func (p *pipelineStates) newPipelineState(device *_ID3D12Device, vsh, psh *_ID3D
 		},
 	}
 
-	s, err := device.CreateGraphicsPipelineState(&psoDesc)
-	if err != nil {
-		return nil, err
-	}
+	s := mylog.Check2(device.CreateGraphicsPipelineState(&psoDesc))
+
 	return s, nil
 }
 

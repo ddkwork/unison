@@ -15,9 +15,11 @@
 package gamepad
 
 import (
-	"github.com/richardwilkes/unison/internal/gamepaddb"
 	"time"
 	"unsafe"
+
+	"github.com/ddkwork/golibrary/mylog"
+	"github.com/richardwilkes/unison/internal/gamepaddb"
 
 	"golang.org/x/sys/windows"
 )
@@ -69,12 +71,12 @@ type nativeGamepadsXbox struct {
 }
 
 func (n *nativeGamepadsXbox) init(gamepads *gamepads) error {
-	g, err := _GameInputCreate()
+	g := mylog.Check2(_GameInputCreate())
 
 	n.gameInput = g
 	n.deviceCallbackPtr = windows.NewCallbackCDecl(n.deviceCallback)
 
-	if err := n.gameInput.RegisterDeviceCallback(
+	if mylog.Check(n.gameInput.RegisterDeviceCallback(
 		nil,
 		_GameInputKindGamepad,
 		_GameInputDeviceConnected,
@@ -82,7 +84,7 @@ func (n *nativeGamepadsXbox) init(gamepads *gamepads) error {
 		unsafe.Pointer(gamepads),
 		n.deviceCallbackPtr,
 		&n.token,
-	); err != nil {
+	)); err != nil {
 		return err
 	}
 	return nil
@@ -123,7 +125,7 @@ type nativeGamepadXbox struct {
 
 func (n *nativeGamepadXbox) update(gamepads *gamepads) error {
 	gameInput := gamepads.native.(*nativeGamepadsXbox).gameInput
-	r, err := gameInput.GetCurrentReading(_GameInputKindGamepad, n.gameInputDevice)
+	r := mylog.Check2(gameInput.GetCurrentReading(_GameInputKindGamepad, n.gameInputDevice))
 
 	defer r.Release()
 

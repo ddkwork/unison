@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/OpenPrinting/goipp"
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/toolbox"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/i18n"
@@ -91,11 +92,9 @@ func (p *Printer) Attributes(timeout time.Duration, allowCachedReturn bool) (*Pr
 	req.Operation.Add(goipp.MakeAttribute("requested-attributes", goipp.TagKeyword, goipp.String("all")))
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
-	rsp, err := p.sendRequest(ctx, req, nil, 0)
-	if err != nil {
-		return NewAttributes(nil).ForPrinter(), err
-	}
-	if err = checkIPPStatus(rsp); err != nil {
+	rsp := mylog.Check2(p.sendRequest(ctx, req, nil, 0))
+
+	if mylog.Check(checkIPPStatus(rsp)); err != nil {
 		return NewAttributes(nil).ForPrinter(), err
 	}
 	p.attributes = NewAttributes(rsp.Printer).ForPrinter()
@@ -111,11 +110,9 @@ func (p *Printer) Validate(ctx context.Context, jobName, mimeType string, attrib
 	req := p.newRequest(id, goipp.OpValidateJob)
 	addAttributesForJob(req, jobName, mimeType)
 	req.Job = attributes.toIPP()
-	rsp, err := p.sendRequest(ctx, req, nil, 0)
-	if err != nil {
-		return nil, err
-	}
-	if err = checkIPPStatus(rsp); err != nil {
+	rsp := mylog.Check2(p.sendRequest(ctx, req, nil, 0))
+
+	if mylog.Check(checkIPPStatus(rsp)); err != nil {
 		return nil, err
 	}
 	return NewAttributes(rsp.Unsupported).ForJob(), nil
@@ -130,7 +127,7 @@ func (p *Printer) Print(ctx context.Context, jobName, mimeType string, fileData 
 	req := p.newRequest(id, goipp.OpPrintJob)
 	addAttributesForJob(req, jobName, mimeType)
 	req.Job = attributes.toIPP()
-	rsp, err := p.sendRequest(ctx, req, fileData, fileLength)
+	rsp := mylog.Check2(p.sendRequest(ctx, req, fileData, fileLength))
 
 	return checkIPPStatus(rsp)
 }
@@ -176,17 +173,15 @@ func addAttributesForJob(req *goipp.Message, jobName, mimeType string) {
 }
 
 func (p *Printer) sendRequest(ctx context.Context, req *goipp.Message, fileData io.Reader, fileLength int) (*goipp.Message, error) {
-	data, err := req.EncodeBytes()
-	if err != nil {
-		return nil, errs.Wrap(err)
-	}
+	data := mylog.Check2(req.EncodeBytes())
+
 	var r io.Reader
 	r = bytes.NewReader(data)
 	if fileData != nil {
 		r = io.MultiReader(r, fileData)
 	}
 	var httpReq *http.Request
-	if httpReq, err = http.NewRequestWithContext(ctx, http.MethodPost, p.uri(), r); err != nil {
+	if httpReq = mylog.Check2(http.NewRequestWithContext(ctx, http.MethodPost, p.uri(), r)); err != nil {
 		return nil, errs.Wrap(err)
 	}
 	httpReq.Header.Set("Content-Length", strconv.Itoa(len(data)+fileLength))
@@ -195,7 +190,7 @@ func (p *Printer) sendRequest(ctx context.Context, req *goipp.Message, fileData 
 		httpReq.SetBasicAuth(p.User, p.Password)
 	}
 	var httpResp *http.Response
-	if httpResp, err = p.httpClient.Do(httpReq); err != nil { //nolint:bodyclose // Body is closed by xio.DiscardAndCloseIgnoringErrors
+	if httpResp = mylog.Check2(p.httpClient.Do(httpReq)); err != nil { //nolint:bodyclose // Body is closed by xio.DiscardAndCloseIgnoringErrors
 		return nil, errs.Wrap(err)
 	}
 	defer xio.DiscardAndCloseIgnoringErrors(httpResp.Body)
@@ -203,7 +198,7 @@ func (p *Printer) sendRequest(ctx context.Context, req *goipp.Message, fileData 
 		return nil, errs.Newf("unexpected http response code: %d", httpResp.StatusCode)
 	}
 	rsp := goipp.NewResponse(0, 0, 0)
-	if err = rsp.Decode(httpResp.Body); err != nil {
+	if mylog.Check(rsp.Decode(httpResp.Body)); err != nil {
 		return nil, errs.Wrap(err)
 	}
 	return rsp, nil

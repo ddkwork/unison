@@ -16,10 +16,12 @@ package buffered
 
 import (
 	"fmt"
+	"image"
+
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/unison/internal/atlas"
 	"github.com/richardwilkes/unison/internal/graphics"
 	"github.com/richardwilkes/unison/internal/graphicsdriver"
-	"image"
 )
 
 var whiteImage *Image
@@ -79,10 +81,8 @@ func (i *Image) ReadPixels(graphicsDriver graphicsdriver.Graphics, pixels []byte
 
 	if i.pixels == nil {
 		pix := make([]byte, 4*i.width*i.height)
-		ok, err := i.img.ReadPixels(graphicsDriver, pix, image.Rect(0, 0, i.width, i.height))
-		if err != nil {
-			return false, err
-		}
+		ok := mylog.Check2(i.img.ReadPixels(graphicsDriver, pix, image.Rect(0, 0, i.width, i.height)))
+
 		if !ok {
 			return false, nil
 		}

@@ -16,12 +16,13 @@ package mipmap
 
 import (
 	"fmt"
+	"image"
+	"math"
+
 	"github.com/richardwilkes/unison/internal/atlas"
 	"github.com/richardwilkes/unison/internal/buffered"
 	"github.com/richardwilkes/unison/internal/graphics"
 	"github.com/richardwilkes/unison/internal/graphicsdriver"
-	"image"
-	"math"
 )
 
 func canUseMipmap(imageType atlas.ImageType) bool {

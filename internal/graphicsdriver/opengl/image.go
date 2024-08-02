@@ -18,6 +18,8 @@ package opengl
 
 import (
 	"errors"
+
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/unison/internal/graphics"
 	"github.com/richardwilkes/unison/internal/graphicsdriver"
 	"github.com/richardwilkes/unison/internal/graphicsdriver/opengl/gl"
@@ -60,7 +62,7 @@ func (i *Image) Dispose() {
 }
 
 func (i *Image) setViewport() error {
-	if err := i.ensureFramebuffer(); err != nil {
+	if mylog.Check(i.ensureFramebuffer()); err != nil {
 		return err
 	}
 	i.graphics.context.setViewport(i.framebuffer)
@@ -68,11 +70,11 @@ func (i *Image) setViewport() error {
 }
 
 func (i *Image) ReadPixels(args []graphicsdriver.PixelsArgs) error {
-	if err := i.ensureFramebuffer(); err != nil {
+	if mylog.Check(i.ensureFramebuffer()); err != nil {
 		return err
 	}
 	for _, arg := range args {
-		if err := i.graphics.context.framebufferPixels(arg.Pixels, i.framebuffer, arg.Region); err != nil {
+		if mylog.Check(i.graphics.context.framebufferPixels(arg.Pixels, i.framebuffer, arg.Region)); err != nil {
 			return err
 		}
 	}
@@ -100,7 +102,7 @@ func (i *Image) ensureFramebuffer() error {
 		return nil
 	}
 
-	f, err := i.graphics.context.newFramebuffer(i.texture, w, h)
+	f := mylog.Check2(i.graphics.context.newFramebuffer(i.texture, w, h))
 
 	i.framebuffer = f
 	return nil
@@ -111,15 +113,15 @@ func (i *Image) ensureStencilBuffer() error {
 		return nil
 	}
 
-	if err := i.ensureFramebuffer(); err != nil {
+	if mylog.Check(i.ensureFramebuffer()); err != nil {
 		return err
 	}
 
-	r, err := i.graphics.context.newRenderbuffer(i.viewportSize())
+	r := mylog.Check2(i.graphics.context.newRenderbuffer(i.viewportSize()))
 
 	i.stencil = r
 
-	if err := i.graphics.context.bindStencilBuffer(i.framebuffer.native, i.stencil); err != nil {
+	if mylog.Check(i.graphics.context.bindStencilBuffer(i.framebuffer.native, i.stencil)); err != nil {
 		return err
 	}
 	return nil

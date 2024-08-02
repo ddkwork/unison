@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/unison"
 	"github.com/richardwilkes/unison/enums/align"
 )
@@ -48,10 +49,7 @@ func NewDemoColorsWindow(where unison.Point) (*unison.Window, error) {
 	}
 
 	// Create the window
-	wnd, err := unison.NewWindow("Colors", unison.NotResizableWindowOption())
-	if err != nil {
-		return nil, err
-	}
+	wnd := mylog.Check2(unison.NewWindow("Colors", unison.NotResizableWindowOption()))
 
 	// Install our menus
 	installDefaultMenus(wnd)

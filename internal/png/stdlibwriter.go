@@ -15,6 +15,8 @@ import (
 	"image/color"
 	"io"
 	"strconv"
+
+	"github.com/ddkwork/golibrary/mylog"
 )
 
 // Encoder configures encoding PNG images.
@@ -305,7 +307,7 @@ func zeroMemory(v []uint8) {
 
 func (e *encoder) writeImage(w io.Writer, m image.Image, cb int, level int) error {
 	if e.zw == nil || e.zwLevel != level {
-		zw, err := zlib.NewWriterLevel(w, level)
+		zw := mylog.Check2(zlib.NewWriterLevel(w, level))
 
 		e.zw = zw
 		e.zwLevel = level
@@ -539,9 +541,7 @@ func (e *encoder) writeImage(w io.Writer, m image.Image, cb int, level int) erro
 		}
 
 		// Write the compressed bytes.
-		if _, err := e.zw.Write(cr[f]); err != nil {
-			return err
-		}
+  mylog.Check2(e.zw.Write(cr[f]));
 
 		// The current row for y is the previous row for y+1.
 		pr, cr[0] = cr[0], pr

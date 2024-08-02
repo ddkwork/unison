@@ -7,12 +7,13 @@ package glfw
 
 import (
 	"fmt"
-	"github.com/ddkwork/golibrary/mylog"
 	"math"
 	"regexp"
 	"strconv"
 	"strings"
 	"unsafe"
+
+	"github.com/ddkwork/golibrary/mylog"
 
 	"github.com/ebitengine/purego"
 )
@@ -253,20 +254,20 @@ func (w *Window) refreshContextAttribs(ctxconfig *ctxconfig) (ferr error) {
 	w.context.source = ctxconfig.source
 	w.context.client = OpenGLAPI
 
-	p1, err := _glfw.contextSlot.get()
+	p1 := mylog.Check2(_glfw.contextSlot.get())
 
 	previous := (*Window)(unsafe.Pointer(p1))
 	defer func() {
-		err := previous.MakeContextCurrent()
+		mylog.Check(previous.MakeContextCurrent())
 		if ferr == nil {
 			ferr = err
 		}
 	}()
-	if err := w.MakeContextCurrent(); err != nil {
+	if mylog.Check(w.MakeContextCurrent()); err != nil {
 		return err
 	}
 
-	p2, err := _glfw.contextSlot.get()
+	p2 := mylog.Check2(_glfw.contextSlot.get())
 
 	if (*Window)(unsafe.Pointer(p2)) != w {
 		return nil
@@ -291,7 +292,8 @@ func (w *Window) refreshContextAttribs(ctxconfig *ctxconfig) (ferr error) {
 	for _, prefix := range []string{
 		"OpenGL ES-CM ",
 		"OpenGL ES-CL ",
-		"OpenGL ES "} {
+		"OpenGL ES ",
+	} {
 		if strings.HasPrefix(version, prefix) {
 			version = version[len(prefix):]
 			w.context.client = OpenGLESAPI
@@ -350,10 +352,8 @@ func (w *Window) refreshContextAttribs(ctxconfig *ctxconfig) (ferr error) {
 			if flags&GL_CONTEXT_FLAG_DEBUG_BIT != 0 {
 				w.context.debug = true
 			} else {
-				ok, err := ExtensionSupported("GL_ARB_debug_output")
-				if err != nil {
-					return err
-				}
+				ok := mylog.Check2(ExtensionSupported("GL_ARB_debug_output"))
+
 				if ok && ctxconfig.debug {
 					// HACK: This is a workaround for older drivers (pre KHR_debug)
 					//       not setting the debug bit in the context flags for
@@ -377,10 +377,8 @@ func (w *Window) refreshContextAttribs(ctxconfig *ctxconfig) (ferr error) {
 			} else if mask&GL_CONTEXT_CORE_PROFILE_BIT != 0 {
 				w.context.profile = OpenGLCoreProfile
 			} else {
-				ok, err := ExtensionSupported("GL_ARB_compatibility")
-				if err != nil {
-					return err
-				}
+				ok := mylog.Check2(ExtensionSupported("GL_ARB_compatibility"))
+
 				if ok {
 					// HACK: This is a workaround for the compatibility profile bit
 					//       not being set in the context flags if an OpenGL 3.2+
@@ -392,7 +390,7 @@ func (w *Window) refreshContextAttribs(ctxconfig *ctxconfig) (ferr error) {
 		}
 
 		// Read back robustness strategy
-		ok, err := ExtensionSupported("GL_ARB_robustness")
+		ok := mylog.Check2(ExtensionSupported("GL_ARB_robustness"))
 
 		if ok {
 			// NOTE: We avoid using the context flags for detection, as they are
@@ -409,7 +407,7 @@ func (w *Window) refreshContextAttribs(ctxconfig *ctxconfig) (ferr error) {
 		}
 	} else {
 		// Read back robustness strategy
-		ok, err := ExtensionSupported("GL_EXT_robustness")
+		ok := mylog.Check2(ExtensionSupported("GL_EXT_robustness"))
 
 		if ok {
 			// NOTE: The values of these constants match those of the OpenGL ARB
@@ -426,7 +424,7 @@ func (w *Window) refreshContextAttribs(ctxconfig *ctxconfig) (ferr error) {
 		}
 	}
 
-	ok, err := ExtensionSupported("GL_KHR_context_flush_control")
+	ok := mylog.Check2(ExtensionSupported("GL_KHR_context_flush_control"))
 
 	if ok {
 		var behavior int32
@@ -445,9 +443,7 @@ func (w *Window) refreshContextAttribs(ctxconfig *ctxconfig) (ferr error) {
 	_, _, _ = purego.SyscallN(glClear, GL_COLOR_BUFFER_BIT)
 
 	if w.doublebuffer {
-		if err := w.context.swapBuffers(w); err != nil {
-			return err
-		}
+		mylog.Check(w.context.swapBuffers(w))
 	}
 
 	return nil
@@ -458,7 +454,7 @@ func (w *Window) MakeContextCurrent() error {
 		return NotInitialized
 	}
 
-	ptr, err := _glfw.contextSlot.get()
+	ptr := mylog.Check2(_glfw.contextSlot.get())
 
 	previous := (*Window)(unsafe.Pointer(ptr))
 
@@ -468,14 +464,14 @@ func (w *Window) MakeContextCurrent() error {
 
 	if previous != nil {
 		if w == nil || w.context.source != previous.context.source {
-			if err := previous.context.makeCurrent(nil); err != nil {
+			if mylog.Check(previous.context.makeCurrent(nil)); err != nil {
 				return err
 			}
 		}
 	}
 
 	if w != nil {
-		if err := w.context.makeCurrent(w); err != nil {
+		if mylog.Check(w.context.makeCurrent(w)); err != nil {
 			return err
 		}
 	}
@@ -486,10 +482,8 @@ func GetCurrentContext() (*Window, error) {
 	if !_glfw.initialized {
 		mylog.Check(NotInitialized.Error())
 	}
-	ptr, err := _glfw.contextSlot.get()
-	if err != nil {
-		return nil, err
-	}
+	ptr := mylog.Check2(_glfw.contextSlot.get())
+
 	return (*Window)(unsafe.Pointer(ptr)), nil
 }
 
@@ -502,7 +496,7 @@ func (w *Window) SwapBuffers() error {
 		return fmt.Errorf("glfw: cannot swap buffers of a window that has no OpenGL or OpenGL ES context: %w", NoWindowContext)
 	}
 
-	if err := w.context.swapBuffers(w); err != nil {
+	if mylog.Check(w.context.swapBuffers(w)); err != nil {
 		return err
 	}
 	return nil
@@ -513,14 +507,14 @@ func SwapInterval(interval int) error {
 		return NotInitialized
 	}
 
-	ptr, err := _glfw.contextSlot.get()
+	ptr := mylog.Check2(_glfw.contextSlot.get())
 
 	window := (*Window)(unsafe.Pointer(ptr))
 	if window == nil {
 		return fmt.Errorf("glfw: cannot set swap interval without a current OpenGL or OpenGL ES context %w", NoCurrentContext)
 	}
 
-	if err := window.context.swapInterval(interval); err != nil {
+	if mylog.Check(window.context.swapInterval(interval)); err != nil {
 		return err
 	}
 	return nil
@@ -536,10 +530,8 @@ func ExtensionSupported(extension string) (bool, error) {
 		return false, NotInitialized
 	}
 
-	ptr, err := _glfw.contextSlot.get()
-	if err != nil {
-		return false, err
-	}
+	ptr := mylog.Check2(_glfw.contextSlot.get())
+
 	window := (*Window)(unsafe.Pointer(ptr))
 	if window == nil {
 		return false, fmt.Errorf("glfw: cannot query extension without a current OpenGL or OpenGL ES context %w", NoCurrentContext)

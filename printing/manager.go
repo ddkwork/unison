@@ -16,6 +16,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/grandcat/zeroconf"
 	"github.com/richardwilkes/toolbox/collection/dict"
 	"github.com/richardwilkes/toolbox/errs"
@@ -56,14 +57,11 @@ func (p *PrintManager) ScanForPrinters(ctx context.Context, printers chan<- *Pri
 	p.lock.Lock()
 	p.printers = make(map[string]*Printer)
 	p.lock.Unlock()
-	resolver, err := zeroconf.NewResolver()
-	if err != nil {
-		errs.Log(errs.NewWithCause("unable to create zeroconf resolver", err))
-		return
-	}
+	resolver := mylog.Check2(zeroconf.NewResolver())
+
 	entries := make(chan *zeroconf.ServiceEntry, 8)
 	go p.collectPrinters(ctx, entries, printers)
-	if err = resolver.Browse(ctx, "_ipp._tcp", "local.", entries); err != nil {
+	if mylog.Check(resolver.Browse(ctx, "_ipp._tcp", "local.", entries)); err != nil {
 		errs.Log(errs.NewWithCause("browsing for printers failed", err))
 	}
 }

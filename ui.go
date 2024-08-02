@@ -16,12 +16,14 @@ package unison
 
 import (
 	"errors"
-	"github.com/richardwilkes/unison/internal/atlas"
-	"github.com/richardwilkes/unison/internal/mipmap"
-	"github.com/richardwilkes/unison/internal/thread"
 	"image"
 	"sync"
 	"sync/atomic"
+
+	"github.com/ddkwork/golibrary/mylog"
+	"github.com/richardwilkes/unison/internal/atlas"
+	"github.com/richardwilkes/unison/internal/mipmap"
+	"github.com/richardwilkes/unison/internal/thread"
 
 	_ "github.com/ebitengine/hideconsole"
 )
@@ -86,16 +88,12 @@ type UserInterface struct {
 	userInterfaceImpl
 }
 
-var (
-	theUI *UserInterface
-)
+var theUI *UserInterface
 
 func init() {
 	// newUserInterface() must be called in the main goroutine.
-	u, err := newUserInterface()
-	if err != nil {
-		panic(err)
-	}
+	u := mylog.Check2(newUserInterface())
+
 	theUI = u
 }
 
@@ -117,7 +115,7 @@ func newUserInterface() (*UserInterface, error) {
 	// As a white image is used at Fill, use WritePixels instead.
 	u.whiteImage.WritePixels(pix, image.Rect(0, 0, u.whiteImage.width, u.whiteImage.height))
 
-	if err := u.init(); err != nil {
+	if mylog.Check(u.init()); err != nil {
 		return nil, err
 	}
 
@@ -129,7 +127,7 @@ func (u *UserInterface) readPixels(mipmap *mipmap.Mipmap, pixels []byte, region 
 		panic("ui: ReadPixels cannot be called before the game starts")
 	}
 
-	ok, err := mipmap.ReadPixels(u.graphicsDriver, pixels, region)
+	ok := mylog.Check2(mipmap.ReadPixels(u.graphicsDriver, pixels, region))
 
 	// ReadPixels failed since this was called in between two frames.
 	// Try this again at the next frame.
@@ -141,11 +139,8 @@ func (u *UserInterface) readPixels(mipmap *mipmap.Mipmap, pixels []byte, region 
 
 		var err1 error
 		u.context.runInFrame(func() {
-			ok, err := mipmap.ReadPixels(u.graphicsDriver, pixels, region)
-			if err != nil {
-				err1 = err
-				return
-			}
+			ok := mylog.Check2(mipmap.ReadPixels(u.graphicsDriver, pixels, region))
+
 			if !ok {
 				// This never reaches since this function must be called in a frame.
 				panic("ui: ReadPixels unexpectedly failed")

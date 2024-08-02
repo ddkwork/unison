@@ -19,6 +19,8 @@ import (
 	"errors"
 	"fmt"
 	"image"
+
+	"github.com/ddkwork/golibrary/mylog"
 )
 
 type Page struct {
@@ -188,18 +190,12 @@ func (p *Page) Free(node *Node) {
 }
 
 func walk(n *Node, f func(n *Node) error) error {
-	if err := f(n); err != nil {
-		return err
-	}
+	mylog.Check(f(n))
 	if n.child0 != nil {
-		if err := walk(n.child0, f); err != nil {
-			return err
-		}
+		mylog.Check(walk(n.child0, f))
 	}
 	if n.child1 != nil {
-		if err := walk(n.child1, f); err != nil {
-			return err
-		}
+		mylog.Check(walk(n.child1, f))
 	}
 	return nil
 }
@@ -251,7 +247,7 @@ func (p *Page) extend(newWidth int, newHeight int) func() {
 	abort := errors.New("abort")
 	aborted := false
 	if p.root != nil {
-		_ = walk(p.root, func(n *Node) error {
+		mylog.Check(walk(p.root, func(n *Node) error {
 			if n.region.Max.X < p.width && n.region.Max.Y < p.height {
 				return nil
 			}
@@ -261,7 +257,7 @@ func (p *Page) extend(newWidth int, newHeight int) func() {
 			}
 			edgeNodes = append(edgeNodes, n)
 			return nil
-		})
+		}))
 	}
 
 	var rollback func()

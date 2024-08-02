@@ -24,6 +24,8 @@ import (
 	"sync"
 	"time"
 	"unsafe"
+
+	"github.com/ddkwork/golibrary/mylog"
 )
 
 type nativeGamepadsImpl struct {
@@ -38,10 +40,10 @@ func newNativeGamepadsImpl() nativeGamepads {
 }
 
 func (g *nativeGamepadsImpl) init(gamepads *gamepads) error {
-	if err := initializeCF(); err != nil {
+	if mylog.Check(initializeCF()); err != nil {
 		return err
 	}
-	if err := initializeIOKit(); err != nil {
+	if mylog.Check(initializeIOKit()); err != nil {
 		return err
 	}
 

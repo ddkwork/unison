@@ -12,6 +12,7 @@ package unison
 import (
 	"image"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/unison/internal/glfw"
 	"golang.org/x/image/draw"
@@ -90,11 +91,7 @@ func retrieveCursor(img *Image, cursor **Cursor) *Cursor {
 
 // NewCursor creates a new custom cursor from an image.
 func NewCursor(img *Image, hotSpot Point) *Cursor {
-	nrgba, err := img.ToNRGBA()
-	if err != nil {
-		errs.Log(err)
-		return ArrowCursor()
-	}
+	nrgba := mylog.Check2(img.ToNRGBA())
 
 	// glfw doesn't take the high resolution cursors properly, so scale them down, if needed
 	logicalSize := img.LogicalSize()

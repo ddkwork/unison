@@ -15,8 +15,9 @@
 package graphics_test
 
 import (
-	"github.com/richardwilkes/unison/internal/graphics"
 	"testing"
+
+	"github.com/richardwilkes/unison/internal/graphics"
 )
 
 func TestInternalImageSize(t *testing.T) {

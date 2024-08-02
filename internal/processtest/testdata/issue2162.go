@@ -16,18 +16,19 @@
 
 package main
 
-import "github.com/hajimehoshi/ebiten/v2"
+import (
+	"github.com/ddkwork/golibrary/mylog"
+	"github.com/hajimehoshi/ebiten/v2"
+)
 
 func init() {
-	s, err := ebiten.NewShader([]byte(`
+	s := mylog.Check2(ebiten.NewShader([]byte(`
 package main
 
 func Fragment(dstPos vec4, srcPos vec2, color vec4) vec4 {
 	return vec4(1)
-}`))
-	if err != nil {
-		panic(err)
-	}
+}`)))
+
 	s.Deallocate()
 }
 
@@ -52,7 +53,7 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 
 func main() {
 	// Run a game loop at least for one frame to ensure the shader disposed.
-	if err := ebiten.RunGame(&Game{}); err != nil {
+	if mylog.Check(ebiten.RunGame(&Game{})); err != nil {
 		panic(err)
 	}
 }

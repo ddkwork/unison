@@ -42,9 +42,7 @@ const (
 	VertexFloatCount = 8
 )
 
-var (
-	quadIndices = []uint32{0, 1, 2, 1, 2, 3}
-)
+var quadIndices = []uint32{0, 1, 2, 1, 2, 3}
 
 func QuadIndices() []uint32 {
 	return quadIndices

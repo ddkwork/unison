@@ -23,6 +23,7 @@ import (
 	"os"
 	"unsafe"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/ebitengine/purego"
 	"golang.org/x/image/math/f32"
 
@@ -39,10 +40,8 @@ func init() {
 }
 
 func Example_listDevices() {
-	device, err := mtl.CreateSystemDefaultDevice()
-	if err != nil {
-		log.Fatal(err)
-	}
+	device := mylog.Check2(mtl.CreateSystemDefaultDevice())
+
 	printJSON("preferred system default Metal device = ", device)
 
 	// This test is not executed by `go test` command as this doesn't have an `Output:` comment.
@@ -79,17 +78,11 @@ func printJSON(label string, v any) {
 	fmt.Print(label)
 	w := json.NewEncoder(os.Stdout)
 	w.SetIndent("", "\t")
-	err := w.Encode(v)
-	if err != nil {
-		panic(err)
-	}
+	mylog.Check(w.Encode(v))
 }
 
 func Example_renderTriangle() {
-	device, err := mtl.CreateSystemDefaultDevice()
-	if err != nil {
-		log.Fatal(err)
-	}
+	device := mylog.Check2(mtl.CreateSystemDefaultDevice())
 
 	// Create a render pipeline state.
 	const source = `#include <metal_stdlib>
@@ -112,27 +105,18 @@ fragment float4 FragmentShader(Vertex in [[stage_in]]) {
 	return in.color;
 }
 `
-	lib, err := device.NewLibraryWithSource(source, mtl.CompileOptions{})
-	if err != nil {
-		log.Fatalln(err)
-	}
-	vs, err := lib.NewFunctionWithName("VertexShader")
-	if err != nil {
-		log.Fatalln(err)
-	}
-	fs, err := lib.NewFunctionWithName("FragmentShader")
-	if err != nil {
-		log.Fatalln(err)
-	}
+	lib := mylog.Check2(device.NewLibraryWithSource(source, mtl.CompileOptions{}))
+
+	vs := mylog.Check2(lib.NewFunctionWithName("VertexShader"))
+
+	fs := mylog.Check2(lib.NewFunctionWithName("FragmentShader"))
+
 	var rpld mtl.RenderPipelineDescriptor
 	rpld.VertexFunction = vs
 	rpld.FragmentFunction = fs
 	rpld.ColorAttachments[0].PixelFormat = mtl.PixelFormatRGBA8UNorm
 	rpld.ColorAttachments[0].WriteMask = mtl.ColorWriteMaskAll
-	rps, err := device.NewRenderPipelineStateWithDescriptor(rpld)
-	if err != nil {
-		log.Fatalln(err)
-	}
+	rps := mylog.Check2(device.NewRenderPipelineStateWithDescriptor(rpld))
 
 	// Create a vertex buffer.
 	type Vertex struct {

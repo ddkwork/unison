@@ -27,9 +27,7 @@ import (
 	"unsafe"
 )
 
-var (
-	libGLES unsafe.Pointer
-)
+var libGLES unsafe.Pointer
 
 func (c *defaultContext) init() error {
 	// TODO: Use multiple %w-s as of Go 1.20.

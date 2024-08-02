@@ -12,28 +12,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package testing
+package test
 
 import (
 	"fmt"
+	"strings"
+
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/unison/internal/graphics"
 	"github.com/richardwilkes/unison/internal/shaderir"
-	"strings"
 )
 
 // ShaderProgramFill returns a shader source to fill the frambuffer.
 func ShaderProgramFill(r, g, b, a byte) *shaderir.Program {
-	ir, err := graphics.CompileShader([]byte(fmt.Sprintf(`//kage:unit pixels
+	ir := mylog.Check2(graphics.CompileShader([]byte(fmt.Sprintf(`//kage:unit pixels
 
 package main
 
 func Fragment(dstPos vec4, srcPos vec2, color vec4) vec4 {
 	return vec4(%0.9f, %0.9f, %0.9f, %0.9f)
 }
-`, float64(r)/0xff, float64(g)/0xff, float64(b)/0xff, float64(a)/0xff)))
-	if err != nil {
-		panic(err)
-	}
+`, float64(r)/0xff, float64(g)/0xff, float64(b)/0xff, float64(a)/0xff))))
+
 	return ir
 }
 
@@ -48,16 +48,14 @@ func ShaderProgramImages(numImages int) *shaderir.Program {
 		exprs = append(exprs, fmt.Sprintf("imageSrc%dUnsafeAt(srcPos)", i))
 	}
 
-	ir, err := graphics.CompileShader([]byte(fmt.Sprintf(`//kage:unit pixels
+	ir := mylog.Check2(graphics.CompileShader([]byte(fmt.Sprintf(`//kage:unit pixels
 
 package main
 
 func Fragment(dstPos vec4, srcPos vec2, color vec4) vec4 {
 	return %s
 }
-`, strings.Join(exprs, " + "))))
-	if err != nil {
-		panic(err)
-	}
+`, strings.Join(exprs, " + ")))))
+
 	return ir
 }

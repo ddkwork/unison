@@ -26,6 +26,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/ddkwork/golibrary/mylog"
 )
 
 type VirtualFS struct {
@@ -124,13 +126,8 @@ func (v *virtualFSRoot) ReadDir(count int) ([]fs.DirEntry, error) {
 
 	ents := make([]fs.DirEntry, n)
 	for i := range ents {
-		fi, err := os.Stat(v.realPaths[v.offset+i])
-		if err != nil {
-			if count <= 0 {
-				return ents, err
-			}
-			return nil, err
-		}
+		fi := mylog.Check2(os.Stat(v.realPaths[v.offset+i]))
+
 		ents[i] = fs.FileInfoToDirEntry(fi)
 	}
 	v.offset += n
@@ -138,8 +135,7 @@ func (v *virtualFSRoot) ReadDir(count int) ([]fs.DirEntry, error) {
 	return ents, nil
 }
 
-type virtualFSRootFileInfo struct {
-}
+type virtualFSRootFileInfo struct{}
 
 func (v *virtualFSRootFileInfo) Name() string {
 	return "."

@@ -18,6 +18,8 @@ package gl
 
 import (
 	"fmt"
+
+	"github.com/ddkwork/golibrary/mylog"
 )
 
 type procAddressGetter struct {
@@ -26,11 +28,8 @@ type procAddressGetter struct {
 }
 
 func (p *procAddressGetter) get(name string) uintptr {
-	proc, err := p.ctx.getProcAddress(name)
-	if err != nil {
-		p.err = fmt.Errorf("gl: %s is missing: %w", name, err)
-		return 0
-	}
+	proc := mylog.Check2(p.ctx.getProcAddress(name))
+
 	if proc == 0 {
 		p.err = fmt.Errorf("gl: %s is missing", name)
 		return 0

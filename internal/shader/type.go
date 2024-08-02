@@ -16,10 +16,11 @@ package shader
 
 import (
 	"fmt"
-	"github.com/richardwilkes/unison/internal/shaderir"
 	"go/ast"
 	gconstant "go/constant"
 	"strings"
+
+	"github.com/richardwilkes/unison/internal/shaderir"
 )
 
 func (cs *compileState) parseType(block *block, fname string, expr ast.Expr) (shaderir.Type, bool) {

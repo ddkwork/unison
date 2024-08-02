@@ -16,14 +16,16 @@ package graphicscommand
 
 import (
 	"fmt"
-	"github.com/richardwilkes/unison/internal/debug"
-	"github.com/richardwilkes/unison/internal/graphics"
-	"github.com/richardwilkes/unison/internal/graphicsdriver"
-	"github.com/richardwilkes/unison/internal/shaderir"
 	"image"
 	"math"
 	"sync"
 	"sync/atomic"
+
+	"github.com/ddkwork/golibrary/mylog"
+	"github.com/richardwilkes/unison/internal/debug"
+	"github.com/richardwilkes/unison/internal/graphics"
+	"github.com/richardwilkes/unison/internal/graphicsdriver"
+	"github.com/richardwilkes/unison/internal/shaderir"
 )
 
 const (
@@ -59,7 +61,7 @@ func SetVsyncEnabled(enabled bool, graphicsDriver graphicsdriver.Graphics) {
 // FlushCommands flushes the command queue and present the screen if needed.
 // If endFrame is true, the current screen might be used to present.
 func FlushCommands(graphicsDriver graphicsdriver.Graphics, endFrame bool) error {
-	if err := theCommandQueueManager.flush(graphicsDriver, endFrame); err != nil {
+	if mylog.Check(theCommandQueueManager.flush(graphicsDriver, endFrame)); err != nil {
 		return err
 	}
 	return nil
@@ -178,7 +180,7 @@ func (q *commandQueue) Enqueue(command command) {
 
 // Flush flushes the command queue.
 func (q *commandQueue) Flush(graphicsDriver graphicsdriver.Graphics, endFrame bool) error {
-	if err := q.err.Load(); err != nil {
+	if mylog.Check(q.err.Load()); err != nil {
 		return err.(error)
 	}
 
@@ -202,7 +204,7 @@ func (q *commandQueue) Flush(graphicsDriver graphicsdriver.Graphics, endFrame bo
 	runOnRenderThread(func() {
 		defer logger.Flush()
 
-		if err := q.flush(graphicsDriver, endFrame, logger); err != nil {
+		if mylog.Check(q.flush(graphicsDriver, endFrame, logger)); err != nil {
 			if sync {
 				flushErr = err
 				return
@@ -232,7 +234,7 @@ func (q *commandQueue) flush(graphicsDriver graphicsdriver.Graphics, endFrame bo
 	vs := q.vertices
 	logger.Logf("Graphics commands:\n")
 
-	if err := graphicsDriver.Begin(); err != nil {
+	if mylog.Check(graphicsDriver.Begin()); err != nil {
 		return err
 	}
 
@@ -282,7 +284,7 @@ func (q *commandQueue) flush(graphicsDriver graphicsdriver.Graphics, endFrame bo
 			nc++
 		}
 		if 0 < ne {
-			if err := graphicsDriver.SetVertices(vs[:nv], es[:ne]); err != nil {
+			if mylog.Check(graphicsDriver.SetVertices(vs[:nv], es[:ne])); err != nil {
 				return err
 			}
 			es = es[ne:]
@@ -290,7 +292,7 @@ func (q *commandQueue) flush(graphicsDriver graphicsdriver.Graphics, endFrame bo
 		}
 		indexOffset := 0
 		for _, c := range cs[:nc] {
-			if err := c.Exec(q, graphicsDriver, indexOffset); err != nil {
+			if mylog.Check(c.Exec(q, graphicsDriver, indexOffset)); err != nil {
 				return err
 			}
 			logger.Logf("  %s\n", c)
@@ -431,7 +433,7 @@ func (c *commandQueuePool) get() (*commandQueue, error) {
 	}
 
 	for _, q := range c.cache {
-		if err := q.err.Load(); err != nil {
+		if mylog.Check(q.err.Load()); err != nil {
 			return nil, err.(error)
 		}
 	}
@@ -478,14 +480,14 @@ func (c *commandQueueManager) enqueueDrawTrianglesCommand(dst *Image, srcs [grap
 func (c *commandQueueManager) flush(graphicsDriver graphicsdriver.Graphics, endFrame bool) error {
 	// Switch the command queue.
 	prev := c.current
-	q, err := c.pool.get()
+	q := mylog.Check2(c.pool.get())
 
 	c.current = q
 
 	if prev == nil {
 		return nil
 	}
-	if err := prev.Flush(graphicsDriver, endFrame); err != nil {
+	if mylog.Check(prev.Flush(graphicsDriver, endFrame)); err != nil {
 		return err
 	}
 	return nil

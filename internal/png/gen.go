@@ -31,22 +31,19 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"golang.org/x/tools/go/ast/astutil"
 )
 
 func pngDir() (string, error) {
-	dir, err := exec.Command("go", "list", "-f", "{{.Dir}}", "image/png").Output()
-	if err != nil {
-		return "", err
-	}
+	dir := mylog.Check2(exec.Command("go", "list", "-f", "{{.Dir}}", "image/png").Output())
+
 	return strings.TrimSpace(string(dir)), nil
 }
 
 func pngFiles() ([]string, error) {
-	files, err := exec.Command("go", "list", "-f", `{{join .GoFiles ","}}`, "image/png").Output()
-	if err != nil {
-		return nil, err
-	}
+	files := mylog.Check2(exec.Command("go", "list", "-f", `{{join .GoFiles ","}}`, "image/png").Output())
+
 	return strings.Split(strings.TrimSpace(string(files)), ","), nil
 }
 
@@ -57,28 +54,28 @@ func run() error {
 	if m == nil {
 		return fmt.Errorf("png: unexpected Go version: %s", verStr)
 	}
-	ver, err := strconv.Atoi(m[1])
+	ver := mylog.Check2(strconv.Atoi(m[1]))
 
 	if ver < 22 {
 		return fmt.Errorf("png: use Go 1.22 or newer")
 	}
 
-	dir, err := pngDir()
+	dir := mylog.Check2(pngDir())
 
-	files, err := pngFiles()
+	files := mylog.Check2(pngFiles())
 
 	const prefix = "stdlib"
 
-	matches, err := filepath.Glob(prefix + "*.go")
+	matches := mylog.Check2(filepath.Glob(prefix + "*.go"))
 
 	for _, f := range matches {
-		if err := os.Remove(f); err != nil {
+		if mylog.Check(os.Remove(f)); err != nil {
 			return err
 		}
 	}
 
 	for _, f := range files {
-		out, err := os.Create(prefix + f)
+		out := mylog.Check2(os.Create(prefix + f))
 
 		defer out.Close()
 
@@ -86,10 +83,10 @@ func run() error {
 
 		// TODO: Remove call of RegisterDecoder
 
-		data, err := os.ReadFile(filepath.Join(dir, f))
+		data := mylog.Check2(os.ReadFile(filepath.Join(dir, f)))
 
 		fset := token.NewFileSet()
-		tree, err := parser.ParseFile(fset, "", string(data), parser.ParseComments)
+		tree := mylog.Check2(parser.ParseFile(fset, "", string(data), parser.ParseComments))
 
 		astutil.Apply(tree, func(c *astutil.Cursor) bool {
 			stmt, ok := c.Node().(*ast.ExprStmt)
@@ -131,7 +128,7 @@ func min(a, b int) int {
 }`)
 		}
 
-		if err := w.Flush(); err != nil {
+		if mylog.Check(w.Flush()); err != nil {
 			return err
 		}
 	}
@@ -139,7 +136,7 @@ func min(a, b int) int {
 }
 
 func main() {
-	if err := run(); err != nil {
+	if mylog.Check(run()); err != nil {
 		panic(err)
 	}
 }

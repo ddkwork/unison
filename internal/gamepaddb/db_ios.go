@@ -18,13 +18,15 @@ package gamepaddb
 
 import (
 	_ "embed"
+
+	"github.com/ddkwork/golibrary/mylog"
 )
 
 //go:embed gamecontrollerdb_ios.txt
 var controllerBytes []byte
 
 func init() {
-	if err := Update(controllerBytes); err != nil {
+	if mylog.Check(Update(controllerBytes)); err != nil {
 		panic(err)
 	}
 }

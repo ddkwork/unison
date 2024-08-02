@@ -17,6 +17,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/i18n"
 )
@@ -86,16 +87,14 @@ func (d *linuxOpenDialog) Paths() []string {
 }
 
 func (d *linuxOpenDialog) RunModal() bool {
-	kdialog, err := exec.LookPath("kdialog")
-	if err != nil {
-		kdialog = ""
-	}
+	kdialog := mylog.Check2(exec.LookPath("kdialog"))
+
 	if os.Getenv("KDE_FULL_SESSION") != "" && kdialog != "" {
 		return d.runKDialog(kdialog)
 	}
 
 	var zenity string
-	if zenity, err = exec.LookPath("zenity"); err != nil {
+	if zenity = mylog.Check2(exec.LookPath("zenity")); err != nil {
 		zenity = ""
 	}
 	if zenity != "" {
@@ -156,10 +155,8 @@ func (d *linuxOpenDialog) prepExt() []string {
 }
 
 func (d *linuxOpenDialog) runModal(cmd *exec.Cmd, splitOn string) bool {
-	wnd, err := NewWindow("", FloatingWindowOption(), UndecoratedWindowOption(), NotResizableWindowOption())
-	if err != nil {
-		errs.Log(err)
-	}
+	wnd := mylog.Check2(NewWindow("", FloatingWindowOption(), UndecoratedWindowOption(), NotResizableWindowOption()))
+
 	wnd.SetFrameRect(NewRect(-10000, -10000, 1, 1))
 	InvokeTaskAfter(func() { go d.runCmd(wnd, cmd, splitOn) }, time.Millisecond)
 	return wnd.RunModal() == ModalResponseOK
@@ -168,15 +165,8 @@ func (d *linuxOpenDialog) runModal(cmd *exec.Cmd, splitOn string) bool {
 func (d *linuxOpenDialog) runCmd(wnd *Window, cmd *exec.Cmd, splitOn string) {
 	code := ModalResponseCancel
 	defer func() { InvokeTask(func() { wnd.StopModal(code) }) }()
-	out, err := cmd.Output()
-	if err != nil {
-		var exitErr *exec.ExitError
-		if errors.As(err, &exitErr) && exitErr.ExitCode() == 1 {
-			return
-		}
-		errs.Log(err)
-		return
-	}
+	out := mylog.Check2(cmd.Output())
+
 	if cmd.ProcessState.ExitCode() != 0 {
 		return
 	}

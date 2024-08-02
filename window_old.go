@@ -15,6 +15,7 @@ import (
 	"slices"
 	"time"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/go-gl/gl/v3.2-core/gl"
 	"github.com/richardwilkes/toolbox"
 	"github.com/richardwilkes/toolbox/errs"
@@ -200,7 +201,7 @@ func NewWindow(title string, options ...WindowOption) (*Window, error) {
 		surface:    &surface{},
 	}
 	for _, option := range options {
-		if err := option(w); err != nil {
+		if mylog.Check(option(w)); err != nil {
 			return nil, err
 		}
 	}
@@ -212,15 +213,13 @@ func NewWindow(title string, options ...WindowOption) (*Window, error) {
 	glfw.WindowHint(glfw.TransparentFramebuffer, glfw.False)
 	glfw.WindowHint(glfw.FocusOnShow, glfw.False)
 	glfw.WindowHint(glfw.ScaleToMonitor, glfw.False)
-	var err error
+
 	toolbox.CallWithHandler(func() {
-		w.wnd, err = glfw.CreateWindow(1, 1, title, nil, nil)
+		w.wnd = mylog.Check2(glfw.CreateWindow(1, 1, title, nil, nil))
 	}, func(panicErr error) {
 		err = panicErr
 	})
-	if err != nil {
-		return nil, errs.Wrap(err)
-	}
+
 	w.wnd.SetRefreshCallback(func(_ *glfw.Window) {
 		delete(redrawSet, w)
 		w.draw()
@@ -540,7 +539,7 @@ func (w *Window) SetTitleIcons(images []*Image) {
 	w.titleIcons = images
 	imgs := make([]image.Image, 0, len(images))
 	for _, img := range images {
-		if nrgba, err := img.ToNRGBA(); err != nil {
+		if nrgba := mylog.Check2(img.ToNRGBA()); err != nil {
 			errs.Log(err)
 		} else {
 			w.titleIcons = append(w.titleIcons, img)
@@ -883,11 +882,8 @@ func (w *Window) draw() {
 			fatal.IfErr(gl.Init())
 			glInited = true
 		}
-		c, err := w.surface.prepareCanvas(w.ContentRect().Size, w.LocalContentRect(), sx, sy)
-		if err != nil {
-			errs.Log(err, "size", w.ContentRect().Size, "rect", w.LocalContentRect(), "scaleX", sx, "scaleY", sy)
-			return
-		}
+		c := mylog.Check2(w.surface.prepareCanvas(w.ContentRect().Size, w.LocalContentRect(), sx, sy))
+
 		start := time.Now()
 		c.Save()
 		w.Draw(c)

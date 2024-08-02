@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/kisielk/errcheck/errcheck"
 	"golang.org/x/tools/go/analysis/multichecker"
 	"golang.org/x/tools/go/analysis/passes/atomic"
@@ -27,8 +28,8 @@ import (
 
 func main() {
 	const filename = ".errcheck_excludes"
-	if _, err := os.Stat(filename); err == nil {
-		if err := errcheck.Analyzer.Flags.Set("exclude", filename); err != nil {
+	if _ := mylog.Check2(os.Stat(filename)); err == nil {
+		if mylog.Check(errcheck.Analyzer.Flags.Set("exclude", filename)); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}

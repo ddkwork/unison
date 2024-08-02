@@ -8,10 +8,12 @@ package glfw
 import (
 	"errors"
 	"fmt"
-	"github.com/richardwilkes/unison/internal/microsoftgdk"
-	"github.com/richardwilkes/unison/internal/winver"
 	"strings"
 	"unsafe"
+
+	"github.com/ddkwork/golibrary/mylog"
+	"github.com/richardwilkes/unison/internal/microsoftgdk"
+	"github.com/richardwilkes/unison/internal/winver"
 
 	"golang.org/x/sys/windows"
 )
@@ -52,10 +54,8 @@ func (w *Window) choosePixelFormat(ctxconfig *ctxconfig, fbconfig_ *fbconfig) (i
 	var nativeCount int32
 	var attribs []int32
 
-	c, err := _DescribePixelFormat(w.context.platform.dc, 1, uint32(unsafe.Sizeof(_PIXELFORMATDESCRIPTOR{})), nil)
-	if err != nil {
-		return 0, err
-	}
+	c := mylog.Check2(_DescribePixelFormat(w.context.platform.dc, 1, uint32(unsafe.Sizeof(_PIXELFORMATDESCRIPTOR{})), nil))
+
 	nativeCount = c
 
 	if _glfw.platformContext.ARB_pixel_format {
@@ -64,7 +64,7 @@ func (w *Window) choosePixelFormat(ctxconfig *ctxconfig, fbconfig_ *fbconfig) (i
 		// HACK: Iterate through the minimum of both counts
 		var attrib int32 = _WGL_NUMBER_PIXEL_FORMATS_ARB
 		var extensionCount int32
-		if err := wglGetPixelFormatAttribivARB(w.context.platform.dc, 1, 0, 1, &attrib, &extensionCount); err != nil {
+		if mylog.Check(wglGetPixelFormatAttribivARB(w.context.platform.dc, 1, 0, 1, &attrib, &extensionCount)); err != nil {
 			return 0, fmt.Errorf("glfw: WGL: failed to retrieve pixel format attribute: %w", err)
 		}
 		if nativeCount > extensionCount {
@@ -118,7 +118,7 @@ func (w *Window) choosePixelFormat(ctxconfig *ctxconfig, fbconfig_ *fbconfig) (i
 		if _glfw.platformContext.ARB_pixel_format {
 			// Get pixel format attributes through "modern" extension
 			values := make([]int32, len(attribs))
-			if err := wglGetPixelFormatAttribivARB(w.context.platform.dc, int32(pixelFormat), 0, uint32(len(attribs)), &attribs[0], &values[0]); err != nil {
+			if mylog.Check(wglGetPixelFormatAttribivARB(w.context.platform.dc, int32(pixelFormat), 0, uint32(len(attribs)), &attribs[0], &values[0])); err != nil {
 				return 0, err
 			}
 
@@ -182,7 +182,7 @@ func (w *Window) choosePixelFormat(ctxconfig *ctxconfig, fbconfig_ *fbconfig) (i
 			// Get pixel format attributes through legacy PFDs
 
 			var pfd _PIXELFORMATDESCRIPTOR
-			if _, err := _DescribePixelFormat(w.context.platform.dc, int32(pixelFormat), uint32(unsafe.Sizeof(pfd)), &pfd); err != nil {
+			if _ := mylog.Check2(_DescribePixelFormat(w.context.platform.dc, int32(pixelFormat), uint32(unsafe.Sizeof(pfd)), &pfd)); err != nil {
 				return 0, err
 			}
 
@@ -240,19 +240,19 @@ func (w *Window) choosePixelFormat(ctxconfig *ctxconfig, fbconfig_ *fbconfig) (i
 
 func makeContextCurrentWGL(window *Window) error {
 	if window != nil {
-		if err := wglMakeCurrent(window.context.platform.dc, window.context.platform.handle); err != nil {
+		if mylog.Check(wglMakeCurrent(window.context.platform.dc, window.context.platform.handle)); err != nil {
 			_ = _glfw.contextSlot.set(0)
 			return err
 		}
-		if err := _glfw.contextSlot.set(uintptr(unsafe.Pointer(window))); err != nil {
+		if mylog.Check(_glfw.contextSlot.set(uintptr(unsafe.Pointer(window)))); err != nil {
 			return err
 		}
 	} else {
-		if err := wglMakeCurrent(0, 0); err != nil {
+		if mylog.Check(wglMakeCurrent(0, 0)); err != nil {
 			_ = _glfw.contextSlot.set(0)
 			return err
 		}
-		if err := _glfw.contextSlot.set(0); err != nil {
+		if mylog.Check(_glfw.contextSlot.set(0)); err != nil {
 			return err
 		}
 	}
@@ -265,11 +265,7 @@ func swapBuffersWGL(window *Window) error {
 		enabled := winver.IsWindows8OrGreater()
 
 		if !enabled {
-			var err error
-			enabled, err = _DwmIsCompositionEnabled()
-			if err != nil {
-				return err
-			}
+			enabled = mylog.Check2(_DwmIsCompositionEnabled())
 		}
 
 		// HACK: Use DwmFlush when desktop composition is enabled
@@ -281,14 +277,14 @@ func swapBuffersWGL(window *Window) error {
 		}
 	}
 
-	if err := _SwapBuffers(window.context.platform.dc); err != nil {
+	if mylog.Check(_SwapBuffers(window.context.platform.dc)); err != nil {
 		return err
 	}
 	return nil
 }
 
 func swapIntervalWGL(interval int) error {
-	ptr, err := _glfw.contextSlot.get()
+	ptr := mylog.Check2(_glfw.contextSlot.get())
 
 	window := (*Window)(unsafe.Pointer(ptr))
 
@@ -299,7 +295,7 @@ func swapIntervalWGL(interval int) error {
 		enabled := winver.IsWindows8OrGreater()
 
 		if !enabled {
-			e, err := _DwmIsCompositionEnabled()
+			e := mylog.Check2(_DwmIsCompositionEnabled())
 			// Ignore an error from DWM functions as they might not be implemented e.g. on Proton (#2113).
 			if err == nil {
 				enabled = e
@@ -314,7 +310,7 @@ func swapIntervalWGL(interval int) error {
 	}
 
 	if _glfw.platformContext.EXT_swap_control {
-		if err := wglSwapIntervalEXT(int32(interval)); err != nil {
+		if mylog.Check(wglSwapIntervalEXT(int32(interval))); err != nil {
 			return err
 		}
 	}
@@ -355,7 +351,7 @@ func destroyContextWGL(window *Window) error {
 		// Ignore ERROR_BUSY. This happens when the thread is different from the context thread (#2518).
 		// This is a known issue of GLFW (glfw/glfw#2239).
 		// TODO: Delete the context on an appropriate thread.
-		if err := wglDeleteContext(window.context.platform.handle); err != nil && !errors.Is(err, windows.ERROR_BUSY) {
+		if mylog.Check(wglDeleteContext(window.context.platform.handle)); err != nil && !errors.Is(err, windows.ERROR_BUSY) {
 			return err
 		}
 		window.context.platform.handle = 0
@@ -374,7 +370,7 @@ func initWGL() error {
 
 	// opengl32.dll must be loaded first. The loading state might affect Windows APIs.
 	// This is needed at least before SetPixelFormat.
-	if err := opengl32.Load(); err != nil {
+	if mylog.Check(opengl32.Load()); err != nil {
 		return err
 	}
 
@@ -383,7 +379,7 @@ func initWGL() error {
 	// NOTE: This code will accept the Microsoft GDI ICD; accelerated context
 	//       creation failure occurs during manual pixel format enumeration
 
-	dc, err := _GetDC(_glfw.platformWindow.helperWindowHandle)
+	dc := mylog.Check2(_GetDC(_glfw.platformWindow.helperWindowHandle))
 
 	pfd := _PIXELFORMATDESCRIPTOR{
 		nVersion:   1,
@@ -393,18 +389,18 @@ func initWGL() error {
 	}
 	pfd.nSize = uint16(unsafe.Sizeof(pfd))
 
-	format, err := _ChoosePixelFormat(dc, &pfd)
+	format := mylog.Check2(_ChoosePixelFormat(dc, &pfd))
 
-	if err := _SetPixelFormat(dc, format, &pfd); err != nil {
+	if mylog.Check(_SetPixelFormat(dc, format, &pfd)); err != nil {
 		return err
 	}
 
-	rc, err := wglCreateContext(dc)
+	rc := mylog.Check2(wglCreateContext(dc))
 
 	pdc := wglGetCurrentDC()
 	prc := wglGetCurrentContext()
 
-	if err := wglMakeCurrent(dc, rc); err != nil {
+	if mylog.Check(wglMakeCurrent(dc, rc)); err != nil {
 		_ = wglMakeCurrent(pdc, prc)
 		_ = wglDeleteContext(rc)
 		return err
@@ -431,10 +427,10 @@ func initWGL() error {
 	_glfw.platformContext.ARB_pixel_format = extensionSupportedWGL("WGL_ARB_pixel_format")
 	_glfw.platformContext.ARB_context_flush_control = extensionSupportedWGL("WGL_ARB_context_flush_control")
 
-	if err := wglMakeCurrent(pdc, prc); err != nil {
+	if mylog.Check(wglMakeCurrent(pdc, prc)); err != nil {
 		return err
 	}
-	if err := wglDeleteContext(rc); err != nil {
+	if mylog.Check(wglDeleteContext(rc)); err != nil {
 		return err
 	}
 	_glfw.platformContext.inited = true
@@ -450,18 +446,18 @@ func (w *Window) createContextWGL(ctxconfig *ctxconfig, fbconfig *fbconfig) erro
 		share = ctxconfig.share.context.platform.handle
 	}
 
-	dc, err := _GetDC(w.platform.handle)
+	dc := mylog.Check2(_GetDC(w.platform.handle))
 
 	w.context.platform.dc = dc
 
-	pixelFormat, err := w.choosePixelFormat(ctxconfig, fbconfig)
+	pixelFormat := mylog.Check2(w.choosePixelFormat(ctxconfig, fbconfig))
 
 	var pfd _PIXELFORMATDESCRIPTOR
-	if _, err := _DescribePixelFormat(w.context.platform.dc, int32(pixelFormat), uint32(unsafe.Sizeof(pfd)), &pfd); err != nil {
+	if _ := mylog.Check2(_DescribePixelFormat(w.context.platform.dc, int32(pixelFormat), uint32(unsafe.Sizeof(pfd)), &pfd)); err != nil {
 		return err
 	}
 
-	if err := _SetPixelFormat(w.context.platform.dc, int32(pixelFormat), &pfd); err != nil {
+	if mylog.Check(_SetPixelFormat(w.context.platform.dc, int32(pixelFormat), &pfd)); err != nil {
 		return err
 	}
 
@@ -546,15 +542,14 @@ func (w *Window) createContextWGL(ctxconfig *ctxconfig, fbconfig *fbconfig) erro
 
 		attribs = append(attribs, 0, 0)
 
-		var err error
-		w.context.platform.handle, err = wglCreateContextAttribsARB(w.context.platform.dc, share, &attribs[0])
+		w.context.platform.handle = mylog.Check2(wglCreateContextAttribsARB(w.context.platform.dc, share, &attribs[0]))
 
 	} else {
-		var err error
-		w.context.platform.handle, err = wglCreateContext(w.context.platform.dc)
+
+		w.context.platform.handle = mylog.Check2(wglCreateContext(w.context.platform.dc))
 
 		if share != 0 {
-			if err := wglShareLists(share, w.context.platform.handle); err != nil {
+			if mylog.Check(wglShareLists(share, w.context.platform.handle)); err != nil {
 				return err
 			}
 		}

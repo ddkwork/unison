@@ -17,6 +17,7 @@ package gamepad
 import (
 	"unsafe"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/ebitengine/purego"
 )
 
@@ -59,15 +60,15 @@ var (
 )
 
 func initializeCF() error {
-	corefoundation, err := purego.Dlopen("/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation", purego.RTLD_LAZY|purego.RTLD_GLOBAL)
+	corefoundation := mylog.Check2(purego.Dlopen("/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation", purego.RTLD_LAZY|purego.RTLD_GLOBAL))
 
-	kCFTypeDictionaryKeyCallBacks, err = purego.Dlsym(corefoundation, "kCFTypeDictionaryKeyCallBacks")
+	kCFTypeDictionaryKeyCallBacks = mylog.Check2(purego.Dlsym(corefoundation, "kCFTypeDictionaryKeyCallBacks"))
 
-	kCFTypeDictionaryValueCallBacks, err = purego.Dlsym(corefoundation, "kCFTypeDictionaryValueCallBacks")
+	kCFTypeDictionaryValueCallBacks = mylog.Check2(purego.Dlsym(corefoundation, "kCFTypeDictionaryValueCallBacks"))
 
-	kCFTypeArrayCallBacks, err = purego.Dlsym(corefoundation, "kCFTypeArrayCallBacks")
+	kCFTypeArrayCallBacks = mylog.Check2(purego.Dlsym(corefoundation, "kCFTypeArrayCallBacks"))
 
-	kCFRunLoopDefaultMode, err = purego.Dlsym(corefoundation, "kCFRunLoopDefaultMode")
+	kCFRunLoopDefaultMode = mylog.Check2(purego.Dlsym(corefoundation, "kCFRunLoopDefaultMode"))
 
 	purego.RegisterLibFunc(&_CFNumberCreate, corefoundation, "CFNumberCreate")
 	purego.RegisterLibFunc(&_CFNumberGetValue, corefoundation, "CFNumberGetValue")

@@ -19,6 +19,8 @@ import (
 	"bytes"
 	"image"
 	"syscall/js"
+
+	"github.com/ddkwork/golibrary/mylog"
 )
 
 func download(buf *bytes.Buffer, mime string, path string) {
@@ -44,7 +46,7 @@ func (i *Image) Dump(graphicsDriver graphicsdriver.Graphics, path string, blackb
 	}
 
 	buf := &bytes.Buffer{}
-	if err := i.dumpTo(buf, graphicsDriver, blackbg, rect); err != nil {
+	if mylog.Check(i.dumpTo(buf, graphicsDriver, blackbg, rect)); err != nil {
 		return "", err
 	}
 
@@ -66,12 +68,9 @@ func DumpImages(images []*Image, graphicsDriver graphicsdriver.Graphics, dir str
 			continue
 		}
 
-		f, err := zw.Create(img.dumpName("*.png"))
-		if err != nil {
-			return "", err
-		}
+		f := mylog.Check2(zw.Create(img.dumpName("*.png")))
 
-		if err := img.dumpTo(f, graphicsDriver, false, image.Rect(0, 0, img.width, img.height)); err != nil {
+		if mylog.Check(img.dumpTo(f, graphicsDriver, false, image.Rect(0, 0, img.width, img.height))); err != nil {
 			return "", err
 		}
 	}

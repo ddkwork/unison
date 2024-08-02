@@ -20,9 +20,7 @@ import (
 	"time"
 )
 
-var (
-	object = js.Global().Get("Object")
-)
+var object = js.Global().Get("Object")
 
 type nativeGamepadsImpl struct {
 	indices map[int]struct{}

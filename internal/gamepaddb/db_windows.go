@@ -20,6 +20,8 @@ package gamepaddb
 
 import (
 	_ "embed"
+
+	"github.com/ddkwork/golibrary/mylog"
 )
 
 //go:embed gamecontrollerdb_windows.txt
@@ -36,10 +38,6 @@ var additionalGLFWGamepads = []byte(`
 `)
 
 func init() {
-	if err := Update(controllerBytes); err != nil {
-		panic(err)
-	}
-	if err := Update(additionalGLFWGamepads); err != nil {
-		panic(err)
-	}
+	  mylog.Check(Update(controllerBytes));
+  mylog.Check(Update(additionalGLFWGamepads));
 }

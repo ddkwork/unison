@@ -15,9 +15,11 @@
 package gamepaddb_test
 
 import (
-	"github.com/richardwilkes/unison/internal/gamepaddb"
 	"runtime"
 	"testing"
+
+	"github.com/ddkwork/golibrary/mylog"
+	"github.com/richardwilkes/unison/internal/gamepaddb"
 )
 
 func TestUpdate(t *testing.T) {
@@ -56,7 +58,7 @@ func TestUpdate(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		err := gamepaddb.Update([]byte(c.Input))
+		mylog.Check(gamepaddb.Update([]byte(c.Input)))
 		if err == nil && c.Err {
 			t.Errorf("Update(%q) should return an error but not", c.Input)
 		}

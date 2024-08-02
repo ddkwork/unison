@@ -15,10 +15,11 @@
 package affine_test
 
 import (
-	"github.com/richardwilkes/unison/internal/affine"
 	"math"
 	"math/rand"
 	"testing"
+
+	"github.com/richardwilkes/unison/internal/affine"
 )
 
 func TestColorMScale(t *testing.T) {

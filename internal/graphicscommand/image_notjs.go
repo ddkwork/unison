@@ -20,33 +20,31 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	"github.com/richardwilkes/unison/internal/graphicsdriver"
 	"image"
 	"os"
 	"path/filepath"
+
+	"github.com/ddkwork/golibrary/mylog"
+	"github.com/richardwilkes/unison/internal/graphicsdriver"
 )
 
 func (i *Image) Dump(graphicsDriver graphicsdriver.Graphics, path string, blackbg bool, rect image.Rectangle) (string, error) {
-	p, err := availableFilename(path)
-	if err != nil {
-		return "", err
-	}
+	p := mylog.Check2(availableFilename(path))
+
 	path = p
 
 	path = i.dumpName(path)
-	f, err := os.Create(path)
-	if err != nil {
-		return "", err
-	}
+	f := mylog.Check2(os.Create(path))
+
 	defer func() {
 		_ = f.Close()
 	}()
 
 	w := bufio.NewWriter(f)
-	if err := i.dumpTo(w, graphicsDriver, blackbg, rect); err != nil {
+	if mylog.Check(i.dumpTo(w, graphicsDriver, blackbg, rect)); err != nil {
 		return "", err
 	}
-	if err := w.Flush(); err != nil {
+	if mylog.Check(w.Flush()); err != nil {
 		return "", err
 	}
 
@@ -57,13 +55,11 @@ func (i *Image) Dump(graphicsDriver graphicsdriver.Graphics, path string, blackb
 //
 // This is for testing usage.
 func DumpImages(images []*Image, graphicsDriver graphicsdriver.Graphics, dir string) (string, error) {
-	d, err := availableFilename(dir)
-	if err != nil {
-		return "", err
-	}
+	d := mylog.Check2(availableFilename(dir))
+
 	dir = d
 
-	if err := os.Mkdir(dir, 0755); err != nil {
+	if mylog.Check(os.Mkdir(dir, 0755)); err != nil {
 		return "", err
 	}
 
@@ -73,19 +69,17 @@ func DumpImages(images []*Image, graphicsDriver graphicsdriver.Graphics, dir str
 			continue
 		}
 
-		f, err := os.Create(filepath.Join(dir, img.dumpName("*.png")))
-		if err != nil {
-			return "", err
-		}
+		f := mylog.Check2(os.Create(filepath.Join(dir, img.dumpName("*.png"))))
+
 		defer func() {
 			_ = f.Close()
 		}()
 
 		w := bufio.NewWriter(f)
-		if err := img.dumpTo(w, graphicsDriver, false, image.Rect(0, 0, img.width, img.height)); err != nil {
+		if mylog.Check(img.dumpTo(w, graphicsDriver, false, image.Rect(0, 0, img.width, img.height))); err != nil {
 			return "", err
 		}
-		if err := w.Flush(); err != nil {
+		if mylog.Check(w.Flush()); err != nil {
 			return "", err
 		}
 	}
@@ -99,7 +93,7 @@ func availableFilename(name string) (string, error) {
 	base := name[:len(name)-len(ext)]
 
 	for i := 1; ; i++ {
-		if _, err := os.Stat(name); err != nil {
+		if _ := mylog.Check2(os.Stat(name)); err != nil {
 			if errors.Is(err, os.ErrNotExist) {
 				break
 			}

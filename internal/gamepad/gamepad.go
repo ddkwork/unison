@@ -15,9 +15,11 @@
 package gamepad
 
 import (
-	"github.com/richardwilkes/unison/internal/gamepaddb"
 	"sync"
 	"time"
+
+	"github.com/ddkwork/golibrary/mylog"
+	"github.com/richardwilkes/unison/internal/gamepaddb"
 )
 
 type ID int
@@ -87,13 +89,13 @@ func (g *gamepads) update() error {
 	defer g.m.Unlock()
 
 	if !g.inited {
-		if err := g.native.init(g); err != nil {
+		if mylog.Check(g.native.init(g)); err != nil {
 			return err
 		}
 		g.inited = true
 	}
 
-	if err := g.native.update(g); err != nil {
+	if mylog.Check(g.native.update(g)); err != nil {
 		return err
 	}
 
@@ -108,7 +110,7 @@ func (g *gamepads) update() error {
 		if gp == nil {
 			continue
 		}
-		if err := gp.update(g); err != nil {
+		if mylog.Check(gp.update(g)); err != nil {
 			return err
 		}
 	}

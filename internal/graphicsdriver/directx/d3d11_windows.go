@@ -295,9 +295,7 @@ const (
 	_D3D11_USAGE_STAGING   _D3D11_USAGE = 3
 )
 
-var (
-	_IID_ID3D11Texture2D = windows.GUID{Data1: 0x6f15aaf2, Data2: 0xd208, Data3: 0x4e89, Data4: [...]byte{0x9a, 0xb4, 0x48, 0x95, 0x35, 0xd3, 0x4f, 0x9c}}
-)
+var _IID_ID3D11Texture2D = windows.GUID{Data1: 0x6f15aaf2, Data2: 0xd208, Data3: 0x4e89, Data4: [...]byte{0x9a, 0xb4, 0x48, 0x95, 0x35, 0xd3, 0x4f, 0x9c}}
 
 type _D3D11_BLEND_DESC struct {
 	AlphaToCoverageEnable  _BOOL

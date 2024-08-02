@@ -15,6 +15,7 @@ import (
 	"strings"
 	"unicode"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/toolbox/desktop"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/unison"
@@ -29,10 +30,7 @@ var windowCounter int
 func NewDemoWindow(where unison.Point) (*unison.Window, error) {
 	// Create the window
 	windowCounter++
-	wnd, err := unison.NewWindow(fmt.Sprintf("Demo #%d", windowCounter))
-	if err != nil {
-		return nil, err
-	}
+	wnd := mylog.Check2(unison.NewWindow(fmt.Sprintf("Demo #%d", windowCounter)))
 
 	// Install our menus
 	installDefaultMenus(wnd)
@@ -295,19 +293,19 @@ func createLinksPanel() *unison.Panel {
 	// Add some links
 	panel.AddChild(unison.NewLink("Apple", "Open the Apple home page", "", unison.DefaultLinkTheme,
 		func(_ unison.Paneler, _ string) {
-			if err := desktop.Open("https://www.apple.com"); err != nil {
+			if mylog.Check(desktop.Open("https://www.apple.com")); err != nil {
 				errs.Log(err)
 			}
 		}))
 	panel.AddChild(unison.NewLink("Google", "Open the Google home page", "", unison.DefaultLinkTheme,
 		func(_ unison.Paneler, _ string) {
-			if err := desktop.Open("https://www.google.com"); err != nil {
+			if mylog.Check(desktop.Open("https://www.google.com")); err != nil {
 				errs.Log(err)
 			}
 		}))
 	panel.AddChild(unison.NewLink("Microsoft", "Open the Microsoft home page", "", unison.DefaultLinkTheme,
 		func(_ unison.Paneler, _ string) {
-			if err := desktop.Open("https://www.microsoft.com"); err != nil {
+			if mylog.Check(desktop.Open("https://www.microsoft.com")); err != nil {
 				errs.Log(err)
 			}
 		}))
@@ -593,7 +591,7 @@ func createImagePanel() *unison.Label {
 
 	// Prepare a cursor for when the mouse is over the image
 	cursor := unison.MoveCursor()
-	if logoImg, err := ClassicAppleLogoImage(); err != nil {
+	if logoImg := mylog.Check2(ClassicAppleLogoImage()); err != nil {
 		errs.Log(err)
 	} else {
 		size := logoImg.LogicalSize()
@@ -615,12 +613,7 @@ func createImagePanel() *unison.Label {
 	}
 
 	// Set the initial image
-	img, err := MountainsImage()
-	if err != nil {
-		errs.Log(err)
-	} else {
-		imgPanel.Drawable = img
-	}
+	img := mylog.Check2(MountainsImage())
 
 	// Set the set of the widget to match its preferred size
 	_, prefSize, _ := imgPanel.Sizes(unison.Size{})

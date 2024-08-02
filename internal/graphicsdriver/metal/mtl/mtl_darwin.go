@@ -28,6 +28,7 @@ import (
 	"runtime"
 	"unsafe"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/ebitengine/purego"
 	"github.com/ebitengine/purego/objc"
 
@@ -347,7 +348,7 @@ const (
 type CommandBufferStatus uint8
 
 const (
-	CommandBufferStatusNotEnqueued CommandBufferStatus = 0 //The command buffer is not enqueued yet.
+	CommandBufferStatusNotEnqueued CommandBufferStatus = 0 // The command buffer is not enqueued yet.
 	CommandBufferStatusEnqueued    CommandBufferStatus = 1 // The command buffer is enqueued.
 	CommandBufferStatusCommitted   CommandBufferStatus = 2 // The command buffer is committed for execution.
 	CommandBufferStatusScheduled   CommandBufferStatus = 3 // The command buffer is scheduled.
@@ -570,15 +571,9 @@ var (
 //
 // Reference: https://developer.apple.com/documentation/metal/1433401-mtlcreatesystemdefaultdevice?language=objc.
 func CreateSystemDefaultDevice() (Device, error) {
-	metal, err := purego.Dlopen("/System/Library/Frameworks/Metal.framework/Metal", purego.RTLD_LAZY|purego.RTLD_GLOBAL)
-	if err != nil {
-		return Device{}, err
-	}
+	metal := mylog.Check2(purego.Dlopen("/System/Library/Frameworks/Metal.framework/Metal", purego.RTLD_LAZY|purego.RTLD_GLOBAL))
 
-	mtlCreateSystemDefaultDevice, err := purego.Dlsym(metal, "MTLCreateSystemDefaultDevice")
-	if err != nil {
-		return Device{}, err
-	}
+	mtlCreateSystemDefaultDevice := mylog.Check2(purego.Dlsym(metal, "MTLCreateSystemDefaultDevice"))
 
 	d, _, _ := purego.SyscallN(mtlCreateSystemDefaultDevice)
 	if d == 0 {
@@ -848,8 +843,8 @@ func (cb CommandBuffer) WaitUntilScheduled() {
 //
 // Reference: https://developer.apple.com/documentation/metal/mtlcommandbuffer/1442999-rendercommandencoderwithdescript?language=objc.
 func (cb CommandBuffer) RenderCommandEncoderWithDescriptor(rpd RenderPassDescriptor) RenderCommandEncoder {
-	var renderPassDescriptor = objc.ID(class_MTLRenderPassDescriptor).Send(sel_new)
-	var colorAttachments0 = renderPassDescriptor.Send(sel_colorAttachments).Send(sel_objectAtIndexedSubscript, 0)
+	renderPassDescriptor := objc.ID(class_MTLRenderPassDescriptor).Send(sel_new)
+	colorAttachments0 := renderPassDescriptor.Send(sel_colorAttachments).Send(sel_objectAtIndexedSubscript, 0)
 	colorAttachments0.Send(sel_setLoadAction, int(rpd.ColorAttachments[0].LoadAction))
 	colorAttachments0.Send(sel_setStoreAction, int(rpd.ColorAttachments[0].StoreAction))
 	colorAttachments0.Send(sel_setTexture, rpd.ColorAttachments[0].Texture.texture)
@@ -859,11 +854,11 @@ func (cb CommandBuffer) RenderCommandEncoderWithDescriptor(rpd RenderPassDescrip
 	inv.SetSelector(sel_setClearColor)
 	inv.SetArgumentAtIndex(unsafe.Pointer(&rpd.ColorAttachments[0].ClearColor), 2)
 	inv.Invoke()
-	var stencilAttachment = renderPassDescriptor.Send(sel_stencilAttachment)
+	stencilAttachment := renderPassDescriptor.Send(sel_stencilAttachment)
 	stencilAttachment.Send(sel_setLoadAction, int(rpd.StencilAttachment.LoadAction))
 	stencilAttachment.Send(sel_setStoreAction, int(rpd.StencilAttachment.StoreAction))
 	stencilAttachment.Send(sel_setTexture, rpd.StencilAttachment.Texture.texture)
-	var rce = cb.commandBuffer.Send(sel_renderCommandEncoderWithDescriptor, renderPassDescriptor)
+	rce := cb.commandBuffer.Send(sel_renderCommandEncoderWithDescriptor, renderPassDescriptor)
 	renderPassDescriptor.Send(sel_release)
 	return RenderCommandEncoder{CommandEncoder{rce}}
 }

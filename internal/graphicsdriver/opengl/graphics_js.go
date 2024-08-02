@@ -17,10 +17,11 @@ package opengl
 import (
 	"fmt"
 	"syscall/js"
+
+	"github.com/ddkwork/golibrary/mylog"
 )
 
-type graphicsPlatform struct {
-}
+type graphicsPlatform struct{}
 
 // NewGraphics creates an implementation of graphicsdriver.Graphics for OpenGL.
 // The returned graphics value is nil iff the error is not nil.
@@ -38,10 +39,7 @@ func NewGraphics(canvas js.Value) (graphicsdriver.Graphics, error) {
 		return nil, fmt.Errorf("opengl: getContext for webgl2 failed")
 	}
 
-	ctx, err := gl.NewDefaultContext(glContext)
-	if err != nil {
-		return nil, err
-	}
+	ctx := mylog.Check2(gl.NewDefaultContext(glContext))
 
 	return newGraphics(ctx), nil
 }

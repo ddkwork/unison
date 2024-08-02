@@ -20,6 +20,7 @@ import (
 	"syscall"
 	"unsafe"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"golang.org/x/sys/windows"
 )
 
@@ -82,7 +83,7 @@ func init() {
 	// https://walbourn.github.io/hlsl-fxc-and-d3dcompile/
 	for _, name := range []string{"d3dcompiler_47.dll", "d3dcompiler_46.dll", "d3dcompiler_43.dll"} {
 		dll := windows.NewLazySystemDLL(name)
-		if err := dll.Load(); err != nil {
+		if mylog.Check(dll.Load()); err != nil {
 			continue
 		}
 		d3dcompiler = dll

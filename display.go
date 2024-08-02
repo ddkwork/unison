@@ -125,7 +125,7 @@ func convertMonitorToDisplay(monitor *glfw.Monitor) *Display {
 	vidMode := monitor.GetVideoMode()
 	workX, workY, workWidth, workHeight := monitor.GetWorkarea()
 	sx, sy := monitor.GetContentScale()
-	mmx, mmy := monitor.GetPos() //GetPhysicalSize()
+	mmx, mmy := monitor.GetPos() // GetPhysicalSize()
 	display := &Display{
 		Name:        monitor.GetName(),
 		Frame:       NewRect(float32(x), float32(y), float32(vidMode.Width), float32(vidMode.Height)),

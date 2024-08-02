@@ -12,6 +12,7 @@ package demo
 import (
 	_ "embed" // Used to embed the images
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/unison"
 )
 
@@ -24,8 +25,7 @@ var (
 // ClassicAppleLogoImage returns an image of the classic rainbow-colored Apple logo.
 func ClassicAppleLogoImage() (*unison.Image, error) {
 	if classicAppleLogoImage == nil {
-		var err error
-		if classicAppleLogoImage, err = unison.NewImageFromBytes(classicAppleLogoPngBytes, 0.5); err != nil {
+		if classicAppleLogoImage = mylog.Check2(unison.NewImageFromBytes(classicAppleLogoPngBytes, 0.5)); err != nil {
 			return nil, err
 		}
 	}
@@ -41,8 +41,7 @@ var (
 // MountainsImage returns an image of some mountains.
 func MountainsImage() (*unison.Image, error) {
 	if mountainsImage == nil {
-		var err error
-		if mountainsImage, err = unison.NewImageFromBytes(mountainsJpgBytes, 0.5); err != nil {
+		if mountainsImage = mylog.Check2(unison.NewImageFromBytes(mountainsJpgBytes, 0.5)); err != nil {
 			return nil, err
 		}
 	}

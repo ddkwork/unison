@@ -16,12 +16,13 @@ package msl
 
 import (
 	"fmt"
-	"github.com/richardwilkes/unison/internal/shaderir"
 	"go/constant"
 	"go/token"
 	"math"
 	"regexp"
 	"strings"
+
+	"github.com/richardwilkes/unison/internal/shaderir"
 )
 
 const (

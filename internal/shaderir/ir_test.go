@@ -15,11 +15,12 @@
 package shaderir_test
 
 import (
+	"go/constant"
+	"testing"
+
 	"github.com/richardwilkes/unison/internal/shaderir"
 	"github.com/richardwilkes/unison/internal/shaderir/glsl"
 	"github.com/richardwilkes/unison/internal/shaderir/msl"
-	"go/constant"
-	"testing"
 )
 
 func block(localVars []shaderir.Type, offset int, stmts ...shaderir.Stmt) *shaderir.Block {

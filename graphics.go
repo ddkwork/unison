@@ -16,8 +16,10 @@ package unison
 
 import (
 	"fmt"
-	"github.com/richardwilkes/unison/internal/graphicsdriver"
 	"os"
+
+	"github.com/ddkwork/golibrary/mylog"
+	"github.com/richardwilkes/unison/internal/graphicsdriver"
 )
 
 type graphicsDriverCreator interface {
@@ -56,37 +58,27 @@ func newGraphicsDriver(creator graphicsDriverCreator, graphicsLibrary GraphicsLi
 
 	switch graphicsLibrary {
 	case GraphicsLibraryAuto:
-		g, lib, err := creator.newAuto()
-		if err != nil {
-			return nil, 0, err
-		}
+		g, lib := mylog.Check3(creator.newAuto())
+
 		if g == nil {
 			return nil, 0, fmt.Errorf("ui: no graphics library is available")
 		}
 		return g, lib, nil
 	case GraphicsLibraryOpenGL:
-		g, err := creator.newOpenGL()
-		if err != nil {
-			return nil, 0, err
-		}
+		g := mylog.Check2(creator.newOpenGL())
+
 		return g, GraphicsLibraryOpenGL, nil
 	case GraphicsLibraryDirectX:
-		g, err := creator.newDirectX()
-		if err != nil {
-			return nil, 0, err
-		}
+		g := mylog.Check2(creator.newDirectX())
+
 		return g, GraphicsLibraryDirectX, nil
 	case GraphicsLibraryMetal:
-		g, err := creator.newMetal()
-		if err != nil {
-			return nil, 0, err
-		}
+		g := mylog.Check2(creator.newMetal())
+
 		return g, GraphicsLibraryMetal, nil
 	case GraphicsLibraryPlayStation5:
-		g, err := creator.newPlayStation5()
-		if err != nil {
-			return nil, 0, err
-		}
+		g := mylog.Check2(creator.newPlayStation5())
+
 		return g, GraphicsLibraryPlayStation5, nil
 	default:
 		return nil, 0, fmt.Errorf("ui: an unsupported graphics library is specified: %d", graphicsLibrary)

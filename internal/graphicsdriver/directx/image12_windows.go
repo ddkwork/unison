@@ -17,10 +17,12 @@ package directx
 import (
 	"errors"
 	"fmt"
-	"github.com/richardwilkes/unison/internal/graphics"
-	"github.com/richardwilkes/unison/internal/graphicsdriver"
 	"image"
 	"unsafe"
+
+	"github.com/ddkwork/golibrary/mylog"
+	"github.com/richardwilkes/unison/internal/graphics"
+	"github.com/richardwilkes/unison/internal/graphicsdriver"
 )
 
 type image12 struct {
@@ -72,7 +74,7 @@ func (i *image12) ReadPixels(args []graphicsdriver.PixelsArgs) error {
 		return errors.New("directx: Pixels cannot be called on the screen")
 	}
 
-	if err := i.graphics.flushCommandList(i.graphics.drawCommandList); err != nil {
+	if mylog.Check(i.graphics.flushCommandList(i.graphics.drawCommandList)); err != nil {
 		return err
 	}
 
@@ -97,7 +99,7 @@ func (i *image12) ReadPixels(args []graphicsdriver.PixelsArgs) error {
 		Flags:  _D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET,
 	}
 	layouts, _, _, totalBytes := i.graphics.device.GetCopyableFootprints(&desc, 0, 1, 0)
-	readingStagingBuffer, err := createBuffer(i.graphics.device, totalBytes, _D3D12_HEAP_TYPE_READBACK)
+	readingStagingBuffer := mylog.Check2(createBuffer(i.graphics.device, totalBytes, _D3D12_HEAP_TYPE_READBACK))
 
 	defer func() {
 		readingStagingBuffer.Release()
@@ -107,7 +109,7 @@ func (i *image12) ReadPixels(args []graphicsdriver.PixelsArgs) error {
 		i.graphics.copyCommandList.ResourceBarrier([]_D3D12_RESOURCE_BARRIER_Transition{rb})
 	}
 
-	m, err := readingStagingBuffer.Map(0, &_D3D12_RANGE{0, 0})
+	m := mylog.Check2(readingStagingBuffer.Map(0, &_D3D12_RANGE{0, 0}))
 
 	dst := _D3D12_TEXTURE_COPY_LOCATION_PlacedFootPrint{
 		pResource:       readingStagingBuffer,
@@ -130,7 +132,7 @@ func (i *image12) ReadPixels(args []graphicsdriver.PixelsArgs) error {
 			back:   1,
 		})
 
-	if err := i.graphics.flushCommandList(i.graphics.copyCommandList); err != nil {
+	if mylog.Check(i.graphics.flushCommandList(i.graphics.copyCommandList)); err != nil {
 		return err
 	}
 
@@ -158,7 +160,7 @@ func (i *image12) WritePixels(args []graphicsdriver.PixelsArgs) error {
 		return errors.New("directx: WritePixels cannot be called on the screen")
 	}
 
-	if err := i.graphics.flushCommandList(i.graphics.drawCommandList); err != nil {
+	if mylog.Check(i.graphics.flushCommandList(i.graphics.drawCommandList)); err != nil {
 		return err
 	}
 
@@ -183,7 +185,7 @@ func (i *image12) WritePixels(args []graphicsdriver.PixelsArgs) error {
 		Flags:  _D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET,
 	}
 	layouts, _, _, totalBytes := i.graphics.device.GetCopyableFootprints(&desc, 0, 1, 0)
-	uploadingStagingBuffer, err := createBuffer(i.graphics.device, totalBytes, _D3D12_HEAP_TYPE_UPLOAD)
+	uploadingStagingBuffer := mylog.Check2(createBuffer(i.graphics.device, totalBytes, _D3D12_HEAP_TYPE_UPLOAD))
 
 	i.uploadingStagingBuffers = append(i.uploadingStagingBuffers, uploadingStagingBuffer)
 
@@ -191,7 +193,7 @@ func (i *image12) WritePixels(args []graphicsdriver.PixelsArgs) error {
 		i.graphics.copyCommandList.ResourceBarrier([]_D3D12_RESOURCE_BARRIER_Transition{rb})
 	}
 
-	m, err := uploadingStagingBuffer.Map(0, &_D3D12_RANGE{0, 0})
+	m := mylog.Check2(uploadingStagingBuffer.Map(0, &_D3D12_RANGE{0, 0}))
 
 	i.graphics.needFlushCopyCommandList = true
 
@@ -278,7 +280,7 @@ func (i *image12) internalSize() (int, int) {
 }
 
 func (i *image12) setAsRenderTarget(drawCommandList *_ID3D12GraphicsCommandList, device *_ID3D12Device, useStencil bool) error {
-	if err := i.ensureRenderTargetView(device); err != nil {
+	if mylog.Check(i.ensureRenderTargetView(device)); err != nil {
 		return err
 	}
 
@@ -286,24 +288,24 @@ func (i *image12) setAsRenderTarget(drawCommandList *_ID3D12GraphicsCommandList,
 		if useStencil {
 			return fmt.Errorf("directx: stencils are not available on the screen framebuffer")
 		}
-		rtv, err := i.graphics.rtvDescriptorHeap.GetCPUDescriptorHandleForHeapStart()
+		rtv := mylog.Check2(i.graphics.rtvDescriptorHeap.GetCPUDescriptorHandleForHeapStart())
 
 		rtv.Offset(int32(i.graphics.frameIndex), i.graphics.rtvDescriptorSize)
 		drawCommandList.OMSetRenderTargets([]_D3D12_CPU_DESCRIPTOR_HANDLE{rtv}, false, nil)
 		return nil
 	}
 
-	rtv, err := i.rtvDescriptorHeap.GetCPUDescriptorHandleForHeapStart()
+	rtv := mylog.Check2(i.rtvDescriptorHeap.GetCPUDescriptorHandleForHeapStart())
 
 	if !useStencil {
 		drawCommandList.OMSetRenderTargets([]_D3D12_CPU_DESCRIPTOR_HANDLE{rtv}, false, nil)
 		return nil
 	}
 
-	if err := i.ensureDepthStencilView(device); err != nil {
+	if mylog.Check(i.ensureDepthStencilView(device)); err != nil {
 		return err
 	}
-	dsv, err := i.dsvDescriptorHeap.GetCPUDescriptorHandleForHeapStart()
+	dsv := mylog.Check2(i.dsvDescriptorHeap.GetCPUDescriptorHandleForHeapStart())
 
 	drawCommandList.OMSetStencilRef(0)
 	drawCommandList.OMSetRenderTargets([]_D3D12_CPU_DESCRIPTOR_HANDLE{rtv}, false, &dsv)
@@ -321,16 +323,16 @@ func (i *image12) ensureRenderTargetView(device *_ID3D12Device) error {
 		return nil
 	}
 
-	h, err := device.CreateDescriptorHeap(&_D3D12_DESCRIPTOR_HEAP_DESC{
+	h := mylog.Check2(device.CreateDescriptorHeap(&_D3D12_DESCRIPTOR_HEAP_DESC{
 		Type:           _D3D12_DESCRIPTOR_HEAP_TYPE_RTV,
 		NumDescriptors: 1,
 		Flags:          _D3D12_DESCRIPTOR_HEAP_FLAG_NONE,
 		NodeMask:       0,
-	})
+	}))
 
 	i.rtvDescriptorHeap = h
 
-	rtv, err := i.rtvDescriptorHeap.GetCPUDescriptorHandleForHeapStart()
+	rtv := mylog.Check2(i.rtvDescriptorHeap.GetCPUDescriptorHandleForHeapStart())
 
 	device.CreateRenderTargetView(i.texture, nil, rtv)
 
@@ -346,19 +348,19 @@ func (i *image12) ensureDepthStencilView(device *_ID3D12Device) error {
 		return nil
 	}
 
-	h, err := device.CreateDescriptorHeap(&_D3D12_DESCRIPTOR_HEAP_DESC{
+	h := mylog.Check2(device.CreateDescriptorHeap(&_D3D12_DESCRIPTOR_HEAP_DESC{
 		Type:           _D3D12_DESCRIPTOR_HEAP_TYPE_DSV,
 		NumDescriptors: 1,
 		Flags:          _D3D12_DESCRIPTOR_HEAP_FLAG_NONE,
 		NodeMask:       0,
-	})
+	}))
 
 	i.dsvDescriptorHeap = h
 
-	dsv, err := i.dsvDescriptorHeap.GetCPUDescriptorHandleForHeapStart()
+	dsv := mylog.Check2(i.dsvDescriptorHeap.GetCPUDescriptorHandleForHeapStart())
 
 	if i.stencil == nil {
-		s, err := device.CreateCommittedResource(&_D3D12_HEAP_PROPERTIES{
+		s := mylog.Check2(device.CreateCommittedResource(&_D3D12_HEAP_PROPERTIES{
 			Type:                 _D3D12_HEAP_TYPE_DEFAULT,
 			CPUPageProperty:      _D3D12_CPU_PAGE_PROPERTY_UNKNOWN,
 			MemoryPoolPreference: _D3D12_MEMORY_POOL_UNKNOWN,
@@ -380,7 +382,7 @@ func (i *image12) ensureDepthStencilView(device *_ID3D12Device) error {
 			Flags:  _D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL,
 		}, _D3D12_RESOURCE_STATE_DEPTH_WRITE, &_D3D12_CLEAR_VALUE{
 			Format: _DXGI_FORMAT_D24_UNORM_S8_UINT,
-		})
+		}))
 
 		i.stencil = s
 	}

@@ -17,10 +17,12 @@
 package opengl
 
 import (
+	"runtime"
+
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/unison/internal/graphicsdriver"
 	"github.com/richardwilkes/unison/internal/graphicsdriver/opengl/gl"
 	"github.com/richardwilkes/unison/internal/microsoftgdk"
-	"runtime"
 
 	"github.com/richardwilkes/unison/internal/glfw"
 )
@@ -36,12 +38,9 @@ func NewGraphics() graphicsdriver.Graphics {
 		return nil //, fmt.Errorf("opengl: OpenGL is not supported on Xbox")
 	}
 
-	ctx, err := gl.NewDefaultContext()
-	if err != nil {
-		return nil
-	}
+	ctx := mylog.Check2(gl.NewDefaultContext())
 
-	if err := setGLFWClientAPI(ctx.IsES()); err != nil {
+	if mylog.Check(setGLFWClientAPI(ctx.IsES())); err != nil {
 		return nil
 	}
 
@@ -50,36 +49,36 @@ func NewGraphics() graphicsdriver.Graphics {
 
 func setGLFWClientAPI(isES bool) error {
 	if isES {
-		if err := glfw.WindowHint(glfw.ClientAPI, glfw.OpenGLESAPI); err != nil {
+		if mylog.Check(glfw.WindowHint(glfw.ClientAPI, glfw.OpenGLESAPI)); err != nil {
 			return err
 		}
-		if err := glfw.WindowHint(glfw.ContextVersionMajor, 3); err != nil {
+		if mylog.Check(glfw.WindowHint(glfw.ContextVersionMajor, 3)); err != nil {
 			return err
 		}
-		if err := glfw.WindowHint(glfw.ContextVersionMinor, 0); err != nil {
+		if mylog.Check(glfw.WindowHint(glfw.ContextVersionMinor, 0)); err != nil {
 			return err
 		}
-		if err := glfw.WindowHint(glfw.ContextCreationAPI, glfw.EGLContextAPI); err != nil {
+		if mylog.Check(glfw.WindowHint(glfw.ContextCreationAPI, glfw.EGLContextAPI)); err != nil {
 			return err
 		}
 		return nil
 	}
 
-	if err := glfw.WindowHint(glfw.ClientAPI, glfw.OpenGLAPI); err != nil {
+	if mylog.Check(glfw.WindowHint(glfw.ClientAPI, glfw.OpenGLAPI)); err != nil {
 		return err
 	}
-	if err := glfw.WindowHint(glfw.ContextVersionMajor, 3); err != nil {
+	if mylog.Check(glfw.WindowHint(glfw.ContextVersionMajor, 3)); err != nil {
 		return err
 	}
-	if err := glfw.WindowHint(glfw.ContextVersionMinor, 2); err != nil {
+	if mylog.Check(glfw.WindowHint(glfw.ContextVersionMinor, 2)); err != nil {
 		return err
 	}
 	// macOS requires forward-compatible and a core profile.
 	if runtime.GOOS == "darwin" {
-		if err := glfw.WindowHint(glfw.OpenGLForwardCompat, glfw.True); err != nil {
+		if mylog.Check(glfw.WindowHint(glfw.OpenGLForwardCompat, glfw.True)); err != nil {
 			return err
 		}
-		if err := glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile); err != nil {
+		if mylog.Check(glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)); err != nil {
 			return err
 		}
 	}
@@ -102,16 +101,16 @@ func (g *Graphics) swapBuffers() error {
 	// This needs to be called at least after SetMonitor.
 	// Without SwapInterval after SetMonitor, vsynch doesn't work (#375).
 	if g.vsync {
-		if err := glfw.SwapInterval(1); err != nil {
+		if mylog.Check(glfw.SwapInterval(1)); err != nil {
 			return err
 		}
 	} else {
-		if err := glfw.SwapInterval(0); err != nil {
+		if mylog.Check(glfw.SwapInterval(0)); err != nil {
 			return err
 		}
 	}
 
-	if err := g.window.SwapBuffers(); err != nil {
+	if mylog.Check(g.window.SwapBuffers()); err != nil {
 		return err
 	}
 	return nil

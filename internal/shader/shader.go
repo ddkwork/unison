@@ -18,13 +18,15 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"github.com/richardwilkes/unison/internal/shaderir"
 	"go/ast"
 	gconstant "go/constant"
 	"go/parser"
 	"go/token"
 	"regexp"
 	"strings"
+
+	"github.com/ddkwork/golibrary/mylog"
+	"github.com/richardwilkes/unison/internal/shaderir"
 )
 
 type variable struct {
@@ -184,16 +186,10 @@ func (p *ParseError) Error() string {
 }
 
 func Compile(src []byte, vertexEntry, fragmentEntry string, textureCount int) (*shaderir.Program, error) {
-	unit, err := ParseCompilerDirectives(src)
-	if err != nil {
-		return nil, err
-	}
+	unit := mylog.Check2(ParseCompilerDirectives(src))
 
 	fs := token.NewFileSet()
-	f, err := parser.ParseFile(fs, "", src, parser.AllErrors)
-	if err != nil {
-		return nil, err
-	}
+	f := mylog.Check2(parser.ParseFile(fs, "", src, parser.AllErrors))
 
 	s := &compileState{
 		fs:            fs,

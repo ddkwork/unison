@@ -17,9 +17,6 @@ package directx
 import (
 	"errors"
 	"fmt"
-	"github.com/richardwilkes/unison/internal/graphicsdriver"
-	"github.com/richardwilkes/unison/internal/microsoftgdk"
-	"github.com/richardwilkes/unison/internal/winver"
 	"math"
 	"os"
 	"runtime"
@@ -27,6 +24,11 @@ import (
 	"strings"
 	"time"
 	"unsafe"
+
+	"github.com/ddkwork/golibrary/mylog"
+	"github.com/richardwilkes/unison/internal/graphicsdriver"
+	"github.com/richardwilkes/unison/internal/microsoftgdk"
+	"github.com/richardwilkes/unison/internal/winver"
 
 	"golang.org/x/sys/windows"
 )
@@ -108,10 +110,8 @@ func NewGraphics() graphicsdriver.Graphics {
 		case t == "debug":
 			useDebugLayer = true
 		case strings.HasPrefix(t, "version="):
-			v, err := strconv.Atoi(t[len("version="):])
-			if err != nil {
-				continue
-			}
+			v := mylog.Check2(strconv.Atoi(t[len("version="):]))
+
 			version = v
 		case strings.HasPrefix(t, "featurelevel="):
 			fl, ok := parseFeatureLevel(t[len("featurelevel="):])
@@ -162,12 +162,12 @@ func newGraphicsInfra(factory *_IDXGIFactory) (*graphicsInfra, error) {
 	}
 	runtime.SetFinalizer(g, (*graphicsInfra).release)
 
-	if f, err := g.factory.QueryInterface(&_IID_IDXGIFactory5); err == nil && f != nil {
+	if f := mylog.Check2(g.factory.QueryInterface(&_IID_IDXGIFactory5)); err == nil && f != nil {
 		factory := (*_IDXGIFactory5)(f)
 		defer factory.Release()
 
 		var allowTearing int32
-		if err := factory.CheckFeatureSupport(_DXGI_FEATURE_PRESENT_ALLOW_TEARING, unsafe.Pointer(&allowTearing), uint32(unsafe.Sizeof(allowTearing))); err == nil && allowTearing != 0 {
+		if mylog.Check(factory.CheckFeatureSupport(_DXGI_FEATURE_PRESENT_ALLOW_TEARING, unsafe.Pointer(&allowTearing), uint32(unsafe.Sizeof(allowTearing)))); err == nil && allowTearing != 0 {
 			g.allowTearing = true
 		}
 	}
@@ -195,10 +195,8 @@ func (g *graphicsInfra) release() {
 //
 // warpForDX12 is valid only for DirectX 12.
 func (g *graphicsInfra) appendAdapters(adapters []*_IDXGIAdapter1, warpForDX12 bool) ([]*_IDXGIAdapter1, error) {
-	f, err := g.factory.QueryInterface(&_IID_IDXGIFactory4)
-	if err != nil {
-		return nil, err
-	}
+	f := mylog.Check2(g.factory.QueryInterface(&_IID_IDXGIFactory4))
+
 	if f == nil {
 		return nil, fmt.Errorf("directx: IID_IDXGIFactory4 was not available")
 	}
@@ -206,21 +204,16 @@ func (g *graphicsInfra) appendAdapters(adapters []*_IDXGIAdapter1, warpForDX12 b
 	defer factory4.Release()
 
 	if warpForDX12 {
-		a, err := factory4.EnumWarpAdapter()
-		if err != nil {
-			return nil, err
-		}
+		a := mylog.Check2(factory4.EnumWarpAdapter())
+
 		adapters = append(adapters, a)
 		return adapters, nil
 	}
 
 	for i := uint32(0); ; i++ {
-		a, err := factory4.EnumAdapters1(i)
+		a := mylog.Check2(factory4.EnumAdapters1(i))
 		if errors.Is(err, _DXGI_ERROR_NOT_FOUND) {
 			break
-		}
-		if err != nil {
-			return nil, err
 		}
 
 		adapters = append(adapters, a)
@@ -288,13 +281,13 @@ func (g *graphicsInfra) initSwapChain(width, height int, device unsafe.Pointer, 
 		}
 	}()
 
-	if s4, err := g.swapChain.QueryInterface(&_IID_IDXGISwapChain4); err == nil && s4 != nil {
+	if s4 := mylog.Check2(g.swapChain.QueryInterface(&_IID_IDXGISwapChain4)); err == nil && s4 != nil {
 		g.swapChain4 = (*_IDXGISwapChain4)(s4)
 	}
 
 	// MakeWindowAssociation should be called after swap chain creation.
 	// https://docs.microsoft.com/en-us/windows/win32/api/dxgi/nf-dxgi-idxgifactory-makewindowassociation
-	if err := g.factory.MakeWindowAssociation(window, _DXGI_MWA_NO_WINDOW_CHANGES|_DXGI_MWA_NO_ALT_ENTER); err != nil {
+	if mylog.Check(g.factory.MakeWindowAssociation(window, _DXGI_MWA_NO_WINDOW_CHANGES|_DXGI_MWA_NO_ALT_ENTER)); err != nil {
 		return err
 	}
 
@@ -310,7 +303,7 @@ func (g *graphicsInfra) resizeSwapChain(width, height int) error {
 	if g.allowTearing {
 		flag |= uint32(_DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING)
 	}
-	if err := g.swapChain.ResizeBuffers(uint32(g.bufferCount), uint32(width), uint32(height), _DXGI_FORMAT_B8G8R8A8_UNORM, flag); err != nil {
+	if mylog.Check(g.swapChain.ResizeBuffers(uint32(g.bufferCount), uint32(width), uint32(height), _DXGI_FORMAT_B8G8R8A8_UNORM, flag)); err != nil {
 		return err
 	}
 	return nil

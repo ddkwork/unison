@@ -16,11 +16,13 @@ package directx
 
 import (
 	"fmt"
+	"sync"
+	"unsafe"
+
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/unison/internal/graphics"
 	"github.com/richardwilkes/unison/internal/shaderir"
 	"github.com/richardwilkes/unison/internal/shaderir/hlsl"
-	"sync"
-	"unsafe"
 
 	"golang.org/x/sync/errgroup"
 )
@@ -89,11 +91,11 @@ func compileShader(program *shaderir.Program) (vsh, psh *_ID3DBlob, ferr error) 
 	}()
 
 	if vshBin, pshBin := thePrecompiledFXCs.get(program.SourceHash); vshBin != nil && pshBin != nil {
-		var err error
-		if vsh, err = _D3DCreateBlob(uint(len(vshBin))); err != nil {
+
+		if vsh = mylog.Check2(_D3DCreateBlob(uint(len(vshBin)))); err != nil {
 			return nil, nil, err
 		}
-		if psh, err = _D3DCreateBlob(uint(len(pshBin))); err != nil {
+		if psh = mylog.Check2(_D3DCreateBlob(uint(len(pshBin)))); err != nil {
 			return nil, nil, err
 		}
 		copy(unsafe.Slice((*byte)(vsh.GetBufferPointer()), vsh.GetBufferSize()), vshBin)
@@ -120,24 +122,20 @@ func compileShader(program *shaderir.Program) (vsh, psh *_ID3DBlob, ferr error) 
 			}
 		}()
 		wg.Go(func() error {
-			v, err := _D3DCompile([]byte(vs), "shader", nil, nil, VertexShaderEntryPoint, VertexShaderProfile, flag, 0)
-			if err != nil {
-				return fmt.Errorf("directx: D3DCompile for VSMain failed, original source: %s, %w", vs, err)
-			}
+			v := mylog.Check2(_D3DCompile([]byte(vs), "shader", nil, nil, VertexShaderEntryPoint, VertexShaderProfile, flag, 0))
+
 			vsh = v
 			return nil
 		})
 	}
 	wg.Go(func() error {
-		p, err := _D3DCompile([]byte(ps), "shader", nil, nil, PixelShaderEntryPoint, PixelShaderProfile, flag, 0)
-		if err != nil {
-			return fmt.Errorf("directx: D3DCompile for PSMain failed, original source: %s, %w", ps, err)
-		}
+		p := mylog.Check2(_D3DCompile([]byte(ps), "shader", nil, nil, PixelShaderEntryPoint, PixelShaderProfile, flag, 0))
+
 		psh = p
 		return nil
 	})
 
-	if err := wg.Wait(); err != nil {
+	if mylog.Check(wg.Wait()); err != nil {
 		return nil, nil, err
 	}
 

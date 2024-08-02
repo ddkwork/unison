@@ -13,6 +13,7 @@ import (
 	"os"
 	"syscall"
 
+	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/unison/internal/w32"
 	"golang.org/x/sys/windows"
 )
@@ -56,7 +57,7 @@ func attachConsole() {
 	// Set the console mode, if necessary, to ensure LF is turned into CRLF on output
 	if console != 0 {
 		var mode uint32
-		if err := windows.GetConsoleMode(windows.Handle(console), &mode); err == nil {
+		if mylog.Check(windows.GetConsoleMode(windows.Handle(console), &mode)); err == nil {
 			_ = windows.SetConsoleMode(windows.Handle(console), mode&^windows.DISABLE_NEWLINE_AUTO_RETURN) //nolint:errcheck // Don't care
 		}
 	}

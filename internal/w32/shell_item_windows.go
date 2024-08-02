@@ -48,8 +48,10 @@ func (obj *ShellItem) vmt() *vmtShellItem {
 	return (*vmtShellItem)(obj.UnsafeVirtualMethodTable)
 }
 
-const sizeofUint16 = unsafe.Sizeof(uint16(0))
-const maxUint16Array = (1<<31 - sizeofUint16) / sizeofUint16
+const (
+	sizeofUint16   = unsafe.Sizeof(uint16(0))
+	maxUint16Array = (1<<31 - sizeofUint16) / sizeofUint16
+)
 
 func (obj *ShellItem) DisplayName() string {
 	var p *uint16

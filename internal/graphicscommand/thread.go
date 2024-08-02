@@ -16,6 +16,7 @@ package graphicscommand
 
 import (
 	"context"
+
 	"github.com/richardwilkes/unison/internal/thread"
 )
 

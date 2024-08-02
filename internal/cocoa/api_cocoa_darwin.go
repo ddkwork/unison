@@ -91,12 +91,16 @@ type CGRect struct {
 	Size   CGSize
 }
 
-type NSUInteger = uint
-type NSInteger = int
+type (
+	NSUInteger = uint
+	NSInteger  = int
+)
 
-type NSPoint = CGPoint
-type NSRect = CGRect
-type NSSize = CGSize
+type (
+	NSPoint = CGPoint
+	NSRect  = CGRect
+	NSSize  = CGSize
+)
 
 type NSError struct {
 	objc.ID
