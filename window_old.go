@@ -202,9 +202,7 @@ func NewWindow(title string, options ...WindowOption) (*Window, error) {
 	}
 	for _, option := range options {
 		mylog.Check(option(w))
-		err != nil{
-			return nil, err
-		}
+	
 	}
 	glfw.WindowHint(glfw.Visible, glfw.False)
 	glfw.WindowHint(glfw.Resizable, glfwEnabled(!w.notResizable))

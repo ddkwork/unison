@@ -119,7 +119,7 @@ func (w *Window) inputDrop(paths []string) {
 
 func (w *Window) centerCursorInContentArea() error {
 	width, height := w.platformGetWindowSize()
-	 mylog.Check(w.platformSetCursorPos(float64(width/2), float64(height/2))); 
+	mylog.Check(w.platformSetCursorPos(float64(width/2), float64(height/2)))
 	return nil
 }
 
@@ -162,7 +162,7 @@ func (w *Window) SetInputMode(mode InputMode, value int) error {
 		w.virtualCursorPosX = x
 		w.virtualCursorPosY = y
 
-		 mylog.Check(w.platformSetCursorMode(value)); 
+		mylog.Check(w.platformSetCursorMode(value))
 		return nil
 
 	case StickyKeysMode:
@@ -213,7 +213,7 @@ func (w *Window) SetInputMode(mode InputMode, value int) error {
 		}
 
 		w.rawMouseMotion = intToBool(value)
-		 mylog.Check(w.platformSetRawMouseMotion(intToBool(value))); 
+		mylog.Check(w.platformSetRawMouseMotion(intToBool(value)))
 		return nil
 
 	default:
@@ -351,10 +351,7 @@ func CreateStandardCursor(shape StandardCursor) *Cursor {
 	cursor := &Cursor{}
 	_glfw.cursors = append(_glfw.cursors, cursor)
 
-	 mylog.Check(cursor.platformCreateStandardCursor(shape)); err != nil {
-		_ = cursor.Destroy()
-		return nil
-	}
+	mylog.Check(cursor.platformCreateStandardCursor(shape))
 
 	return cursor
 }
@@ -371,11 +368,11 @@ func (c *Cursor) Destroy() error {
 	// Make sure the cursor is not being used by any window
 	for _, window := range _glfw.windows {
 		if window.cursor == c {
-			 mylog.Check(window.SetCursor(nil)); 
+			mylog.Check(window.SetCursor(nil))
 		}
 	}
 
-	 mylog.Check(c.platformDestroyCursor()); 
+	mylog.Check(c.platformDestroyCursor())
 
 	// Unlink cursor from global linked list
 	for i, cursor := range _glfw.cursors {
@@ -396,7 +393,7 @@ func (w *Window) SetCursor(cursor *Cursor) error {
 
 	w.cursor = cursor
 
-	 mylog.Check(w.platformSetCursor(cursor)); 
+	mylog.Check(w.platformSetCursor(cursor))
 	return nil
 }
 

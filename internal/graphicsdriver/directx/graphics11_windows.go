@@ -265,7 +265,6 @@ func (g *graphics11) End(present bool) error {
 
 	mylog.Check(g.graphicsInfra.present(g.vsyncEnabled))
 
-
 	if g.newScreenWidth != 0 && g.newScreenHeight != 0 {
 		if g.screenImage != nil {
 			// ResizeBuffer requires all the related resources released,
@@ -276,8 +275,7 @@ func (g *graphics11) End(present bool) error {
 
 		mylog.Check(g.graphicsInfra.resizeSwapChain(g.newScreenWidth, g.newScreenHeight))
 
-
-		t := mylog.Check2(g.graphicsInfra.getBuffer(0, &_IID_ID3D11Texture2D))
+		t := (g.graphicsInfra.getBuffer(0, &_IID_ID3D11Texture2D))
 
 		g.screenImage.width = g.newScreenWidth
 		g.screenImage.height = g.newScreenHeight
@@ -396,12 +394,10 @@ func (g *graphics11) NewScreenFramebufferImage(width, height int) (graphicsdrive
 		g.newScreenWidth, g.newScreenHeight = width, height
 	} else {
 		mylog.Check(g.graphicsInfra.initSwapChain(width, height, unsafe.Pointer(g.device), g.window))
-		err != nil{
-			return nil, err
-		}
+
 	}
 
-	t := mylog.Check2(g.graphicsInfra.getBuffer(0, &_IID_ID3D11Texture2D))
+	t := (g.graphicsInfra.getBuffer(0, &_IID_ID3D11Texture2D))
 
 	i := &image11{
 		graphics: g,
@@ -512,19 +508,14 @@ func (g *graphics11) DrawTriangles(dstID graphicsdriver.ImageID, srcIDs [graphic
 
 	mylog.Check(dst.setAsRenderTarget(fillRule != graphicsdriver.FillRuleFillAll))
 
-
 	// Set the shader parameters.
 	shader := g.shaders[shaderID]
 	mylog.Check(shader.use(uniforms, srcs))
 
-
 	if fillRule == graphicsdriver.FillRuleFillAll {
-		bs := mylog.Check2(g.blendState(blend, noStencil))
-
+		bs := (g.blendState(blend, noStencil))
 		g.deviceContext.OMSetBlendState(bs, nil, 0xffffffff)
-
 		dss := mylog.Check2(g.depthStencilState(noStencil))
-
 		g.deviceContext.OMSetDepthStencilState(dss, 0)
 	}
 
@@ -542,16 +533,14 @@ func (g *graphics11) DrawTriangles(dstID graphicsdriver.ImageID, srcIDs [graphic
 		case graphicsdriver.FillRuleFillAll:
 			g.deviceContext.DrawIndexed(uint32(dstRegion.IndexCount), uint32(indexOffset), 0)
 		case graphicsdriver.FillRuleNonZero:
-			bs := mylog.Check2(g.blendState(blend, incrementStencil))
-
+			bs := (g.blendState(blend, incrementStencil))
 			g.deviceContext.OMSetBlendState(bs, nil, 0xffffffff)
 			dss := mylog.Check2(g.depthStencilState(incrementStencil))
 
 			g.deviceContext.OMSetDepthStencilState(dss, 0)
 			g.deviceContext.DrawIndexed(uint32(dstRegion.IndexCount), uint32(indexOffset), 0)
 		case graphicsdriver.FillRuleEvenOdd:
-			bs := mylog.Check2(g.blendState(blend, invertStencil))
-
+			bs := (g.blendState(blend, invertStencil))
 			g.deviceContext.OMSetBlendState(bs, nil, 0xffffffff)
 			dss := mylog.Check2(g.depthStencilState(invertStencil))
 
@@ -560,8 +549,7 @@ func (g *graphics11) DrawTriangles(dstID graphicsdriver.ImageID, srcIDs [graphic
 		}
 
 		if fillRule != graphicsdriver.FillRuleFillAll {
-			bs := mylog.Check2(g.blendState(blend, drawWithStencil))
-
+			bs := (g.blendState(blend, drawWithStencil))
 			g.deviceContext.OMSetBlendState(bs, nil, 0xffffffff)
 			dss := mylog.Check2(g.depthStencilState(drawWithStencil))
 

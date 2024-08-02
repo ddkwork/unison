@@ -100,9 +100,7 @@ func NewGraphics() (graphicsdriver.Graphics, error) {
 		// Initializing a Metal device and a layer must be done in the main thread on macOS.
 		// Note that this assumes NewGraphics is called on the main thread on desktops.
 		mylog.Check(g.view.initialize(systemDefaultDevice))
-		err != nil{
-			return nil, err
-		}
+	
 	}
 	return g, nil
 }
