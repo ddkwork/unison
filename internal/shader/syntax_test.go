@@ -108,7 +108,7 @@ func TestSyntaxNoNewVariables(t *testing.T) {
 	mylog.Check2(compileToIR([]byte(`package main
 
 func Fragment(dstPos vec4, srcPos vec2, color vec4) vec4 {
-	_ := 1
+1
 	return vec4(0)
 }
 `)))
@@ -1883,7 +1883,7 @@ func Fragment(dstPos vec4, srcPos vec2, color vec4) vec4 {
 
 // Issue #2248
 func TestSyntaxDiscard(t *testing.T) {
-	 mylog.Check2(compileToIR([]byte(`package main
+	mylog.Check2(compileToIR([]byte(`package main
 
 func Fragment(dstPos vec4, srcPos vec2, color vec4) vec4 {
 	if true {
@@ -1891,17 +1891,17 @@ func Fragment(dstPos vec4, srcPos vec2, color vec4) vec4 {
 	}
 	return vec4(0)
 }
-`)));
+`)))
 	// discard without return doesn't work so far.
 	// TODO: Allow discard without return.
-	 mylog.Check2(compileToIR([]byte(`package main
+	mylog.Check2(compileToIR([]byte(`package main
 
 func Fragment(dstPos vec4, srcPos vec2, color vec4) vec4 {
 	discard()
 	return vec4(0)
 }
-`)));
-	 mylog.Check2(compileToIR([]byte(`package main
+`)))
+	mylog.Check2(compileToIR([]byte(`package main
 
 func foo() {
 	discard()
@@ -1911,9 +1911,7 @@ func Fragment(dstPos vec4, srcPos vec2, color vec4) vec4 {
 	foo()
 	return vec4(0)
 }
-`))); err == nil {
-		t.Errorf("error must be non-nil but was nil")
-	}
+`)))
 }
 
 // Issue #2184
@@ -1970,12 +1968,8 @@ func Fragment(dstPos vec4, srcPos vec2, color vec4) vec4 {
 	%s
 	return dstPos
 }`, stmt)
-			_ := mylog.Check2(compileToIR([]byte(src)))
-			if err == nil && c.err {
-				t.Errorf("%s must return an error but does not", stmt)
-			} else if err != nil && !c.err {
-				t.Errorf("%s must not return nil but returned %v", stmt, err)
-			}
+			mylog.Check2(compileToIR([]byte(src)))
+
 		}
 	}
 }
@@ -2083,12 +2077,8 @@ func Fragment(dstPos vec4, srcPos vec2, color vec4) vec4 {
 	%s
 	return dstPos
 }`, stmt)
-			_ := mylog.Check2(compileToIR([]byte(src)))
-			if err == nil && c.err {
-				t.Errorf("%s must return an error but does not", stmt)
-			} else if err != nil && !c.err {
-				t.Errorf("%s must not return nil but returned %v", stmt, err)
-			}
+			mylog.Check2(compileToIR([]byte(src)))
+
 		}
 	}
 }
@@ -2154,12 +2144,8 @@ func Fragment(dstPos vec4, srcPos vec2, color vec4) vec4 {
 	%s
 	return dstPos
 }`, stmt)
-			_ := mylog.Check2(compileToIR([]byte(src)))
-			if err == nil && c.err {
-				t.Errorf("%s must return an error but does not", stmt)
-			} else if err != nil && !c.err {
-				t.Errorf("%s must not return nil but returned %v", stmt, err)
-			}
+			mylog.Check2(compileToIR([]byte(src)))
+
 		}
 	}
 }
@@ -2304,12 +2290,8 @@ func Fragment(dstPos vec4, srcPos vec2, color vec4) vec4 {
 	%s
 	return dstPos
 }`, stmt)
-		_ := mylog.Check2(compileToIR([]byte(src)))
-		if err == nil && c.err {
-			t.Errorf("%s must return an error but does not", stmt)
-		} else if err != nil && !c.err {
-			t.Errorf("%s must not return nil but returned %v", stmt, err)
-		}
+		mylog.Check2(compileToIR([]byte(src)))
+
 	}
 }
 
@@ -2445,12 +2427,8 @@ func Fragment(dstPos vec4, srcPos vec2, color vec4) vec4 {
 	%s
 	return dstPos
 }`, stmt)
-		_ := mylog.Check2(compileToIR([]byte(src)))
-		if err == nil && c.err {
-			t.Errorf("%s must return an error but does not", stmt)
-		} else if err != nil && !c.err {
-			t.Errorf("%s must not return nil but returned %v", stmt, err)
-		}
+		mylog.Check2(compileToIR([]byte(src)))
+
 	}
 }
 
@@ -2550,12 +2528,8 @@ func Fragment(dstPos vec4, srcPos vec2, color vec4) vec4 {
 	%s
 	return dstPos
 }`, stmt)
-		_ := mylog.Check2(compileToIR([]byte(src)))
-		if err == nil && c.err {
-			t.Errorf("%s must return an error but does not", stmt)
-		} else if err != nil && !c.err {
-			t.Errorf("%s must not return nil but returned %v", stmt, err)
-		}
+		mylog.Check2(compileToIR([]byte(src)))
+
 	}
 }
 
@@ -2602,12 +2576,8 @@ func Fragment(dstPos vec4, srcPos vec2, color vec4) vec4 {
 	%s
 	return dstPos
 }`, stmt)
-		_ := mylog.Check2(compileToIR([]byte(src)))
-		if err == nil && c.err {
-			t.Errorf("%s must return an error but does not", stmt)
-		} else if err != nil && !c.err {
-			t.Errorf("%s must not return nil but returned %v", stmt, err)
-		}
+		mylog.Check2(compileToIR([]byte(src)))
+
 	}
 }
 
@@ -2652,12 +2622,8 @@ func Fragment(dstPos vec4, srcPos vec2, color vec4) vec4 {
 	%s
 	return dstPos
 }`, stmt)
-		_ := mylog.Check2(compileToIR([]byte(src)))
-		if err == nil && c.err {
-			t.Errorf("%s must return an error but does not", stmt)
-		} else if err != nil && !c.err {
-			t.Errorf("%s must not return nil but returned %v", stmt, err)
-		}
+		mylog.Check2(compileToIR([]byte(src)))
+
 	}
 }
 
@@ -2692,12 +2658,8 @@ func Fragment(dstPos vec4, srcPos vec2, color vec4) vec4 {
 	%s
 	return dstPos
 }`, stmt)
-		_ := mylog.Check2(compileToIR([]byte(src)))
-		if err == nil && c.err {
-			t.Errorf("%s must return an error but does not", stmt)
-		} else if err != nil && !c.err {
-			t.Errorf("%s must not return nil but returned %v", stmt, err)
-		}
+		mylog.Check2(compileToIR([]byte(src)))
+
 	}
 }
 
@@ -2923,12 +2885,8 @@ func Fragment(dstPos vec4, srcPos vec2, color vec4) vec4 {
 	%s
 	return dstPos
 }`, stmt)
-		_ := mylog.Check2(compileToIR([]byte(src)))
-		if err == nil && c.err {
-			t.Errorf("%s must return an error but does not", stmt)
-		} else if err != nil && !c.err {
-			t.Errorf("%s must not return nil but returned %v", stmt, err)
-		}
+		mylog.Check2(compileToIR([]byte(src)))
+
 	}
 }
 
@@ -2951,12 +2909,8 @@ func Fragment(dstPos vec4, srcPos vec2, color vec4) vec4 {
 	%s
 	return dstPos
 }`, stmt)
-		_ := mylog.Check2(compileToIR([]byte(src)))
-		if err == nil && c.err {
-			t.Errorf("%s must return an error but does not", stmt)
-		} else if err != nil && !c.err {
-			t.Errorf("%s must not return nil but returned %v", stmt, err)
-		}
+		mylog.Check2(compileToIR([]byte(src)))
+
 	}
 }
 
@@ -3062,12 +3016,8 @@ func Fragment(dstPos vec4, srcPos vec2, color vec4) vec4 {
 	%s
 	return dstPos
 }`, stmt)
-		_ := mylog.Check2(compileToIR([]byte(src)))
-		if err == nil && c.err {
-			t.Errorf("%s must return an error but does not", stmt)
-		} else if err != nil && !c.err {
-			t.Errorf("%s must not return nil but returned %v", stmt, err)
-		}
+		mylog.Check2(compileToIR([]byte(src)))
+
 	}
 }
 
@@ -3190,12 +3140,8 @@ func Fragment(dstPos vec4, srcPos vec2, color vec4) vec4 {
 	%s
 	return dstPos
 }`, stmt)
-		_ := mylog.Check2(compileToIR([]byte(src)))
-		if err == nil && c.err {
-			t.Errorf("%s must return an error but does not", stmt)
-		} else if err != nil && !c.err {
-			t.Errorf("%s must not return nil but returned %v", stmt, err)
-		}
+		mylog.Check2(compileToIR([]byte(src)))
+
 	}
 }
 
@@ -3221,12 +3167,8 @@ func Fragment(dstPos vec4, srcPos vec2, color vec4) vec4 {
 	%s
 	return dstPos
 }`, stmt)
-		_ := mylog.Check2(compileToIR([]byte(src)))
-		if err == nil && c.err {
-			t.Errorf("%s must return an error but does not", stmt)
-		} else if err != nil && !c.err {
-			t.Errorf("%s must not return nil but returned %v", stmt, err)
-		}
+		mylog.Check2(compileToIR([]byte(src)))
+
 	}
 }
 
@@ -3255,12 +3197,8 @@ func Fragment(dstPos vec4, srcPos vec2, color vec4) vec4 {
 	%s
 	return dstPos
 }`, stmt)
-		_ := mylog.Check2(compileToIR([]byte(src)))
-		if err == nil && c.err {
-			t.Errorf("%s must return an error but does not", stmt)
-		} else if err != nil && !c.err {
-			t.Errorf("%s must not return nil but returned %v", stmt, err)
-		}
+		mylog.Check2(compileToIR([]byte(src)))
+
 	}
 }
 
@@ -3283,12 +3221,8 @@ func Fragment(dstPos vec4, srcPos vec2, color vec4) vec4 {
 	%s
 	return dstPos
 }`, stmt)
-		_ := mylog.Check2(compileToIR([]byte(src)))
-		if err == nil && c.err {
-			t.Errorf("%s must return an error but does not", stmt)
-		} else if err != nil && !c.err {
-			t.Errorf("%s must not return nil but returned %v", stmt, err)
-		}
+		mylog.Check2(compileToIR([]byte(src)))
+
 	}
 }
 
@@ -3374,12 +3308,7 @@ func Fragment(dstPos vec4, srcPos vec2, color vec4) vec4 {
 	}
 	for _, c := range cases {
 		ir := mylog.Check2(compileToIR([]byte(c.src)))
-		if err == nil && c.err {
-			t.Errorf("Compile(%q) must return an error but does not", c.src)
-		} else if err != nil && !c.err {
-			t.Errorf("Compile(%q) must not return nil but returned %v", c.src, err)
-		}
-		if err != nil || c.err {
+		if c.err {
 			continue
 		}
 		if got, want := ir.Unit, c.unit; got != want {
@@ -3390,7 +3319,7 @@ func Fragment(dstPos vec4, srcPos vec2, color vec4) vec4 {
 
 // Issue #2654
 func TestSyntaxOmittedReturnType(t *testing.T) {
-	 mylog.Check2(compileToIR([]byte(`package main
+	mylog.Check2(compileToIR([]byte(`package main
 
 func foo(x vec2) {
 	x = bar(x)
@@ -3399,9 +3328,7 @@ func foo(x vec2) {
 
 func bar(x vec2) {
 	return x
-}`))); err == nil {
-		t.Error("compileToIR must return an error but did not")
-	}
+}`)))
 }
 
 // Issue #2590
@@ -3441,13 +3368,13 @@ var Foo, Bar int = 1, 1
 
 // Issue #2705
 func TestSyntaxInitWithNegativeInteger(t *testing.T) {
-	 mylog.Check2(compileToIR([]byte(`package main
+	mylog.Check2(compileToIR([]byte(`package main
 
 func Fragment(dstPos vec4, srcPos vec2, color vec4) vec4 {
 	var x float = -0
 	_ = x
 	return dstPos
-}`)));
+}`)))
 }
 
 // Issue #2706
@@ -3483,12 +3410,7 @@ func Foo() %s {
 func Fragment(dstPos vec4, srcPos vec2, color vec4) vec4 {
 	return dstPos
 }`, typ, stmt)
-		_ := mylog.Check2(compileToIR([]byte(src)))
-		if err == nil && c.err {
-			t.Errorf("return %s for type %s must return an error but does not", stmt, typ)
-		} else if err != nil && !c.err {
-			t.Errorf("return %s for type %s must not return nil but returned %v", stmt, typ, err)
-		}
+		mylog.Check2(compileToIR([]byte(src)))
 	}
 }
 
@@ -3533,12 +3455,8 @@ func Fragment(dstPos vec4, srcPos vec2, color vec4) vec4 {
 	%s
 	return dstPos
 }`, stmt)
-		_ := mylog.Check2(compileToIR([]byte(src)))
-		if err == nil && c.err {
-			t.Errorf("%s must return an error but does not", stmt)
-		} else if err != nil && !c.err {
-			t.Errorf("%s must not return nil but returned %v", stmt, err)
-		}
+		mylog.Check2(compileToIR([]byte(src)))
+
 	}
 }
 
@@ -3572,12 +3490,8 @@ func Fragment(dstPos vec4, srcPos vec2, color vec4) vec4 {
 	%s
 	return dstPos
 }`, stmt)
-		_ := mylog.Check2(compileToIR([]byte(src)))
-		if err == nil && c.err {
-			t.Errorf("%s must return an error but does not", stmt)
-		} else if err != nil && !c.err {
-			t.Errorf("%s must not return nil but returned %v", stmt, err)
-		}
+		mylog.Check2(compileToIR([]byte(src)))
+
 	}
 }
 
@@ -3674,59 +3588,47 @@ func Fragment(dstPos vec4, srcPos vec2, color vec4) vec4 {
 	%s
 	return dstPos
 }`, stmt)
-		_ := mylog.Check2(compileToIR([]byte(src)))
-		if err == nil && c.err {
-			t.Errorf("%s must return an error but does not", stmt)
-		} else if err != nil && !c.err {
-			t.Errorf("%s must not return nil but returned %v", stmt, err)
-		}
+		mylog.Check2(compileToIR([]byte(src)))
+
 	}
 }
 
 // Issue #2680
 func TestSyntaxForWithLocalVariable(t *testing.T) {
-	 mylog.Check2(compileToIR([]byte(`package main
+	mylog.Check2(compileToIR([]byte(`package main
 
 func foo() {
 	i := 0
 	for i = 0; i < 1; i++ {
 	}
-}`))); err == nil {
-		t.Error("compileToIR must return an error but did not")
-	}
-	 mylog.Check2(compileToIR([]byte(`package main
+}`)))
+	mylog.Check2(compileToIR([]byte(`package main
 
 func foo() {
 	for i, j := 0, 0; i < 1; i++ {
 		_ = j
 	}
-}`))); err == nil {
-		t.Error("compileToIR must return an error but did not")
-	}
+}`)))
 }
 
 // Issue #2648
 func TestSyntaxDuplicatedUniformVariables(t *testing.T) {
-	 mylog.Check2(compileToIR([]byte(`package main
+	mylog.Check2(compileToIR([]byte(`package main
 
 var Foo int
 var Foo int
-`))); err == nil {
-		t.Error("compileToIR must return an error but did not")
-	}
-	 mylog.Check2(compileToIR([]byte(`package main
+`)))
+	mylog.Check2(compileToIR([]byte(`package main
 
 var Foo int
 var Bar float
 var Foo vec2
-`))); err == nil {
-		t.Error("compileToIR must return an error but did not")
-	}
+`)))
 }
 
 // Issue #2747
 func TestSyntaxMultipleAssignmentsAndTypeCheck(t *testing.T) {
-	 mylog.Check2(compileToIR([]byte(`package main
+	mylog.Check2(compileToIR([]byte(`package main
 
 func Foo() (float, bool) {
 	return 0, false
@@ -3737,8 +3639,8 @@ func Bar() {
 	_, _ = f, b
 	return
 }
-`)));
-	 mylog.Check2(compileToIR([]byte(`package main
+`)))
+	mylog.Check2(compileToIR([]byte(`package main
 
 func Foo() (float, bool) {
 	return 0, false
@@ -3751,49 +3653,41 @@ func Bar() {
 	_, _ = f, b
 	return
 }
-`)));
+`)))
 
-	 mylog.Check2(compileToIR([]byte(`package main
+	mylog.Check2(compileToIR([]byte(`package main
 
 func Foo() {
 	a, b := 0
 	_, _ = a, b
 }
-`))); err == nil {
-		t.Error("compileToIR must return an error but did not")
-	}
+`)))
 
-	 mylog.Check2(compileToIR([]byte(`package main
+	mylog.Check2(compileToIR([]byte(`package main
 
 func Foo() {
 	a, b, c := 0, 0
 	_, _ = a, b, c
 }
-`))); err == nil {
-		t.Error("compileToIR must return an error but did not")
-	}
+`)))
 
-	 mylog.Check2(compileToIR([]byte(`package main
+	mylog.Check2(compileToIR([]byte(`package main
 
 func Foo() {
 	var a, b int
 	a, b = 0
 	_, _ = a, b
 }
-`))); err == nil {
-		t.Error("compileToIR must return an error but did not")
-	}
+`)))
 
-	 mylog.Check2(compileToIR([]byte(`package main
+	mylog.Check2(compileToIR([]byte(`package main
 
 func Foo() {
 	var a, b, c int
 	a, b, c = 0, 0
 	_, _ = a, b, c
 }
-`))); err == nil {
-		t.Error("compileToIR must return an error but did not")
-	}
+`)))
 }
 
 func TestSyntaxBitwiseOperator(t *testing.T) {
@@ -3867,18 +3761,14 @@ func Fragment(dstPos vec4, srcPos vec2, color vec4) vec4 {
 	%s
 	return dstPos
 }`, stmt)
-		_ := mylog.Check2(compileToIR([]byte(src)))
-		if err == nil && c.err {
-			t.Errorf("%s must return an error but does not", stmt)
-		} else if err != nil && !c.err {
-			t.Errorf("%s must not return nil but returned %v", stmt, err)
-		}
+		mylog.Check2(compileToIR([]byte(src)))
+
 	}
 }
 
 // Issue #2891
 func TestSyntaxInvalidArgument(t *testing.T) {
-	 mylog.Check2(compileToIR([]byte(`package main
+	mylog.Check2(compileToIR([]byte(`package main
 
 func Foo(x int) int {
 	return 0
@@ -3887,22 +3777,18 @@ func Foo(x int) int {
 func Bar() int {
 	return Foo(Foo)
 }
-`))); err == nil {
-		t.Error("compileToIR must return an error but did not")
-	}
+`)))
 }
 
 // Issue #2891, #2910
 func TestSyntaxTailingUnaryOperator(t *testing.T) {
-	 mylog.Check2(compileToIR([]byte(`package main
+	mylog.Check2(compileToIR([]byte(`package main
 
 func Foo() {
 	1 + x := vec2(2)
 }
-`))); err == nil {
-		t.Error("compileToIR must return an error but did not")
-	}
-	 mylog.Check2(compileToIR([]byte(`package main
+`)))
+	mylog.Check2(compileToIR([]byte(`package main
 
 func Foo() {
 	1 + x, y := Bar()
@@ -3911,14 +3797,12 @@ func Foo() {
 func Bar() (int, int) {
 	return 0, 0
 }
-`))); err == nil {
-		t.Error("compileToIR must return an error but did not")
-	}
+`)))
 }
 
 // Issue #2926, #2989
 func TestSyntaxNonTypeExpression(t *testing.T) {
-	 mylog.Check2(compileToIR([]byte(`package main
+	mylog.Check2(compileToIR([]byte(`package main
 
 func Foo() {
 }
@@ -3926,10 +3810,8 @@ func Foo() {
 func Bar() float {
 	return +Foo
 }
-`))); err == nil {
-		t.Error("compileToIR must return an error but did not")
-	}
-	 mylog.Check2(compileToIR([]byte(`package main
+`)))
+	mylog.Check2(compileToIR([]byte(`package main
 
 func Foo() {
 }
@@ -3937,10 +3819,8 @@ func Foo() {
 func Bar() float {
 	return Foo + 1.0
 }
-`))); err == nil {
-		t.Error("compileToIR must return an error but did not")
-	}
-	 mylog.Check2(compileToIR([]byte(`package main
+`)))
+	mylog.Check2(compileToIR([]byte(`package main
 
 func Foo() {
 }
@@ -3948,10 +3828,8 @@ func Foo() {
 func Bar() float {
 	return 1.0 + Foo
 }
-`))); err == nil {
-		t.Error("compileToIR must return an error but did not")
-	}
-	 mylog.Check2(compileToIR([]byte(`package main
+`)))
+	mylog.Check2(compileToIR([]byte(`package main
 
 func Foo() {
 }
@@ -3959,10 +3837,8 @@ func Foo() {
 func Bar() float {
 	return Foo.x
 }
-`))); err == nil {
-		t.Error("compileToIR must return an error but did not")
-	}
-	 mylog.Check2(compileToIR([]byte(`package main
+`)))
+	mylog.Check2(compileToIR([]byte(`package main
 
 func Foo() {
 }
@@ -3970,14 +3846,12 @@ func Foo() {
 func Bar() float {
 	return Foo[0]
 }
-`))); err == nil {
-		t.Error("compileToIR must return an error but did not")
-	}
+`)))
 }
 
 // Issue #2993
 func TestSyntaxIfAndConstBool(t *testing.T) {
-	 mylog.Check2(compileToIR([]byte(`package main
+	mylog.Check2(compileToIR([]byte(`package main
 
 func Foo() int {
 	const X = true
@@ -3986,8 +3860,8 @@ func Foo() int {
 	}
 	return 0
 }
-`)));
-	 mylog.Check2(compileToIR([]byte(`package main
+`)))
+	mylog.Check2(compileToIR([]byte(`package main
 
 func Foo() int {
 	const X bool = true
@@ -3996,5 +3870,5 @@ func Foo() int {
 	}
 	return 0
 }
-`)));
+`)))
 }
