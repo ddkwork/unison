@@ -1,6 +1,6 @@
 module github.com/richardwilkes/unison
 
-go 1.22.5
+go 1.23
 
 require (
 	github.com/OpenPrinting/goipp v1.1.0
@@ -16,7 +16,7 @@ require (
 )
 
 require (
-	github.com/ddkwork/golibrary v0.0.0-20240728131742-3497a6ed9010
+	github.com/ddkwork/golibrary v0.0.0-20240802082739-ae4f0bcd4079
 	github.com/richardwilkes/toolbox v1.99.0
 )
 
