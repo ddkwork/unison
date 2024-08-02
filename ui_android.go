@@ -117,12 +117,13 @@ func (*graphicsDriverCreatorImpl) newPlayStation5() (graphicsdriver.Graphics, er
 
 func deviceScaleFactorImpl() float64 {
 	var s float64
-	if mylog.Check(app.RunOnJVM(func(vm, env, ctx uintptr) error {
+	mylog.Check(app.RunOnJVM(func(vm, env, ctx uintptr) error {
 		// TODO: This might be crash when this is called from init(). How can we detect this?
 		s = float64(C.deviceScale(C.uintptr_t(vm), C.uintptr_t(env), C.uintptr_t(ctx)))
 		return nil
-	})); err != nil {
-		panic(fmt.Sprintf("devicescale: error %v", err))
+	}))
+	err != nil{
+		panic(fmt.Sprintf("devicescale: error %v", err)),
 	}
 	return s
 }

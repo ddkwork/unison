@@ -313,9 +313,8 @@ func (u *UserInterface) update() error {
 	if u.suspended() {
 		return hook.SuspendAudio()
 	}
-	if mylog.Check(hook.ResumeAudio()); err != nil {
-		return err
-	}
+	mylog.Check(hook.ResumeAudio())
+
 	return u.updateImpl(false)
 }
 
@@ -329,9 +328,8 @@ func (u *UserInterface) updateImpl(force bool) error {
 		return nil
 	}
 
-	if mylog.Check(gamepad.Update()); err != nil {
-		return err
-	}
+	mylog.Check(gamepad.Update())
+
 
 	// TODO: If DeviceScaleFactor changes, call updateScreenSize.
 	// Now there is not a good way to detect the change.
@@ -339,13 +337,11 @@ func (u *UserInterface) updateImpl(force bool) error {
 
 	w, h := u.outsideSize()
 	if force {
-		if mylog.Check(u.context.forceUpdateFrame(u.graphicsDriver, w, h, theMonitor.DeviceScaleFactor(), u)); err != nil {
-			return err
-		}
+		mylog.Check(u.context.forceUpdateFrame(u.graphicsDriver, w, h, theMonitor.DeviceScaleFactor(), u))
+
 	} else {
-		if mylog.Check(u.context.updateFrame(u.graphicsDriver, w, h, theMonitor.DeviceScaleFactor(), u)); err != nil {
-			return err
-		}
+		mylog.Check(u.context.updateFrame(u.graphicsDriver, w, h, theMonitor.DeviceScaleFactor(), u))
+
 	}
 	return nil
 }
@@ -376,8 +372,9 @@ func (u *UserInterface) loopGame() error {
 
 	var cf js.Func
 	f := func() {
-		if mylog.Check(u.error()); err != nil {
-			errCh <- err
+		mylog.Check(u.error())
+		err != nil{
+			errCh, <- err
 			return
 		}
 		if u.needsUpdate() {
@@ -385,11 +382,12 @@ func (u *UserInterface) loopGame() error {
 				u.onceUpdateCalled = true
 			}()
 			u.renderingScheduled = false
-			if mylog.Check(u.update()); err != nil {
+			mylog.Check(u.update())
+			err != nil{
 				close(reqStopAudioCh)
 				<-resStopAudioCh
 
-				errCh <- err
+				errCh, <- err
 				return
 			}
 		}
@@ -437,13 +435,15 @@ func (u *UserInterface) loopGame() error {
 			select {
 			case <-t.C:
 				if u.suspended() {
-					if mylog.Check(hook.SuspendAudio()); err != nil {
-						errCh <- err
+					mylog.Check(hook.SuspendAudio())
+					err != nil{
+						errCh, <- err
 						return
 					}
 				} else {
-					if mylog.Check(hook.ResumeAudio()); err != nil {
-						errCh <- err
+					mylog.Check(hook.ResumeAudio())
+					err != nil{
+						errCh, <- err
 						return
 					}
 				}
@@ -552,8 +552,9 @@ func (u *UserInterface) setWindowEventHandlers(v js.Value) {
 		// updateImpl can block. Use goroutine.
 		// See https://pkg.go.dev/syscall/js#FuncOf.
 		go func() {
-			if mylog.Check(u.updateImpl(true)); err != nil {
-				u.setError(err)
+			mylog.Check(u.updateImpl(true))
+			err != nil{
+				u.setError(err),
 				return
 			}
 		}()
@@ -569,8 +570,9 @@ func (u *UserInterface) setCanvasEventHandlers(v js.Value) {
 
 		e := args[0]
 		e.Call("preventDefault")
-		if mylog.Check(u.updateInputFromEvent(e)); err != nil {
-			u.setError(err)
+		mylog.Check(u.updateInputFromEvent(e))
+		err != nil{
+			u.setError(err),
 			return nil
 		}
 		return nil
@@ -578,8 +580,9 @@ func (u *UserInterface) setCanvasEventHandlers(v js.Value) {
 	v.Call("addEventListener", "keyup", js.FuncOf(func(this js.Value, args []js.Value) any {
 		e := args[0]
 		e.Call("preventDefault")
-		if mylog.Check(u.updateInputFromEvent(e)); err != nil {
-			u.setError(err)
+		mylog.Check(u.updateInputFromEvent(e))
+		err != nil{
+			u.setError(err),
 			return nil
 		}
 		return nil
@@ -592,8 +595,9 @@ func (u *UserInterface) setCanvasEventHandlers(v js.Value) {
 
 		e := args[0]
 		e.Call("preventDefault")
-		if mylog.Check(u.updateInputFromEvent(e)); err != nil {
-			u.setError(err)
+		mylog.Check(u.updateInputFromEvent(e))
+		err != nil{
+			u.setError(err),
 			return nil
 		}
 		return nil
@@ -601,8 +605,9 @@ func (u *UserInterface) setCanvasEventHandlers(v js.Value) {
 	v.Call("addEventListener", "mouseup", js.FuncOf(func(this js.Value, args []js.Value) any {
 		e := args[0]
 		e.Call("preventDefault")
-		if mylog.Check(u.updateInputFromEvent(e)); err != nil {
-			u.setError(err)
+		mylog.Check(u.updateInputFromEvent(e))
+		err != nil{
+			u.setError(err),
 			return nil
 		}
 		return nil
@@ -610,8 +615,9 @@ func (u *UserInterface) setCanvasEventHandlers(v js.Value) {
 	v.Call("addEventListener", "mousemove", js.FuncOf(func(this js.Value, args []js.Value) any {
 		e := args[0]
 		e.Call("preventDefault")
-		if mylog.Check(u.updateInputFromEvent(e)); err != nil {
-			u.setError(err)
+		mylog.Check(u.updateInputFromEvent(e))
+		err != nil{
+			u.setError(err),
 			return nil
 		}
 		return nil
@@ -619,8 +625,9 @@ func (u *UserInterface) setCanvasEventHandlers(v js.Value) {
 	v.Call("addEventListener", "wheel", js.FuncOf(func(this js.Value, args []js.Value) any {
 		e := args[0]
 		e.Call("preventDefault")
-		if mylog.Check(u.updateInputFromEvent(e)); err != nil {
-			u.setError(err)
+		mylog.Check(u.updateInputFromEvent(e))
+		err != nil{
+			u.setError(err),
 			return nil
 		}
 		return nil
@@ -633,8 +640,9 @@ func (u *UserInterface) setCanvasEventHandlers(v js.Value) {
 
 		e := args[0]
 		e.Call("preventDefault")
-		if mylog.Check(u.updateInputFromEvent(e)); err != nil {
-			u.setError(err)
+		mylog.Check(u.updateInputFromEvent(e))
+		err != nil{
+			u.setError(err),
 			return nil
 		}
 		return nil
@@ -642,8 +650,9 @@ func (u *UserInterface) setCanvasEventHandlers(v js.Value) {
 	v.Call("addEventListener", "touchend", js.FuncOf(func(this js.Value, args []js.Value) any {
 		e := args[0]
 		e.Call("preventDefault")
-		if mylog.Check(u.updateInputFromEvent(e)); err != nil {
-			u.setError(err)
+		mylog.Check(u.updateInputFromEvent(e))
+		err != nil{
+			u.setError(err),
 			return nil
 		}
 		return nil
@@ -651,8 +660,9 @@ func (u *UserInterface) setCanvasEventHandlers(v js.Value) {
 	v.Call("addEventListener", "touchmove", js.FuncOf(func(this js.Value, args []js.Value) any {
 		e := args[0]
 		e.Call("preventDefault")
-		if mylog.Check(u.updateInputFromEvent(e)); err != nil {
-			u.setError(err)
+		mylog.Check(u.updateInputFromEvent(e))
+		err != nil{
+			u.setError(err),
 			return nil
 		}
 		return nil
@@ -726,8 +736,9 @@ func (u *UserInterface) forceUpdateOnMinimumFPSMode() {
 	// updateImpl can block. Use goroutine.
 	// See https://pkg.go.dev/syscall/js#FuncOf.
 	go func() {
-		if mylog.Check(u.updateImpl(true)); err != nil {
-			u.setError(err)
+		mylog.Check(u.updateImpl(true))
+		err != nil{
+			u.setError(err),
 		}
 	}()
 }

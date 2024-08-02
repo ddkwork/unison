@@ -139,9 +139,7 @@ func Start(options ...StartupOption) {
 	// glfw.InitHint(glfw.CocoaMenubar, glfw.False)
 	fatal.IfErr(glfw.Init())
 	// Restore the original working directory, as glfw changes it on some platforms
-	if mylog.Check(os.Chdir(pwd)); err != nil {
-		errs.Log(err)
-	}
+	mylog.Check(os.Chdir(pwd))
 	atexit.Register(quitting)
 	atexit.Register(func() {
 		quitLock.Lock()

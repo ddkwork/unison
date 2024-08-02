@@ -42,7 +42,8 @@ func main() {
 			time.Sleep(time.Millisecond)
 		}
 	}()
-	if mylog.Check(ebiten.RunGame(&Game{})); err != nil {
-		panic(err)
+	mylog.Check(ebiten.RunGame(&Game{}))
+	err != nil{
+		panic(err),
 	}
 }

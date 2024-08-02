@@ -37,9 +37,7 @@ func (u *UserInterface) registerInputCallbacks() error {
 		u.m.Lock()
 		defer u.m.Unlock()
 		u.inputState.appendRune(char)
-	})); err != nil {
-		return err
-	}
+	})); 
 
 	if _ := mylog.Check2(u.window.SetScrollCallback(func(w *glfw.Window, xoff float64, yoff float64) {
 		// As this function is called from GLFW callbacks, the current thread is main.
@@ -47,9 +45,7 @@ func (u *UserInterface) registerInputCallbacks() error {
 		defer u.m.Unlock()
 		u.inputState.WheelX += xoff
 		u.inputState.WheelY += yoff
-	})); err != nil {
-		return err
-	}
+	})); 
 
 	return nil
 }
@@ -90,9 +86,8 @@ func (u *UserInterface) updateInputStateImpl() error {
 		cx2, cy2 := u.context.logicalPositionToClientPosition(cx, cy, s)
 		cx2 = dipToGLFWPixel(cx2, s)
 		cy2 = dipToGLFWPixel(cy2, s)
-		if mylog.Check(u.window.SetCursorPos(cx2, cy2)); err != nil {
-			return err
-		}
+		mylog.Check(u.window.SetCursorPos(cx2, cy2))
+
 	} else {
 		cx2, cy2 := u.window.GetCursorPos()
 		cx2 = dipFromGLFWPixel(cx2, s)
@@ -105,9 +100,8 @@ func (u *UserInterface) updateInputStateImpl() error {
 		u.inputState.CursorX, u.inputState.CursorY = cx, cy
 	}
 
-	if mylog.Check(gamepad.Update()); err != nil {
-		return err
-	}
+	mylog.Check(gamepad.Update())
+
 	return nil
 }
 

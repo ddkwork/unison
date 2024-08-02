@@ -27,7 +27,7 @@ import (
 )
 
 func main() {
-	if mylog.Check(run()); err != nil {
+	 mylog.Check(run()); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
@@ -70,9 +70,7 @@ type DebugContext struct {
 }
 
 var _ Context = (*DebugContext)(nil)
-`, "//go:build !playstation5")); err != nil {
-		return err
-	}
+`, "//go:build !playstation5")); 
 
 	t := reflect.TypeOf((*gl.Context)(nil)).Elem()
 	for i := 0; i < t.NumMethod(); i++ {
@@ -94,27 +92,17 @@ var _ Context = (*DebugContext)(nil)
 			outNames = append(outNames, fmt.Sprintf("out%d", j))
 		}
 
-		if _ := mylog.Check2(fmt.Fprintf(out, "\nfunc (d *DebugContext) %s(%s) (%s) {\n", name, strings.Join(argNamesAndTypes, ", "), strings.Join(outTypes, ","))); err != nil {
-			return err
-		}
+		if _ := mylog.Check2(fmt.Fprintf(out, "\nfunc (d *DebugContext) %s(%s) (%s) {\n", name, strings.Join(argNamesAndTypes, ", "), strings.Join(outTypes, ","))); 
 		if len(outTypes) > 0 {
-			if _ := mylog.Check2(fmt.Fprintf(out, "\t%s := ", strings.Join(outNames, ", "))); err != nil {
-				return err
-			}
+			if _ := mylog.Check2(fmt.Fprintf(out, "\t%s := ", strings.Join(outNames, ", "))); 
 		} else {
-			if _ := mylog.Check2(fmt.Fprintf(out, "\t")); err != nil {
-				return err
-			}
+			if _ := mylog.Check2(fmt.Fprintf(out, "\t")); 
 		}
-		if _ := mylog.Check2(fmt.Fprintf(out, "d.Context.%s(%s)\n", name, strings.Join(argNames, ", "))); err != nil {
-			return err
-		}
+		if _ := mylog.Check2(fmt.Fprintf(out, "d.Context.%s(%s)\n", name, strings.Join(argNames, ", "))); 
 
 		// Print logs.
 		if name != "LoadFunctions" && name != "IsES" {
-			if _ := mylog.Check2(fmt.Fprintf(out, "\tfmt.Fprintln(os.Stderr, %q)\n", name)); err != nil {
-				return err
-			}
+			if _ := mylog.Check2(fmt.Fprintf(out, "\tfmt.Fprintln(os.Stderr, %q)\n", name)); 
 		}
 
 		// Check errors.
@@ -122,24 +110,16 @@ var _ Context = (*DebugContext)(nil)
 			if _ := mylog.Check2(fmt.Fprintf(out, `	if e := d.Context.GetError(); e != NO_ERROR {
 		panic(fmt.Sprintf("gl: GetError() returned %%d at %s", e))
 	}
-`, name)); err != nil {
-				return err
-			}
+`, name)); 
 		}
 
 		if len(outTypes) > 0 {
-			if _ := mylog.Check2(fmt.Fprintf(out, "\treturn %s\n", strings.Join(outNames, ", "))); err != nil {
-				return err
-			}
+			if _ := mylog.Check2(fmt.Fprintf(out, "\treturn %s\n", strings.Join(outNames, ", "))); 
 		}
-		if _ := mylog.Check2(fmt.Fprintf(out, "}\n")); err != nil {
-			return err
-		}
+		if _ := mylog.Check2(fmt.Fprintf(out, "}\n")); 
 	}
 
-	if mylog.Check(out.Flush()); err != nil {
-		return err
-	}
+	 mylog.Check(out.Flush()); 
 
 	return nil
 }

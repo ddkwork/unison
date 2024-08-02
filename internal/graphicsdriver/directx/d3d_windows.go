@@ -83,7 +83,8 @@ func init() {
 	// https://walbourn.github.io/hlsl-fxc-and-d3dcompile/
 	for _, name := range []string{"d3dcompiler_47.dll", "d3dcompiler_46.dll", "d3dcompiler_43.dll"} {
 		dll := windows.NewLazySystemDLL(name)
-		if mylog.Check(dll.Load()); err != nil {
+		mylog.Check(dll.Load())
+		err != nil{
 			continue
 		}
 		d3dcompiler = dll

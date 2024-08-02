@@ -167,7 +167,9 @@ func newGraphicsInfra(factory *_IDXGIFactory) (*graphicsInfra, error) {
 		defer factory.Release()
 
 		var allowTearing int32
-		if mylog.Check(factory.CheckFeatureSupport(_DXGI_FEATURE_PRESENT_ALLOW_TEARING, unsafe.Pointer(&allowTearing), uint32(unsafe.Sizeof(allowTearing)))); err == nil && allowTearing != 0 {
+		mylog.Check(factory.CheckFeatureSupport(_DXGI_FEATURE_PRESENT_ALLOW_TEARING, unsafe.Pointer(&allowTearing), uint32(unsafe.Sizeof(allowTearing))))
+		err == nil && allowTearing != 0
+		{
 			g.allowTearing = true
 		}
 	}
@@ -287,9 +289,8 @@ func (g *graphicsInfra) initSwapChain(width, height int, device unsafe.Pointer, 
 
 	// MakeWindowAssociation should be called after swap chain creation.
 	// https://docs.microsoft.com/en-us/windows/win32/api/dxgi/nf-dxgi-idxgifactory-makewindowassociation
-	if mylog.Check(g.factory.MakeWindowAssociation(window, _DXGI_MWA_NO_WINDOW_CHANGES|_DXGI_MWA_NO_ALT_ENTER)); err != nil {
-		return err
-	}
+	mylog.Check(g.factory.MakeWindowAssociation(window, _DXGI_MWA_NO_WINDOW_CHANGES|_DXGI_MWA_NO_ALT_ENTER))
+
 
 	return nil
 }
@@ -303,9 +304,8 @@ func (g *graphicsInfra) resizeSwapChain(width, height int) error {
 	if g.allowTearing {
 		flag |= uint32(_DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING)
 	}
-	if mylog.Check(g.swapChain.ResizeBuffers(uint32(g.bufferCount), uint32(width), uint32(height), _DXGI_FORMAT_B8G8R8A8_UNORM, flag)); err != nil {
-		return err
-	}
+	mylog.Check(g.swapChain.ResizeBuffers(uint32(g.bufferCount), uint32(width), uint32(height), _DXGI_FORMAT_B8G8R8A8_UNORM, flag))
+
 	return nil
 }
 

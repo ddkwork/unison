@@ -69,9 +69,8 @@ func run() error {
 	matches := mylog.Check2(filepath.Glob(prefix + "*.go"))
 
 	for _, f := range matches {
-		if mylog.Check(os.Remove(f)); err != nil {
-			return err
-		}
+		mylog.Check(os.Remove(f))
+
 	}
 
 	for _, f := range files {
@@ -128,15 +127,15 @@ func min(a, b int) int {
 }`)
 		}
 
-		if mylog.Check(w.Flush()); err != nil {
-			return err
-		}
+		mylog.Check(w.Flush())
+
 	}
 	return nil
 }
 
 func main() {
-	if mylog.Check(run()); err != nil {
-		panic(err)
+	mylog.Check(run())
+	err != nil{
+		panic(err),
 	}
 }

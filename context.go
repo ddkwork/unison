@@ -82,9 +82,8 @@ func (c *context) forceUpdateFrame(graphicsDriver graphicsdriver.Graphics, outsi
 		n = 2
 	}
 	for i := 0; i < n; i++ {
-		if mylog.Check(c.updateFrameImpl(graphicsDriver, 1, outsideWidth, outsideHeight, deviceScaleFactor, ui, true)); err != nil {
-			return err
-		}
+		mylog.Check(c.updateFrameImpl(graphicsDriver, 1, outsideWidth, outsideHeight, deviceScaleFactor, ui, true))
+
 	}
 	return nil
 }
@@ -98,9 +97,8 @@ func (c *context) updateFrameImpl(graphicsDriver graphicsdriver.Graphics, update
 
 	debug.Logf("----\n")
 
-	if mylog.Check(atlas.BeginFrame(graphicsDriver)); err != nil {
-		return err
-	}
+	mylog.Check(atlas.BeginFrame(graphicsDriver))
+
 
 	defer func() {
 		if err1 := atlas.EndFrame(); err1 != nil && err == nil {
@@ -115,9 +113,8 @@ func (c *context) updateFrameImpl(graphicsDriver graphicsdriver.Graphics, update
 	}()
 
 	// Flush deferred functions, like reading pixels from GPU.
-	if mylog.Check(c.processFuncsInFrame(ui)); err != nil {
-		return err
-	}
+	mylog.Check(c.processFuncsInFrame(ui))
+
 
 	// ForceUpdate can be invoked even if the context is not initialized yet (#1591).
 	if w, h := c.layoutGame(outsideWidth, outsideHeight, deviceScaleFactor); w == 0 || h == 0 {
@@ -125,9 +122,8 @@ func (c *context) updateFrameImpl(graphicsDriver graphicsdriver.Graphics, update
 	}
 
 	// Update the input state after the layout is updated as a cursor position is affected by the layout.
-	if mylog.Check(ui.updateInputState()); err != nil {
-		return err
-	}
+	mylog.Check(ui.updateInputState())
+
 
 	// Ensure that Update is called once before Draw so that Update can be used for initialization.
 	if !c.updateCalled && updateCount == 0 {
@@ -143,29 +139,24 @@ func (c *context) updateFrameImpl(graphicsDriver graphicsdriver.Graphics, update
 			ui.readInputState(inputState)
 		})
 
-		if mylog.Check(hook.RunBeforeUpdateHooks()); err != nil {
-			return err
-		}
-		if mylog.Check(c.game.Update()); err != nil {
-			return err
-		}
+		mylog.Check(hook.RunBeforeUpdateHooks())
+
+		mylog.Check(c.game.Update())
+
 
 		// Catch the error that happened at (*Image).At.
-		if mylog.Check(ui.error()); err != nil {
-			return err
-		}
+		mylog.Check(ui.error())
+
 	}
 
 	// Update window icons during a frame, since an icon might be *ebiten.Image and
 	// getting pixels from it needs to be in a frame (#1468).
-	if mylog.Check(ui.updateIconIfNeeded()); err != nil {
-		return err
-	}
+	mylog.Check(ui.updateIconIfNeeded())
+
 
 	// Draw the game.
-	if mylog.Check(c.drawGame(graphicsDriver, ui, forceDraw)); err != nil {
-		return err
-	}
+	mylog.Check(c.drawGame(graphicsDriver, ui, forceDraw))
+
 
 	return nil
 }
@@ -189,9 +180,8 @@ func (c *context) drawGame(graphicsDriver graphicsdriver.Graphics, ui *UserInter
 		c.offscreen.clear()
 	}
 
-	if mylog.Check(c.game.DrawOffscreen()); err != nil {
-		return err
-	}
+	mylog.Check(c.game.DrawOffscreen())
+
 
 	const maxSkipCount = 3
 
@@ -315,7 +305,8 @@ func (c *context) processFuncsInFrame(ui *UserInterface) error {
 		default:
 			if processed {
 				// Catch the error that happened at (*Image).At.
-				if mylog.Check(ui.error()); err != nil {
+				mylog.Check(ui.error())
+				err != nil{
 					return err
 				}
 			}

@@ -35,9 +35,8 @@ func (u *UserInterface) updateInputState() error {
 
 // updateInputStateImpl must be called from the main thread.
 func (u *UserInterface) updateInputStateImpl() error {
-	if mylog.Check(gamepad.Update()); err != nil {
-		return err
-	}
+	mylog.Check(gamepad.Update())
+
 
 	C.ebitengine_UpdateTouches()
 

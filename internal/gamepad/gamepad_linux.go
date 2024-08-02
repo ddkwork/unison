@@ -49,7 +49,7 @@ func newNativeGamepadsImpl() nativeGamepads {
 func (g *nativeGamepadsImpl) init(gamepads *gamepads) error {
 	// Check the existence of the directory `dirName`.
 	var stat unix.Stat_t
-	if mylog.Check(unix.Stat(dirName, &stat)); err != nil {
+	 mylog.Check(unix.Stat(dirName, &stat)); err != nil {
 		if err == unix.ENOENT {
 			return nil
 		}
@@ -80,9 +80,7 @@ func (g *nativeGamepadsImpl) init(gamepads *gamepads) error {
 		if !reEvent.MatchString(ent.Name()) {
 			continue
 		}
-		if mylog.Check(g.openGamepad(gamepads, filepath.Join(dirName, ent.Name()))); err != nil {
-			return err
-		}
+		 mylog.Check(g.openGamepad(gamepads, filepath.Join(dirName, ent.Name()))); 
 	}
 
 	return nil
@@ -108,23 +106,21 @@ func (*nativeGamepadsImpl) openGamepad(gamepads *gamepads, path string) (err err
 	keyBits := make([]byte, (_KEY_CNT+7)/8)
 	absBits := make([]byte, (_ABS_CNT+7)/8)
 	var id input_id
-	if mylog.Check(ioctl(fd, _EVIOCGBIT(0, uint(len(evBits))), unsafe.Pointer(&evBits[0]))); err != nil {
+	 mylog.Check(ioctl(fd, _EVIOCGBIT(0, uint(len(evBits))), unsafe.Pointer(&evBits[0]))); err != nil {
 		return fmt.Errorf("gamepad: ioctl for evBits failed: %w", err)
 	}
-	if mylog.Check(ioctl(fd, _EVIOCGBIT(unix.EV_KEY, uint(len(keyBits))), unsafe.Pointer(&keyBits[0]))); err != nil {
+	 mylog.Check(ioctl(fd, _EVIOCGBIT(unix.EV_KEY, uint(len(keyBits))), unsafe.Pointer(&keyBits[0]))); err != nil {
 		return fmt.Errorf("gamepad: ioctl for keyBits failed: %w", err)
 	}
-	if mylog.Check(ioctl(fd, _EVIOCGBIT(unix.EV_ABS, uint(len(absBits))), unsafe.Pointer(&absBits[0]))); err != nil {
+	 mylog.Check(ioctl(fd, _EVIOCGBIT(unix.EV_ABS, uint(len(absBits))), unsafe.Pointer(&absBits[0]))); err != nil {
 		return fmt.Errorf("gamepad: ioctl for absBits failed: %w", err)
 	}
-	if mylog.Check(ioctl(fd, _EVIOCGID(), unsafe.Pointer(&id))); err != nil {
+	 mylog.Check(ioctl(fd, _EVIOCGID(), unsafe.Pointer(&id))); err != nil {
 		return fmt.Errorf("gamepad: ioctl for an ID failed: %w", err)
 	}
 
 	if !isBitSet(evBits, unix.EV_ABS) {
-		if mylog.Check(unix.Close(fd)); err != nil {
-			return err
-		}
+		 mylog.Check(unix.Close(fd)); 
 
 		return nil
 	}
@@ -132,7 +128,7 @@ func (*nativeGamepadsImpl) openGamepad(gamepads *gamepads, path string) (err err
 	cname := make([]byte, 256)
 	name := "Unknown"
 	// TODO: Is it OK to ignore the error here?
-	if mylog.Check(ioctl(fd, uint(_EVIOCGNAME(uint(len(cname)))), unsafe.Pointer(&cname[0]))); err == nil {
+	 mylog.Check(ioctl(fd, uint(_EVIOCGNAME(uint(len(cname)))), unsafe.Pointer(&cname[0]))); err == nil {
 		name = unix.ByteSliceToString(cname)
 	}
 
@@ -192,7 +188,7 @@ func (*nativeGamepadsImpl) openGamepad(gamepads *gamepads, path string) (err err
 			hatCount++
 			continue
 		}
-		if mylog.Check(ioctl(n.fd, uint(_EVIOCGABS(uint(code))), unsafe.Pointer(&n.absInfo[code]))); err != nil {
+		 mylog.Check(ioctl(n.fd, uint(_EVIOCGABS(uint(code))), unsafe.Pointer(&n.absInfo[code]))); err != nil {
 			return fmt.Errorf("gamepad: ioctl for an abs at openGamepad failed: %w", err)
 		}
 		n.absMap[code] = axisCount
@@ -205,9 +201,7 @@ func (*nativeGamepadsImpl) openGamepad(gamepads *gamepads, path string) (err err
 
 	n.computeStandardLayout(id.vendor)
 
-	if mylog.Check(n.pollAbsState()); err != nil {
-		return err
-	}
+	 mylog.Check(n.pollAbsState()); 
 
 	return nil
 }
@@ -237,9 +231,7 @@ func (g *nativeGamepadsImpl) update(gamepads *gamepads) error {
 
 		path := filepath.Join(dirName, name)
 		if e.Mask&(unix.IN_CREATE|unix.IN_ATTRIB) != 0 {
-			if mylog.Check(g.openGamepad(gamepads, path)); err != nil {
-				return err
-			}
+			 mylog.Check(g.openGamepad(gamepads, path)); 
 			continue
 		}
 		if e.Mask&unix.IN_DELETE != 0 {
@@ -323,7 +315,7 @@ func (g *nativeGamepadImpl) update(gamepad *gamepads) error {
 				g.dropped = true
 			case _SYN_REPORT:
 				g.dropped = false
-				if mylog.Check(g.pollAbsState()); err != nil {
+				 mylog.Check(g.pollAbsState()); err != nil {
 					return fmt.Errorf("gamepad: poll absolute state: %w", err)
 				}
 			}
@@ -353,7 +345,7 @@ func (g *nativeGamepadImpl) pollAbsState() error {
 		if g.absMap[code] < 0 {
 			continue
 		}
-		if mylog.Check(ioctl(g.fd, uint(_EVIOCGABS(uint(code))), unsafe.Pointer(&g.absInfo[code]))); err != nil {
+		 mylog.Check(ioctl(g.fd, uint(_EVIOCGABS(uint(code))), unsafe.Pointer(&g.absInfo[code]))); err != nil {
 			return fmt.Errorf("gamepad: ioctl for an abs at pollAbsState failed: %w", err)
 		}
 		g.handleAbsEvent(code, g.absInfo[code].value)

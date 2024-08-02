@@ -111,9 +111,8 @@ func (i *image11) ReadPixels(args []graphicsdriver.PixelsArgs) error {
 	})
 
 	var mapped _D3D11_MAPPED_SUBRESOURCE
-	if mylog.Check(i.graphics.deviceContext.Map(unsafe.Pointer(staging), 0, _D3D11_MAP_READ, 0, &mapped)); err != nil {
-		return err
-	}
+	mylog.Check(i.graphics.deviceContext.Map(unsafe.Pointer(staging), 0, _D3D11_MAP_READ, 0, &mapped))
+
 
 	stride := int(mapped.RowPitch)
 	srcPix := unsafe.Slice((*byte)(mapped.pData), stride*unionRegion.Dy())

@@ -37,9 +37,8 @@ func RunBeforeUpdateHooks() error {
 	defer m.Unlock()
 
 	for _, f := range onBeforeUpdateHooks {
-		if mylog.Check(f()); err != nil {
-			return err
-		}
+		mylog.Check(f())
+
 	}
 	return nil
 }

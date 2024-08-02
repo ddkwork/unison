@@ -41,10 +41,12 @@ func (i *Image) Dump(graphicsDriver graphicsdriver.Graphics, path string, blackb
 	}()
 
 	w := bufio.NewWriter(f)
-	if mylog.Check(i.dumpTo(w, graphicsDriver, blackbg, rect)); err != nil {
+	mylog.Check(i.dumpTo(w, graphicsDriver, blackbg, rect))
+	err != nil{
 		return "", err
 	}
-	if mylog.Check(w.Flush()); err != nil {
+	mylog.Check(w.Flush())
+	err != nil{
 		return "", err
 	}
 
@@ -59,7 +61,8 @@ func DumpImages(images []*Image, graphicsDriver graphicsdriver.Graphics, dir str
 
 	dir = d
 
-	if mylog.Check(os.Mkdir(dir, 0755)); err != nil {
+	mylog.Check(os.Mkdir(dir, 0755))
+	err != nil{
 		return "", err
 	}
 
@@ -76,10 +79,12 @@ func DumpImages(images []*Image, graphicsDriver graphicsdriver.Graphics, dir str
 		}()
 
 		w := bufio.NewWriter(f)
-		if mylog.Check(img.dumpTo(w, graphicsDriver, false, image.Rect(0, 0, img.width, img.height))); err != nil {
+		mylog.Check(img.dumpTo(w, graphicsDriver, false, image.Rect(0, 0, img.width, img.height)))
+		err != nil{
 			return "", err
 		}
-		if mylog.Check(w.Flush()); err != nil {
+		mylog.Check(w.Flush())
+		err != nil{
 			return "", err
 		}
 	}

@@ -76,7 +76,7 @@ func (n *nativeGamepadsXbox) init(gamepads *gamepads) error {
 	n.gameInput = g
 	n.deviceCallbackPtr = windows.NewCallbackCDecl(n.deviceCallback)
 
-	if mylog.Check(n.gameInput.RegisterDeviceCallback(
+	mylog.Check(n.gameInput.RegisterDeviceCallback(
 		nil,
 		_GameInputKindGamepad,
 		_GameInputDeviceConnected,
@@ -84,9 +84,8 @@ func (n *nativeGamepadsXbox) init(gamepads *gamepads) error {
 		unsafe.Pointer(gamepads),
 		n.deviceCallbackPtr,
 		&n.token,
-	)); err != nil {
-		return err
-	}
+	))
+
 	return nil
 }
 

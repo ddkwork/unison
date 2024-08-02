@@ -89,15 +89,13 @@ func (g *gamepads) update() error {
 	defer g.m.Unlock()
 
 	if !g.inited {
-		if mylog.Check(g.native.init(g)); err != nil {
-			return err
-		}
+		mylog.Check(g.native.init(g))
+
 		g.inited = true
 	}
 
-	if mylog.Check(g.native.update(g)); err != nil {
-		return err
-	}
+	mylog.Check(g.native.update(g))
+
 
 	// A gamepad can be detected even though there are not. Apparently, some special devices are
 	// recognized as gamepads by OSes. In this case, the number of the 'buttons' can exceed the
@@ -110,9 +108,8 @@ func (g *gamepads) update() error {
 		if gp == nil {
 			continue
 		}
-		if mylog.Check(gp.update(g)); err != nil {
-			return err
-		}
+		mylog.Check(gp.update(g))
+
 	}
 	return nil
 }

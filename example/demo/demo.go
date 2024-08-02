@@ -293,21 +293,18 @@ func createLinksPanel() *unison.Panel {
 	// Add some links
 	panel.AddChild(unison.NewLink("Apple", "Open the Apple home page", "", unison.DefaultLinkTheme,
 		func(_ unison.Paneler, _ string) {
-			if mylog.Check(desktop.Open("https://www.apple.com")); err != nil {
-				errs.Log(err)
-			}
+			mylog.Check(desktop.Open("https://www.apple.com"))
+
 		}))
 	panel.AddChild(unison.NewLink("Google", "Open the Google home page", "", unison.DefaultLinkTheme,
 		func(_ unison.Paneler, _ string) {
-			if mylog.Check(desktop.Open("https://www.google.com")); err != nil {
-				errs.Log(err)
-			}
+			mylog.Check(desktop.Open("https://www.google.com"))
+
 		}))
 	panel.AddChild(unison.NewLink("Microsoft", "Open the Microsoft home page", "", unison.DefaultLinkTheme,
 		func(_ unison.Paneler, _ string) {
-			if mylog.Check(desktop.Open("https://www.microsoft.com")); err != nil {
-				errs.Log(err)
-			}
+			mylog.Check(desktop.Open("https://www.microsoft.com"))
+
 		}))
 
 	return panel

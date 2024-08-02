@@ -40,7 +40,8 @@ func NewGraphics() graphicsdriver.Graphics {
 
 	ctx := mylog.Check2(gl.NewDefaultContext())
 
-	if mylog.Check(setGLFWClientAPI(ctx.IsES())); err != nil {
+	mylog.Check(setGLFWClientAPI(ctx.IsES()))
+	err != nil{
 		return nil
 	}
 
@@ -49,38 +50,29 @@ func NewGraphics() graphicsdriver.Graphics {
 
 func setGLFWClientAPI(isES bool) error {
 	if isES {
-		if mylog.Check(glfw.WindowHint(glfw.ClientAPI, glfw.OpenGLESAPI)); err != nil {
-			return err
-		}
-		if mylog.Check(glfw.WindowHint(glfw.ContextVersionMajor, 3)); err != nil {
-			return err
-		}
-		if mylog.Check(glfw.WindowHint(glfw.ContextVersionMinor, 0)); err != nil {
-			return err
-		}
-		if mylog.Check(glfw.WindowHint(glfw.ContextCreationAPI, glfw.EGLContextAPI)); err != nil {
-			return err
-		}
+		mylog.Check(glfw.WindowHint(glfw.ClientAPI, glfw.OpenGLESAPI))
+
+		mylog.Check(glfw.WindowHint(glfw.ContextVersionMajor, 3))
+
+		mylog.Check(glfw.WindowHint(glfw.ContextVersionMinor, 0))
+
+		mylog.Check(glfw.WindowHint(glfw.ContextCreationAPI, glfw.EGLContextAPI))
+
 		return nil
 	}
 
-	if mylog.Check(glfw.WindowHint(glfw.ClientAPI, glfw.OpenGLAPI)); err != nil {
-		return err
-	}
-	if mylog.Check(glfw.WindowHint(glfw.ContextVersionMajor, 3)); err != nil {
-		return err
-	}
-	if mylog.Check(glfw.WindowHint(glfw.ContextVersionMinor, 2)); err != nil {
-		return err
-	}
+	mylog.Check(glfw.WindowHint(glfw.ClientAPI, glfw.OpenGLAPI))
+
+	mylog.Check(glfw.WindowHint(glfw.ContextVersionMajor, 3))
+
+	mylog.Check(glfw.WindowHint(glfw.ContextVersionMinor, 2))
+
 	// macOS requires forward-compatible and a core profile.
 	if runtime.GOOS == "darwin" {
-		if mylog.Check(glfw.WindowHint(glfw.OpenGLForwardCompat, glfw.True)); err != nil {
-			return err
-		}
-		if mylog.Check(glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)); err != nil {
-			return err
-		}
+		mylog.Check(glfw.WindowHint(glfw.OpenGLForwardCompat, glfw.True))
+
+		mylog.Check(glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile))
+
 	}
 	return nil
 }
@@ -101,17 +93,14 @@ func (g *Graphics) swapBuffers() error {
 	// This needs to be called at least after SetMonitor.
 	// Without SwapInterval after SetMonitor, vsynch doesn't work (#375).
 	if g.vsync {
-		if mylog.Check(glfw.SwapInterval(1)); err != nil {
-			return err
-		}
+		mylog.Check(glfw.SwapInterval(1))
+
 	} else {
-		if mylog.Check(glfw.SwapInterval(0)); err != nil {
-			return err
-		}
+		mylog.Check(glfw.SwapInterval(0))
+
 	}
 
-	if mylog.Check(g.window.SwapBuffers()); err != nil {
-		return err
-	}
+	mylog.Check(g.window.SwapBuffers())
+
 	return nil
 }

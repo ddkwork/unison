@@ -201,7 +201,8 @@ func NewWindow(title string, options ...WindowOption) (*Window, error) {
 		surface:    &surface{},
 	}
 	for _, option := range options {
-		if mylog.Check(option(w)); err != nil {
+		mylog.Check(option(w))
+		err != nil{
 			return nil, err
 		}
 	}

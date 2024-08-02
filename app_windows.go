@@ -32,17 +32,19 @@ func platformLateInit() {
 	keyPath := `Software\Microsoft\Windows\CurrentVersion\Themes\Personalize`
 	k := mylog.Check2(registry.OpenKey(registry.CURRENT_USER, keyPath, syscall.KEY_NOTIFY|registry.QUERY_VALUE))
 
-	if mylog.Check(updateTheme(k, true)); err != nil {
+	mylog.Check(updateTheme(k, true))
+	err != nil{
 		errs.Log(err)
-		xio.CloseIgnoringErrors(k)
+		xio.CloseIgnoringErrors(k),
 		return
 	}
 	go func() {
 		for {
 			w32.RegNotifyChangeKeyValue(k, false, w32.RegNotifyChangeName|w32.RegNotifyChangeLastSet, 0, false)
-			if mylog.Check(updateTheme(k, false)); err != nil {
+			mylog.Check(updateTheme(k, false))
+			err != nil{
 				errs.Log(err)
-				xio.CloseIgnoringErrors(k)
+				xio.CloseIgnoringErrors(k),
 				return
 			}
 		}

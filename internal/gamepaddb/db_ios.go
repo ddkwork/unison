@@ -26,7 +26,5 @@ import (
 var controllerBytes []byte
 
 func init() {
-	if mylog.Check(Update(controllerBytes)); err != nil {
-		panic(err)
-	}
+	 mylog.Check(Update(controllerBytes));
 }

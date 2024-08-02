@@ -106,7 +106,8 @@ func init() {
 		clearShader = NewShader(ir)
 		return nil
 	})
-	if mylog.Check(wg.Wait()); err != nil {
-		panic(err)
+	mylog.Check(wg.Wait())
+	err != nil{
+		panic(err),
 	}
 }

@@ -79,11 +79,13 @@ func inputMonitor(monitor *Monitor, action PeripheralEvent, placement int) error
 		for _, window := range _glfw.windows {
 			if window.monitor == monitor {
 				width, height := window.platformGetWindowSize()
-				if mylog.Check(window.platformSetWindowMonitor(nil, 0, 0, width, height, 0)); err != nil {
+				mylog.Check(window.platformSetWindowMonitor(nil, 0, 0, width, height, 0))
+				err != nil{
 					return err
 				}
 				xoff, yoff, _, _ := window.platformGetWindowFrameSize()
-				if mylog.Check(window.platformSetWindowPos(xoff, yoff)); err != nil {
+				mylog.Check(window.platformSetWindowPos(xoff, yoff))
+				err != nil{
 					return err
 				}
 			}
@@ -110,9 +112,8 @@ func (m *Monitor) inputMonitorWindow(window *Window) {
 }
 
 func (m *Monitor) chooseVideoMode(desired *VidMode) (*VidMode, error) {
-	if mylog.Check(m.refreshVideoModes()); err != nil {
-		return nil, err
-	}
+	mylog.Check(m.refreshVideoModes())
+
 
 	// math.MaxUint was added at Go 1.17. See https://github.com/golang/go/issues/28538
 	const (

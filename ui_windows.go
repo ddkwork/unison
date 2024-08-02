@@ -197,7 +197,9 @@ func initializeWindowAfterCreation(w *glfw.Window) error {
 
 func (u *UserInterface) skipTaskbar() error {
 	// S_FALSE is returned when CoInitializeEx is nested. This is a successful case.
-	if mylog.Check(windows.CoInitializeEx(0, windows.COINIT_MULTITHREADED)); err != nil && !errors.Is(err, syscall.Errno(windows.S_FALSE)) {
+	mylog.Check(windows.CoInitializeEx(0, windows.COINIT_MULTITHREADED))
+	err != nil && !errors.Is(err, syscall.Errno(windows.S_FALSE))
+	{
 		return err
 	}
 	// CoUninitialize should be called even when CoInitializeEx returns S_FALSE.
@@ -208,9 +210,8 @@ func (u *UserInterface) skipTaskbar() error {
 	defer t.Release()
 
 	w := u.window.GetWin32Window()
-	if mylog.Check(t.DeleteTab(w)); err != nil {
-		return err
-	}
+	mylog.Check(t.DeleteTab(w))
+
 
 	return nil
 }

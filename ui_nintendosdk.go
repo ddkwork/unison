@@ -91,9 +91,8 @@ func (u *UserInterface) loopGame() error {
 	for {
 		recordProfilerHeartbeat()
 
-		if mylog.Check(u.context.updateFrame(u.graphicsDriver, float64(C.kScreenWidth), float64(C.kScreenHeight), theMonitor.DeviceScaleFactor(), u)); err != nil {
-			return err
-		}
+		mylog.Check(u.context.updateFrame(u.graphicsDriver, float64(C.kScreenWidth), float64(C.kScreenHeight), theMonitor.DeviceScaleFactor(), u))
+
 	}
 }
 

@@ -134,9 +134,8 @@ type openGLState struct {
 
 // reset resets or initializes the OpenGL state.
 func (s *openGLState) reset(context *context) error {
-	if mylog.Check(context.reset()); err != nil {
-		return err
-	}
+	mylog.Check(context.reset())
+
 
 	s.lastProgram = 0
 	context.ctx.UseProgram(0)

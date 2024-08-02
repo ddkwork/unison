@@ -77,9 +77,8 @@ func newShader(device mtl.Device, id graphicsdriver.ShaderID, program *shaderir.
 		ir:   program,
 		rpss: map[shaderRpsKey]mtl.RenderPipelineState{},
 	}
-	if mylog.Check(s.init(device)); err != nil {
-		return nil, err
-	}
+	mylog.Check(s.init(device))
+
 	return s, nil
 }
 

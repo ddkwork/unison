@@ -83,9 +83,8 @@ func (g *Graphics) End(present bool) error {
 	// The last uniforms must be reset before swapping the buffer (#2517).
 	if present {
 		g.state.resetLastUniforms()
-		if mylog.Check(g.swapBuffers()); err != nil {
-			return err
-		}
+		mylog.Check(g.swapBuffers())
+
 	}
 
 	return nil
@@ -166,12 +165,10 @@ func (g *Graphics) removeImage(img *Image) {
 }
 
 func (g *Graphics) Initialize() error {
-	if mylog.Check(g.makeContextCurrent()); err != nil {
-		return err
-	}
-	if mylog.Check(g.state.reset(&g.context)); err != nil {
-		return err
-	}
+	mylog.Check(g.makeContextCurrent())
+
+	mylog.Check(g.state.reset(&g.context))
+
 	return nil
 }
 
@@ -206,9 +203,8 @@ func (g *Graphics) DrawTriangles(dstID graphicsdriver.ImageID, srcIDs [graphics.
 
 	g.drawCalled = true
 
-	if mylog.Check(destination.setViewport()); err != nil {
-		return err
-	}
+	mylog.Check(destination.setViewport())
+
 	g.context.blend(blend)
 
 	shader := g.shaders[shaderID]
@@ -249,9 +245,8 @@ func (g *Graphics) DrawTriangles(dstID graphicsdriver.ImageID, srcIDs [graphics.
 		imgs[i].native = g.images[srcID].texture
 	}
 
-	if mylog.Check(g.useProgram(program, g.uniformVars, imgs)); err != nil {
-		return err
-	}
+	mylog.Check(g.useProgram(program, g.uniformVars, imgs))
+
 
 	for i := range g.uniformVars {
 		g.uniformVars[i] = uniformVariable{}
@@ -259,9 +254,8 @@ func (g *Graphics) DrawTriangles(dstID graphicsdriver.ImageID, srcIDs [graphics.
 	g.uniformVars = g.uniformVars[:0]
 
 	if fillRule != graphicsdriver.FillRuleFillAll {
-		if mylog.Check(destination.ensureStencilBuffer()); err != nil {
-			return err
-		}
+		mylog.Check(destination.ensureStencilBuffer())
+
 		g.context.ctx.Enable(gl.STENCIL_TEST)
 	}
 

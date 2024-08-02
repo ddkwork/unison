@@ -22,16 +22,16 @@ import (
 
 func GetX11Display() (*C.Display, error) {
 	ret := C.glfwGetX11Display()
-	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
-		return nil, err
-	}
+	mylog.Check(fetchErrorIgnoringPlatformError())
+
 	return ret, nil
 }
 
 // GetX11Adapter returns the RRCrtc of the monitor.
 func (m *Monitor) GetX11Adapter() (C.RRCrtc, error) {
 	ret := C.glfwGetX11Adapter(m.data)
-	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
+	mylog.Check(fetchErrorIgnoringPlatformError())
+	err != nil{
 		return 0, err
 	}
 	return ret, nil
@@ -40,7 +40,8 @@ func (m *Monitor) GetX11Adapter() (C.RRCrtc, error) {
 // GetX11Monitor returns the RROutput of the monitor.
 func (m *Monitor) GetX11Monitor() (C.RROutput, error) {
 	ret := C.glfwGetX11Monitor(m.data)
-	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
+	mylog.Check(fetchErrorIgnoringPlatformError())
+	err != nil{
 		return 0, err
 	}
 	return ret, nil
@@ -49,7 +50,8 @@ func (m *Monitor) GetX11Monitor() (C.RROutput, error) {
 // GetX11Window returns the Window of the window.
 func (w *Window) GetX11Window() (C.Window, error) {
 	ret := C.glfwGetX11Window(w.data)
-	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
+	mylog.Check(fetchErrorIgnoringPlatformError())
+	err != nil{
 		return 0, err
 	}
 	return ret, nil
@@ -58,16 +60,16 @@ func (w *Window) GetX11Window() (C.Window, error) {
 // GetGLXContext returns the GLXContext of the window.
 func (w *Window) GetGLXContext() (C.GLXContext, error) {
 	ret := C.glfwGetGLXContext(w.data)
-	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
-		return nil, err
-	}
+	mylog.Check(fetchErrorIgnoringPlatformError())
+
 	return ret, nil
 }
 
 // GetGLXWindow returns the GLXWindow of the window.
 func (w *Window) GetGLXWindow() (C.GLXWindow, error) {
 	ret := C.glfwGetGLXWindow(w.data)
-	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
+	mylog.Check(fetchErrorIgnoringPlatformError())
+	err != nil{
 		return 0, err
 	}
 	return ret, nil

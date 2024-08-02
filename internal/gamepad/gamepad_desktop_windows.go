@@ -173,14 +173,12 @@ func (g *nativeGamepadsDesktop) init(gamepads *gamepads) error {
 		m := mylog.Check2(_GetModuleHandleW())
 
 		var api *_IDirectInput8W
-		if mylog.Check(g.directInput8Create(m, _DIRECTINPUT_VERSION, &_IID_IDirectInput8W, &api, nil)); err != nil {
-			return err
-		}
+		mylog.Check(g.directInput8Create(m, _DIRECTINPUT_VERSION, &_IID_IDirectInput8W, &api, nil))
+
 		g.dinput8API = api
 
-		if mylog.Check(g.detectConnection(gamepads)); err != nil {
-			return err
-		}
+		mylog.Check(g.detectConnection(gamepads))
+
 	}
 
 	return nil
@@ -221,9 +219,8 @@ func (g *nativeGamepadsDesktop) detectConnection(gamepads *gamepads) error {
 		if g.enumDevicesCallback == 0 {
 			g.enumDevicesCallback = windows.NewCallback(g.dinput8EnumDevicesCallback)
 		}
-		if mylog.Check(g.dinput8API.EnumDevices(_DI8DEVCLASS_GAMECTRL, g.enumDevicesCallback, unsafe.Pointer(gamepads), _DIEDFL_ALLDEVICES)); err != nil {
-			return err
-		}
+		mylog.Check(g.dinput8API.EnumDevices(_DI8DEVCLASS_GAMECTRL, g.enumDevicesCallback, unsafe.Pointer(gamepads), _DIEDFL_ALLDEVICES))
+
 		if g.err != nil {
 			return g.err
 		}
@@ -240,10 +237,11 @@ func (g *nativeGamepadsDesktop) detectConnection(gamepads *gamepads) error {
 			}
 
 			var xic _XINPUT_CAPABILITIES
-			if mylog.Check(g.xinputGetCapabilities(uint32(i), 0, &xic)); err != nil {
-				if !errors.Is(err, windows.ERROR_DEVICE_NOT_CONNECTED) {
-					return err
-				}
+			mylog.Check(g.xinputGetCapabilities(uint32(i), 0, &xic))
+			err != nil{
+				if !errors.Is(err, windows.ERROR_DEVICE_NOT_CONNECTED){
+				return err
+			}
 				continue
 			}
 
@@ -293,8 +291,9 @@ func (g *nativeGamepadsDesktop) dinput8EnumDevicesCallback(lpddi *_DIDEVICEINSTA
 	}
 
 	var device *_IDirectInputDevice8W
-	if mylog.Check(g.dinput8API.CreateDevice(&lpddi.guidInstance, &device, nil)); err != nil {
-		g.err = err
+	mylog.Check(g.dinput8API.CreateDevice(&lpddi.guidInstance, &device, nil))
+	err != nil{
+		g.err, = err
 		return _DIENUM_STOP
 	}
 
@@ -308,7 +307,8 @@ func (g *nativeGamepadsDesktop) dinput8EnumDevicesCallback(lpddi *_DIDEVICEINSTA
 				dwHow:        _DIPH_DEVICE,
 			},
 		}
-		if mylog.Check(device.GetProperty(_DIPROP_GUIDANDPATH, &prop.diph)); err != nil {
+		mylog.Check(device.GetProperty(_DIPROP_GUIDANDPATH, &prop.diph))
+		err != nil{
 			return "", err
 		}
 		return windows.UTF16ToString(prop.wszPath[:]), nil
@@ -343,8 +343,9 @@ func (g *nativeGamepadsDesktop) dinput8EnumDevicesCallback(lpddi *_DIDEVICEINSTA
 		dwNumObjs:  uint32(len(dinputObjectDataFormats)),
 		rgodf:      &dinputObjectDataFormats[0],
 	}
-	if mylog.Check(device.SetDataFormat(&dataFormat)); err != nil {
-		g.err = err
+	mylog.Check(device.SetDataFormat(&dataFormat))
+	err != nil{
+		g.err, = err
 		device.Release()
 		return _DIENUM_STOP
 	}
@@ -352,8 +353,9 @@ func (g *nativeGamepadsDesktop) dinput8EnumDevicesCallback(lpddi *_DIDEVICEINSTA
 	dc := _DIDEVCAPS{
 		dwSize: uint32(unsafe.Sizeof(_DIDEVCAPS{})),
 	}
-	if mylog.Check(device.GetCapabilities(&dc)); err != nil {
-		g.err = err
+	mylog.Check(device.GetCapabilities(&dc))
+	err != nil{
+		g.err, = err
 		device.Release()
 		return _DIENUM_STOP
 	}
@@ -366,8 +368,9 @@ func (g *nativeGamepadsDesktop) dinput8EnumDevicesCallback(lpddi *_DIDEVICEINSTA
 		},
 		dwData: _DIPROPAXISMODE_ABS,
 	}
-	if mylog.Check(device.SetProperty(_DIPROP_AXISMODE, &dipd.diph)); err != nil {
-		g.err = err
+	mylog.Check(device.SetProperty(_DIPROP_AXISMODE, &dipd.diph))
+	err != nil{
+		g.err, = err
 		device.Release()
 		return _DIENUM_STOP
 	}
@@ -378,8 +381,9 @@ func (g *nativeGamepadsDesktop) dinput8EnumDevicesCallback(lpddi *_DIDEVICEINSTA
 	if g.enumObjectsCallback == 0 {
 		g.enumObjectsCallback = windows.NewCallback(g.dinputDevice8EnumObjectsCallback)
 	}
-	if mylog.Check(device.EnumObjects(g.enumObjectsCallback, unsafe.Pointer(&ctx), _DIDFT_AXIS|_DIDFT_BUTTON|_DIDFT_POV)); err != nil {
-		g.err = err
+	mylog.Check(device.EnumObjects(g.enumObjectsCallback, unsafe.Pointer(&ctx), _DIDFT_AXIS|_DIDFT_BUTTON|_DIDFT_POV))
+	err != nil{
+		g.err, = err
 		device.Release()
 		return _DIENUM_STOP
 	}
@@ -508,7 +512,8 @@ func (g *nativeGamepadsDesktop) dinputDevice8EnumObjectsCallback(lpddoi *_DIDEVI
 			lMin: -32768,
 			lMax: 32767,
 		}
-		if mylog.Check(ctx.device.SetProperty(_DIPROP_RANGE, &dipr.diph)); err != nil {
+		mylog.Check(ctx.device.SetProperty(_DIPROP_RANGE, &dipr.diph))
+		err != nil{
 			return _DIENUM_CONTINUE
 		}
 
@@ -556,8 +561,9 @@ func (g *nativeGamepadsDesktop) update(gamepads *gamepads) error {
 	}
 
 	if g.deviceChanged.Load() {
-		if mylog.Check(g.detectConnection(gamepads)); err != nil {
-			g.err = err
+		mylog.Check(g.detectConnection(gamepads))
+		err != nil{
+			g.err, = err
 		}
 		g.deviceChanged.Store(false)
 	}
@@ -620,31 +626,33 @@ func (g *nativeGamepadDesktop) update(gamepads *gamepads) (err error) {
 	}()
 
 	if g.usesDInput() {
-		if mylog.Check(g.dinputDevice.Poll()); err != nil {
-			if !errors.Is(err, handleError(_DIERR_NOTACQUIRED)) && !errors.Is(err, handleError(_DIERR_INPUTLOST)) {
-				return err
-			}
+		mylog.Check(g.dinputDevice.Poll())
+		err != nil{
+			if !errors.Is(err, handleError(_DIERR_NOTACQUIRED)) && !errors.Is(err, handleError(_DIERR_INPUTLOST)){
+			return err
+		}
 		}
 
 		var state _DIJOYSTATE
-		if mylog.Check(g.dinputDevice.GetDeviceState(uint32(unsafe.Sizeof(state)), unsafe.Pointer(&state))); err != nil {
-			if !errors.Is(err, handleError(_DIERR_NOTACQUIRED)) && !errors.Is(err, handleError(_DIERR_INPUTLOST)) {
-				return err
-			}
+		mylog.Check(g.dinputDevice.GetDeviceState(uint32(unsafe.Sizeof(state)), unsafe.Pointer(&state)))
+		err != nil{
+			if !errors.Is(err, handleError(_DIERR_NOTACQUIRED)) && !errors.Is(err, handleError(_DIERR_INPUTLOST)){
+			return err
+		}
 			// Acquire can return an error just after a gamepad is disconnected. Ignore the error.
 			_ = g.dinputDevice.Acquire()
-			if mylog.Check(g.dinputDevice.Poll()); err != nil {
-				if !errors.Is(err, handleError(_DIERR_NOTACQUIRED)) && !errors.Is(err, handleError(_DIERR_INPUTLOST)) {
-					return err
-				}
-			}
-			if mylog.Check(g.dinputDevice.GetDeviceState(uint32(unsafe.Sizeof(state)), unsafe.Pointer(&state))); err != nil {
-				if !errors.Is(err, handleError(_DIERR_NOTACQUIRED)) && !errors.Is(err, handleError(_DIERR_INPUTLOST)) {
-					return err
-				}
-				disconnected = true
-				return nil
-			}
+			mylog.Check(g.dinputDevice.Poll()); err != nil{
+			if !errors.Is(err, handleError(_DIERR_NOTACQUIRED)) && !errors.Is(err, handleError(_DIERR_INPUTLOST)){
+			return err
+		}
+		}
+			mylog.Check(g.dinputDevice.GetDeviceState(uint32(unsafe.Sizeof(state)), unsafe.Pointer(&state))); err != nil{
+			if !errors.Is(err, handleError(_DIERR_NOTACQUIRED)) && !errors.Is(err, handleError(_DIERR_INPUTLOST)){
+			return err
+		}
+			disconnected = true
+			return nil
+		}
 		}
 
 		var ai, bi, hi int
@@ -705,10 +713,11 @@ func (g *nativeGamepadDesktop) update(gamepads *gamepads) (err error) {
 	}
 
 	var state _XINPUT_STATE
-	if mylog.Check(gamepads.native.(*nativeGamepadsDesktop).xinputGetState(uint32(g.xinputIndex), &state)); err != nil {
-		if !errors.Is(err, windows.ERROR_DEVICE_NOT_CONNECTED) {
-			return err
-		}
+	mylog.Check(gamepads.native.(*nativeGamepadsDesktop).xinputGetState(uint32(g.xinputIndex), &state))
+	err != nil{
+		if !errors.Is(err, windows.ERROR_DEVICE_NOT_CONNECTED){
+		return err
+	}
 		disconnected = true
 		return nil
 	}

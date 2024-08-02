@@ -79,7 +79,7 @@ func TestPrograms(t *testing.T) {
 			cmd := exec.CommandContext(ctx, bin)
 			stderr := &bytes.Buffer{}
 			cmd.Stderr = stderr
-			if mylog.Check(cmd.Run()); err != nil {
+			 mylog.Check(cmd.Run()); err != nil {
 				t.Errorf("%v\n%s", err, stderr)
 			}
 		})

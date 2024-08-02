@@ -270,9 +270,8 @@ func initRemoteSession() error {
 	// if cannot be moved to center in capture mode. If not Remote Desktop platformWindow.blankCursor stays nil
 	// and will perform has before (normal).
 	if _glfw.platformWindow.isRemoteSession {
-		if mylog.Check(createBlankCursor()); err != nil {
-			return err
-		}
+		mylog.Check(createBlankCursor())
+
 	}
 
 	return nil
@@ -296,20 +295,20 @@ func platformInit() error {
 			_ = _SetProcessDpiAwarenessContext(_DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2)
 		}
 	} else if winver.IsWindows8Point1OrGreater() {
-		if mylog.Check(_SetProcessDpiAwareness(_PROCESS_PER_MONITOR_DPI_AWARE)); err != nil && !errors.Is(err, handleError(windows.E_ACCESSDENIED)) {
+		mylog.Check(_SetProcessDpiAwareness(_PROCESS_PER_MONITOR_DPI_AWARE))
+		err != nil && !errors.Is(err, handleError(windows.E_ACCESSDENIED))
+		{
 			return err
 		}
 	} else if winver.IsWindowsVistaOrGreater() {
 		_SetProcessDPIAware()
 	}
 
-	if mylog.Check(registerWindowClassWin32()); err != nil {
-		return err
-	}
+	mylog.Check(registerWindowClassWin32())
 
-	if mylog.Check(createHelperWindow()); err != nil {
-		return err
-	}
+
+	mylog.Check(createHelperWindow())
+
 	if microsoftgdk.IsXbox() {
 		// On Xbox, APIs to get monitors are not available.
 		// Create a pseudo monitor instance instead.
@@ -326,47 +325,43 @@ func platformInit() error {
 			name:  "Xbox Monitor",
 			modes: []*VidMode{mode},
 		}
-		if mylog.Check(inputMonitor(m, Connected, _GLFW_INSERT_LAST)); err != nil {
-			return err
-		}
+		mylog.Check(inputMonitor(m, Connected, _GLFW_INSERT_LAST))
+
 	} else {
 		// Some hacks are needed to support Remote Desktop...
-		if mylog.Check(initRemoteSession()); err != nil {
-			return err
-		}
-		if mylog.Check(pollMonitorsWin32()); err != nil {
-			return err
-		}
+		mylog.Check(initRemoteSession())
+
+		mylog.Check(pollMonitorsWin32())
+
 	}
 	return nil
 }
 
 func platformTerminate() error {
 	if _glfw.platformWindow.blankCursor != 0 {
-		if mylog.Check(_DestroyCursor(_glfw.platformWindow.blankCursor)); err != nil {
-			return err
-		}
+		mylog.Check(_DestroyCursor(_glfw.platformWindow.blankCursor))
+
 	}
 
 	if _glfw.platformWindow.deviceNotificationHandle != 0 {
-		if mylog.Check(_UnregisterDeviceNotification(_glfw.platformWindow.deviceNotificationHandle)); err != nil {
-			return err
-		}
+		mylog.Check(_UnregisterDeviceNotification(_glfw.platformWindow.deviceNotificationHandle))
+
 	}
 
 	if _glfw.platformWindow.helperWindowHandle != 0 {
 		if !microsoftgdk.IsXbox() {
 			// An error 'invalid window handle' can occur without any specific reasons (#2551).
 			// As there is nothing to do, just ignore this error.
-			if mylog.Check(_DestroyWindow(_glfw.platformWindow.helperWindowHandle)); err != nil && !errors.Is(err, windows.ERROR_INVALID_WINDOW_HANDLE) {
+			mylog.Check(_DestroyWindow(_glfw.platformWindow.helperWindowHandle))
+			err != nil && !errors.Is(err, windows.ERROR_INVALID_WINDOW_HANDLE)
+			{
 				return err
 			}
 		}
 	}
 
-	if mylog.Check(unregisterWindowClassWin32()); err != nil {
-		return err
-	}
+	mylog.Check(unregisterWindowClassWin32())
+
 
 	terminateWGL()
 

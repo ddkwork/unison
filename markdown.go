@@ -999,8 +999,9 @@ func (m *Markdown) finishTextRow() {
 // links.
 func DefaultMarkdownLinkHandler(_ Paneler, target string) {
 	if HasURLPrefix(target) {
-		if mylog.Check(desktop.Open(target)); err != nil {
-			ErrorDialogWithError(i18n.Text("Opening the link failed"), err)
+		mylog.Check(desktop.Open(target))
+		err != nil{
+			ErrorDialogWithError(i18n.Text("Opening the link failed"), err),
 		}
 	}
 }

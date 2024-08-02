@@ -263,9 +263,8 @@ func (g *graphics11) End(present bool) error {
 		return nil
 	}
 
-	if mylog.Check(g.graphicsInfra.present(g.vsyncEnabled)); err != nil {
-		return err
-	}
+	mylog.Check(g.graphicsInfra.present(g.vsyncEnabled))
+
 
 	if g.newScreenWidth != 0 && g.newScreenHeight != 0 {
 		if g.screenImage != nil {
@@ -275,9 +274,8 @@ func (g *graphics11) End(present bool) error {
 			g.screenImage.disposeBuffers()
 		}
 
-		if mylog.Check(g.graphicsInfra.resizeSwapChain(g.newScreenWidth, g.newScreenHeight)); err != nil {
-			return err
-		}
+		mylog.Check(g.graphicsInfra.resizeSwapChain(g.newScreenWidth, g.newScreenHeight))
+
 
 		t := mylog.Check2(g.graphicsInfra.getBuffer(0, &_IID_ID3D11Texture2D))
 
@@ -339,9 +337,8 @@ func (g *graphics11) SetVertices(vertices []float32, indices []uint32) error {
 	// Copy the vertices data.
 	{
 		var mapped _D3D11_MAPPED_SUBRESOURCE
-		if mylog.Check(g.deviceContext.Map(unsafe.Pointer(g.vertexBuffer), 0, _D3D11_MAP_WRITE_DISCARD, 0, &mapped)); err != nil {
-			return err
-		}
+		mylog.Check(g.deviceContext.Map(unsafe.Pointer(g.vertexBuffer), 0, _D3D11_MAP_WRITE_DISCARD, 0, &mapped))
+
 		copy(unsafe.Slice((*float32)(mapped.pData), len(vertices)), vertices)
 		g.deviceContext.Unmap(unsafe.Pointer(g.vertexBuffer), 0)
 	}
@@ -398,7 +395,8 @@ func (g *graphics11) NewScreenFramebufferImage(width, height int) (graphicsdrive
 	if g.graphicsInfra.isSwapChainInited() {
 		g.newScreenWidth, g.newScreenHeight = width, height
 	} else {
-		if mylog.Check(g.graphicsInfra.initSwapChain(width, height, unsafe.Pointer(g.device), g.window)); err != nil {
+		mylog.Check(g.graphicsInfra.initSwapChain(width, height, unsafe.Pointer(g.device), g.window))
+		err != nil{
 			return nil, err
 		}
 	}
@@ -512,15 +510,13 @@ func (g *graphics11) DrawTriangles(dstID graphicsdriver.ImageID, srcIDs [graphic
 		},
 	})
 
-	if mylog.Check(dst.setAsRenderTarget(fillRule != graphicsdriver.FillRuleFillAll)); err != nil {
-		return err
-	}
+	mylog.Check(dst.setAsRenderTarget(fillRule != graphicsdriver.FillRuleFillAll))
+
 
 	// Set the shader parameters.
 	shader := g.shaders[shaderID]
-	if mylog.Check(shader.use(uniforms, srcs)); err != nil {
-		return err
-	}
+	mylog.Check(shader.use(uniforms, srcs))
+
 
 	if fillRule == graphicsdriver.FillRuleFillAll {
 		bs := mylog.Check2(g.blendState(blend, noStencil))

@@ -13,28 +13,24 @@ import (
 
 func terminate() error {
 	for _, w := range _glfw.windows {
-		if mylog.Check(w.Destroy()); err != nil {
-			return err
-		}
+		mylog.Check(w.Destroy())
+
 	}
 
 	for _, c := range _glfw.cursors {
-		if mylog.Check(c.Destroy()); err != nil {
-			return err
-		}
+		mylog.Check(c.Destroy())
+
 	}
 
 	_glfw.monitors = nil
 
-	if mylog.Check(platformTerminate()); err != nil {
-		return err
-	}
+	mylog.Check(platformTerminate())
+
 
 	_glfw.initialized = false
 
-	if mylog.Check(_glfw.contextSlot.destroy()); err != nil {
-		return err
-	}
+	mylog.Check(_glfw.contextSlot.destroy())
+
 
 	return nil
 }
@@ -60,19 +56,16 @@ func Init() (ferr error) {
 
 	_glfw.hints.init.hatButtons = true
 
-	if mylog.Check(platformInit()); err != nil {
-		return err
-	}
+	mylog.Check(platformInit())
 
-	if mylog.Check(_glfw.contextSlot.create()); err != nil {
-		return err
-	}
+
+	mylog.Check(_glfw.contextSlot.create())
+
 
 	_glfw.initialized = true
 
-	if mylog.Check(defaultWindowHints()); err != nil {
-		return err
-	}
+	mylog.Check(defaultWindowHints())
+
 	return nil
 }
 
@@ -80,8 +73,7 @@ func Terminate() error {
 	if !_glfw.initialized {
 		return nil
 	}
-	if mylog.Check(terminate()); err != nil {
-		return err
-	}
+	mylog.Check(terminate())
+
 	return nil
 }

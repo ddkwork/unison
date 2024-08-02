@@ -121,8 +121,9 @@ fragment float4 FragmentShader(Vertex in [[stage_in]]) {
 	// TODO: Embed this file?
 	want := mylog.Check2(readPNG(filepath.Join("testdata", "triangle.png")))
 
-	if mylog.Check(imageEq(got, want)); err != nil {
-		t.Errorf("got image != want: %v", err)
+	mylog.Check(imageEq(got, want))
+	err != nil{
+		t.Errorf("got image != want: %v", err),
 	}
 }
 

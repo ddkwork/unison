@@ -526,9 +526,8 @@ func Update(mappingData []byte) error {
 		}
 	}
 
-	if mylog.Check(s.Err()); err != nil {
-		return err
-	}
+	mylog.Check(s.Err())
+
 
 	for _, l := range lines {
 		gamepadNames[l.id] = l.name

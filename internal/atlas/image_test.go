@@ -574,8 +574,9 @@ func TestMaxImageSizeExceeded(t *testing.T) {
 	defer img.Deallocate()
 
 	defer func() {
-		if mylog.Check(recover()); err == nil {
-			t.Errorf("WritePixels must panic but not")
+		mylog.Check(recover())
+		err == nil{
+			t.Errorf("WritePixels must panic but not"),
 		}
 	}()
 

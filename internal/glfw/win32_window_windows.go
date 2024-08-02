@@ -127,13 +127,9 @@ func (w *Window) applyAspectRatio(edge int, area *_RECT) error {
 	exStyle := w.getWindowExStyle()
 
 	if winver.IsWindows10AnniversaryUpdateOrGreater() {
-		if mylog.Check(_AdjustWindowRectExForDpi(&frame, style, false, exStyle, _GetDpiForWindow(w.platform.handle))); err != nil {
-			return err
-		}
+		 mylog.Check(_AdjustWindowRectExForDpi(&frame, style, false, exStyle, _GetDpiForWindow(w.platform.handle))); 
 	} else {
-		if mylog.Check(_AdjustWindowRectEx(&frame, style, false, exStyle)); err != nil {
-			return err
-		}
+		 mylog.Check(_AdjustWindowRectEx(&frame, style, false, exStyle)); 
 	}
 
 	if edge == _WMSZ_LEFT || edge == _WMSZ_BOTTOMLEFT || edge == _WMSZ_RIGHT || edge == _WMSZ_BOTTOMRIGHT {
@@ -170,7 +166,7 @@ func (w *Window) clientToScreen(rect _RECT) (_RECT, error) {
 		x: rect.left,
 		y: rect.top,
 	}
-	if mylog.Check(_ClientToScreen(w.platform.handle, &point)); err != nil {
+	 mylog.Check(_ClientToScreen(w.platform.handle, &point)); err != nil {
 		return _RECT{}, err
 	}
 	rect.left = point.x
@@ -180,7 +176,7 @@ func (w *Window) clientToScreen(rect _RECT) (_RECT, error) {
 		x: rect.right,
 		y: rect.bottom,
 	}
-	if mylog.Check(_ClientToScreen(w.platform.handle, &point)); err != nil {
+	 mylog.Check(_ClientToScreen(w.platform.handle, &point)); err != nil {
 		return _RECT{}, err
 	}
 	rect.right = point.x
@@ -193,17 +189,13 @@ func captureCursor(window *Window) error {
 
 	clipRect = mylog.Check2(window.clientToScreen(clipRect))
 
-	if mylog.Check(_ClipCursor(&clipRect)); err != nil {
-		return err
-	}
+	 mylog.Check(_ClipCursor(&clipRect)); 
 	_glfw.platformWindow.capturedCursorWindow = window
 	return nil
 }
 
 func releaseCursor() error {
-	if mylog.Check(_ClipCursor(nil)); err != nil {
-		return err
-	}
+	 mylog.Check(_ClipCursor(nil)); 
 	_glfw.platformWindow.capturedCursorWindow = nil
 	return nil
 }
@@ -236,39 +228,23 @@ func (w *Window) disableCursor() error {
 	_glfw.platformWindow.disabledCursorWindow = w
 	x, y := w.platformGetCursorPos()
 	_glfw.platformWindow.restoreCursorPosX, _glfw.platformWindow.restoreCursorPosY = x, y
-	if mylog.Check(w.updateCursorImage()); err != nil {
-		return err
-	}
-	if mylog.Check(w.centerCursorInContentArea()); err != nil {
-		return err
-	}
-	if mylog.Check(captureCursor(w)); err != nil {
-		return err
-	}
+	 mylog.Check(w.updateCursorImage()); 
+	 mylog.Check(w.centerCursorInContentArea()); 
+	 mylog.Check(captureCursor(w)); 
 	if w.rawMouseMotion {
-		if mylog.Check(w.enableRawMouseMotion()); err != nil {
-			return err
-		}
+		 mylog.Check(w.enableRawMouseMotion()); 
 	}
 	return nil
 }
 
 func (w *Window) enableCursor() error {
 	if w.rawMouseMotion {
-		if mylog.Check(w.disableRawMouseMotion()); err != nil {
-			return err
-		}
+		 mylog.Check(w.disableRawMouseMotion()); 
 	}
 	_glfw.platformWindow.disabledCursorWindow = nil
-	if mylog.Check(releaseCursor()); err != nil {
-		return err
-	}
-	if mylog.Check(w.platformSetCursorPos(_glfw.platformWindow.restoreCursorPosX, _glfw.platformWindow.restoreCursorPosY)); err != nil {
-		return err
-	}
-	if mylog.Check(w.updateCursorImage()); err != nil {
-		return err
-	}
+	 mylog.Check(releaseCursor()); 
+	 mylog.Check(w.platformSetCursorPos(_glfw.platformWindow.restoreCursorPosX, _glfw.platformWindow.restoreCursorPosY)); 
+	 mylog.Check(w.updateCursorImage()); 
 	return nil
 }
 
@@ -299,23 +275,15 @@ func (w *Window) updateWindowStyles() error {
 	rect := mylog.Check2(_GetClientRect(w.platform.handle))
 
 	if winver.IsWindows10AnniversaryUpdateOrGreater() {
-		if mylog.Check(_AdjustWindowRectExForDpi(&rect, style, false, w.getWindowExStyle(), _GetDpiForWindow(w.platform.handle))); err != nil {
-			return err
-		}
+		 mylog.Check(_AdjustWindowRectExForDpi(&rect, style, false, w.getWindowExStyle(), _GetDpiForWindow(w.platform.handle))); 
 	} else {
-		if mylog.Check(_AdjustWindowRectEx(&rect, style, false, w.getWindowExStyle())); err != nil {
-			return err
-		}
+		 mylog.Check(_AdjustWindowRectEx(&rect, style, false, w.getWindowExStyle())); 
 	}
 
 	rect = mylog.Check2(w.clientToScreen(rect))
 
-	if _ := mylog.Check2(_SetWindowLongW(w.platform.handle, _GWL_STYLE, int32(style))); err != nil {
-		return err
-	}
-	if mylog.Check(_SetWindowPos(w.platform.handle, _HWND_TOP, rect.left, rect.top, rect.right-rect.left, rect.bottom-rect.top, _SWP_FRAMECHANGED|_SWP_NOACTIVATE|_SWP_NOZORDER)); err != nil {
-		return err
-	}
+	if _ := mylog.Check2(_SetWindowLongW(w.platform.handle, _GWL_STYLE, int32(style))); 
+	 mylog.Check(_SetWindowPos(w.platform.handle, _HWND_TOP, rect.left, rect.top, rect.right-rect.left, rect.bottom-rect.top, _SWP_FRAMECHANGED|_SWP_NOACTIVATE|_SWP_NOZORDER)); 
 
 	return nil
 }
@@ -404,14 +372,12 @@ func (w *Window) fitToMonitor() error {
 	} else {
 		hWndInsertAfter = _HWND_NOTOPMOST
 	}
-	if mylog.Check(_SetWindowPos(w.platform.handle, hWndInsertAfter,
+	 mylog.Check(_SetWindowPos(w.platform.handle, hWndInsertAfter,
 		mi.rcMonitor.left,
 		mi.rcMonitor.top,
 		mi.rcMonitor.right-mi.rcMonitor.left,
 		mi.rcMonitor.bottom-mi.rcMonitor.top,
-		_SWP_NOZORDER|_SWP_NOACTIVATE|_SWP_NOCOPYBITS)); err != nil {
-		return err
-	}
+		_SWP_NOZORDER|_SWP_NOACTIVATE|_SWP_NOCOPYBITS)); 
 	return nil
 }
 
@@ -422,12 +388,8 @@ func (w *Window) acquireMonitor() error {
 		// HACK: When mouse trails are enabled the cursor becomes invisible when
 		//       the OpenGL ICD switches to page flipping
 		if winver.IsWindowsXPOrGreater() {
-			if mylog.Check(_SystemParametersInfoW(_SPI_GETMOUSETRAILS, 0, uintptr(unsafe.Pointer(&_glfw.platformWindow.mouseTrailSize)), 0)); err != nil {
-				return err
-			}
-			if mylog.Check(_SystemParametersInfoW(_SPI_SETMOUSETRAILS, 0, 0, 0)); err != nil {
-				return err
-			}
+			 mylog.Check(_SystemParametersInfoW(_SPI_GETMOUSETRAILS, 0, uintptr(unsafe.Pointer(&_glfw.platformWindow.mouseTrailSize)), 0)); 
+			 mylog.Check(_SystemParametersInfoW(_SPI_SETMOUSETRAILS, 0, 0, 0)); 
 		}
 	}
 
@@ -435,9 +397,7 @@ func (w *Window) acquireMonitor() error {
 		_glfw.platformWindow.acquiredMonitorCount++
 	}
 
-	if mylog.Check(w.monitor.setVideoModeWin32(&w.videoMode)); err != nil {
-		return err
-	}
+	 mylog.Check(w.monitor.setVideoModeWin32(&w.videoMode)); 
 	w.monitor.inputMonitorWindow(w)
 	return nil
 }
@@ -453,9 +413,7 @@ func (w *Window) releaseMonitor() error {
 
 		// HACK: Restore mouse trail length saved in acquireMonitor
 		if winver.IsWindowsXPOrGreater() {
-			if mylog.Check(_SystemParametersInfoW(_SPI_SETMOUSETRAILS, _glfw.platformWindow.mouseTrailSize, 0, 0)); err != nil {
-				return err
-			}
+			 mylog.Check(_SystemParametersInfoW(_SPI_SETMOUSETRAILS, _glfw.platformWindow.mouseTrailSize, 0, 0)); 
 		}
 	}
 
@@ -482,9 +440,7 @@ func (w *Window) maximizeWindowManually() error {
 
 	style := uint32(s)
 	style |= _WS_MAXIMIZE
-	if _ := mylog.Check2(_SetWindowLongW(w.platform.handle, _GWL_STYLE, int32(style))); err != nil {
-		return err
-	}
+	if _ := mylog.Check2(_SetWindowLongW(w.platform.handle, _GWL_STYLE, int32(style))); 
 
 	if w.decorated {
 		s := mylog.Check2(_GetWindowLongW(w.platform.handle, _GWL_EXSTYLE))
@@ -492,16 +448,12 @@ func (w *Window) maximizeWindowManually() error {
 		exStyle := uint32(s)
 		if winver.IsWindows10AnniversaryUpdateOrGreater() {
 			dpi := _GetDpiForWindow(w.platform.handle)
-			if mylog.Check(_AdjustWindowRectExForDpi(&rect, style, false, exStyle, dpi)); err != nil {
-				return err
-			}
+			 mylog.Check(_AdjustWindowRectExForDpi(&rect, style, false, exStyle, dpi)); 
 			m := mylog.Check2(_GetSystemMetricsForDpi(_SM_CYCAPTION, dpi))
 
 			_OffsetRect(&rect, 0, m)
 		} else {
-			if mylog.Check(_AdjustWindowRectEx(&rect, style, false, exStyle)); err != nil {
-				return err
-			}
+			 mylog.Check(_AdjustWindowRectEx(&rect, style, false, exStyle)); 
 			m := mylog.Check2(_GetSystemMetrics(_SM_CYCAPTION))
 
 			_OffsetRect(&rect, 0, m)
@@ -512,11 +464,9 @@ func (w *Window) maximizeWindowManually() error {
 		}
 	}
 
-	if mylog.Check(_SetWindowPos(w.platform.handle, _HWND_TOP,
+	 mylog.Check(_SetWindowPos(w.platform.handle, _HWND_TOP,
 		rect.left, rect.top, rect.right-rect.left, rect.bottom-rect.top,
-		_SWP_NOACTIVATE|_SWP_NOZORDER|_SWP_FRAMECHANGED)); err != nil {
-		return err
-	}
+		_SWP_NOACTIVATE|_SWP_NOZORDER|_SWP_FRAMECHANGED)); 
 
 	return nil
 }
@@ -537,7 +487,7 @@ func windowProc(hWnd windows.HWND, uMsg uint32, wParam _WPARAM, lParam _LPARAM) 
 				// We need WM_GETDPISCALEDSIZE from V2 to keep the client
 				// area static when the non-client area is scaled
 				if wndconfig != nil && wndconfig.scaleToMonitor {
-					if mylog.Check(_EnableNonClientDpiScaling(hWnd)); err != nil {
+					 mylog.Check(_EnableNonClientDpiScaling(hWnd)); err != nil {
 						_glfw.errors = append(_glfw.errors, err)
 						return 0
 					}
@@ -545,7 +495,7 @@ func windowProc(hWnd windows.HWND, uMsg uint32, wParam _WPARAM, lParam _LPARAM) 
 			}
 
 		case _WM_DISPLAYCHANGE:
-			if mylog.Check(pollMonitorsWin32()); err != nil {
+			 mylog.Check(pollMonitorsWin32()); err != nil {
 				_glfw.errors = append(_glfw.errors, err)
 				return 0
 			}
@@ -569,7 +519,7 @@ func windowProc(hWnd windows.HWND, uMsg uint32, wParam _WPARAM, lParam _LPARAM) 
 		//       completed or cancelled
 		if lParam == 0 && window.platform.frameAction {
 			if window.cursorMode == CursorDisabled {
-				if mylog.Check(window.disableCursor()); err != nil {
+				 mylog.Check(window.disableCursor()); err != nil {
 					_glfw.errors = append(_glfw.errors, err)
 					return 0
 				}
@@ -587,7 +537,7 @@ func windowProc(hWnd windows.HWND, uMsg uint32, wParam _WPARAM, lParam _LPARAM) 
 		}
 
 		if window.cursorMode == CursorDisabled {
-			if mylog.Check(window.disableCursor()); err != nil {
+			 mylog.Check(window.disableCursor()); err != nil {
 				_glfw.errors = append(_glfw.errors, err)
 				return 0
 			}
@@ -597,7 +547,7 @@ func windowProc(hWnd windows.HWND, uMsg uint32, wParam _WPARAM, lParam _LPARAM) 
 
 	case _WM_KILLFOCUS:
 		if window.cursorMode == CursorDisabled {
-			if mylog.Check(window.enableCursor()); err != nil {
+			 mylog.Check(window.enableCursor()); err != nil {
 				_glfw.errors = append(_glfw.errors, err)
 				return 0
 			}
@@ -786,7 +736,7 @@ func windowProc(hWnd windows.HWND, uMsg uint32, wParam _WPARAM, lParam _LPARAM) 
 			}
 		}
 		if i > MouseButtonLast {
-			if mylog.Check(_ReleaseCapture()); err != nil {
+			 mylog.Check(_ReleaseCapture()); err != nil {
 				_glfw.errors = append(_glfw.errors, err)
 				return 0
 			}
@@ -806,7 +756,7 @@ func windowProc(hWnd windows.HWND, uMsg uint32, wParam _WPARAM, lParam _LPARAM) 
 			tme.cbSize = uint32(unsafe.Sizeof(tme))
 			tme.dwFlags = _TME_LEAVE
 			tme.hwndTrack = window.platform.handle
-			if mylog.Check(_TrackMouseEvent(&tme)); err != nil {
+			 mylog.Check(_TrackMouseEvent(&tme)); err != nil {
 				_glfw.errors = append(_glfw.errors, err)
 				return 0
 			}
@@ -884,7 +834,7 @@ func windowProc(hWnd windows.HWND, uMsg uint32, wParam _WPARAM, lParam _LPARAM) 
 					x: int32(float64(data.mouse.lLastX) / 65535.0 * float64(width)),
 					y: int32(float64(data.mouse.lLastY) / 65535.0 * float64(height)),
 				}
-				if mylog.Check(_ScreenToClient(window.platform.handle, &pos)); err != nil {
+				 mylog.Check(_ScreenToClient(window.platform.handle, &pos)); err != nil {
 					_glfw.errors = append(_glfw.errors, err)
 					return 0
 				}
@@ -930,7 +880,7 @@ func windowProc(hWnd windows.HWND, uMsg uint32, wParam _WPARAM, lParam _LPARAM) 
 		// HACK: Enable the cursor while the user is moving or
 		//       resizing the window or using the window menu
 		if window.cursorMode == CursorDisabled {
-			if mylog.Check(window.enableCursor()); err != nil {
+			 mylog.Check(window.enableCursor()); err != nil {
 				_glfw.errors = append(_glfw.errors, err)
 				return 0
 			}
@@ -944,7 +894,7 @@ func windowProc(hWnd windows.HWND, uMsg uint32, wParam _WPARAM, lParam _LPARAM) 
 		// HACK: Disable the cursor once the user is done moving or
 		//       resizing the window or using the menu
 		if window.cursorMode == CursorDisabled {
-			if mylog.Check(window.disableCursor()); err != nil {
+			 mylog.Check(window.disableCursor()); err != nil {
 				_glfw.errors = append(_glfw.errors, err)
 				return 0
 			}
@@ -957,7 +907,7 @@ func windowProc(hWnd windows.HWND, uMsg uint32, wParam _WPARAM, lParam _LPARAM) 
 		maximized := wParam == _SIZE_MAXIMIZED || (window.platform.maximized && wParam != _SIZE_RESTORED)
 
 		if _glfw.platformWindow.capturedCursorWindow == window {
-			if mylog.Check(captureCursor(window)); err != nil {
+			 mylog.Check(captureCursor(window)); err != nil {
 				_glfw.errors = append(_glfw.errors, err)
 				return 0
 			}
@@ -981,16 +931,16 @@ func windowProc(hWnd windows.HWND, uMsg uint32, wParam _WPARAM, lParam _LPARAM) 
 
 		if window.monitor != nil && window.platform.iconified != iconified {
 			if iconified {
-				if mylog.Check(window.releaseMonitor()); err != nil {
+				 mylog.Check(window.releaseMonitor()); err != nil {
 					_glfw.errors = append(_glfw.errors, err)
 					return 0
 				}
 			} else {
-				if mylog.Check(window.acquireMonitor()); err != nil {
+				 mylog.Check(window.acquireMonitor()); err != nil {
 					_glfw.errors = append(_glfw.errors, err)
 					return 0
 				}
-				if mylog.Check(window.fitToMonitor()); err != nil {
+				 mylog.Check(window.fitToMonitor()); err != nil {
 					_glfw.errors = append(_glfw.errors, err)
 					return 0
 				}
@@ -1003,7 +953,7 @@ func windowProc(hWnd windows.HWND, uMsg uint32, wParam _WPARAM, lParam _LPARAM) 
 
 	case _WM_MOVE:
 		if _glfw.platformWindow.capturedCursorWindow == window {
-			if mylog.Check(captureCursor(window)); err != nil {
+			 mylog.Check(captureCursor(window)); err != nil {
 				_glfw.errors = append(_glfw.errors, err)
 				return 0
 			}
@@ -1019,7 +969,7 @@ func windowProc(hWnd windows.HWND, uMsg uint32, wParam _WPARAM, lParam _LPARAM) 
 			break
 		}
 
-		if mylog.Check(window.applyAspectRatio(int(wParam), (*_RECT)(unsafe.Pointer(lParam)))); err != nil {
+		 mylog.Check(window.applyAspectRatio(int(wParam), (*_RECT)(unsafe.Pointer(lParam)))); err != nil {
 			_glfw.errors = append(_glfw.errors, err)
 			return 0
 		}
@@ -1036,12 +986,12 @@ func windowProc(hWnd windows.HWND, uMsg uint32, wParam _WPARAM, lParam _LPARAM) 
 		}
 
 		if winver.IsWindows10AnniversaryUpdateOrGreater() {
-			if mylog.Check(_AdjustWindowRectExForDpi(&frame, style, false, exStyle, _GetDpiForWindow(window.platform.handle))); err != nil {
+			 mylog.Check(_AdjustWindowRectExForDpi(&frame, style, false, exStyle, _GetDpiForWindow(window.platform.handle))); err != nil {
 				_glfw.errors = append(_glfw.errors, err)
 				return 0
 			}
 		} else {
-			if mylog.Check(_AdjustWindowRectEx(&frame, style, false, exStyle)); err != nil {
+			 mylog.Check(_AdjustWindowRectEx(&frame, style, false, exStyle)); err != nil {
 				_glfw.errors = append(_glfw.errors, err)
 				return 0
 			}
@@ -1084,7 +1034,7 @@ func windowProc(hWnd windows.HWND, uMsg uint32, wParam _WPARAM, lParam _LPARAM) 
 
 	case _WM_DWMCOMPOSITIONCHANGED, _WM_DWMCOLORIZATIONCOLORCHANGED:
 		if window.platform.transparent {
-			if mylog.Check(window.updateFramebufferTransparency()); err != nil {
+			 mylog.Check(window.updateFramebufferTransparency()); err != nil {
 				_glfw.errors = append(_glfw.errors, err)
 				return 0
 			}
@@ -1101,11 +1051,11 @@ func windowProc(hWnd windows.HWND, uMsg uint32, wParam _WPARAM, lParam _LPARAM) 
 			var source, target _RECT
 			size := (*_SIZE)(unsafe.Pointer(lParam))
 
-			if mylog.Check(_AdjustWindowRectExForDpi(&source, window.getWindowStyle(), false, window.getWindowExStyle(), _GetDpiForWindow(window.platform.handle))); err != nil {
+			 mylog.Check(_AdjustWindowRectExForDpi(&source, window.getWindowStyle(), false, window.getWindowExStyle(), _GetDpiForWindow(window.platform.handle))); err != nil {
 				_glfw.errors = append(_glfw.errors, err)
 				return 0
 			}
-			if mylog.Check(_AdjustWindowRectExForDpi(&target, window.getWindowStyle(), false, window.getWindowExStyle(), uint32(_LOWORD(uint32(wParam))))); err != nil {
+			 mylog.Check(_AdjustWindowRectExForDpi(&target, window.getWindowStyle(), false, window.getWindowExStyle(), uint32(_LOWORD(uint32(wParam))))); err != nil {
 				_glfw.errors = append(_glfw.errors, err)
 				return 0
 			}
@@ -1123,7 +1073,7 @@ func windowProc(hWnd windows.HWND, uMsg uint32, wParam _WPARAM, lParam _LPARAM) 
 		// need it to compensate for non-client area scaling
 		if window.monitor == nil && (window.platform.scaleToMonitor || winver.IsWindows10CreatorsUpdateOrGreater()) {
 			suggested := (*_RECT)(unsafe.Pointer(lParam))
-			if mylog.Check(_SetWindowPos(window.platform.handle, _HWND_TOP,
+			 mylog.Check(_SetWindowPos(window.platform.handle, _HWND_TOP,
 				suggested.left,
 				suggested.top,
 				suggested.right-suggested.left,
@@ -1138,7 +1088,7 @@ func windowProc(hWnd windows.HWND, uMsg uint32, wParam _WPARAM, lParam _LPARAM) 
 
 	case _WM_SETCURSOR:
 		if _LOWORD(uint32(lParam)) == _HTCLIENT {
-			if mylog.Check(window.updateCursorImage()); err != nil {
+			 mylog.Check(window.updateCursorImage()); err != nil {
 				_glfw.errors = append(_glfw.errors, err)
 				return 0
 			}
@@ -1200,9 +1150,7 @@ func (w *Window) createNativeWindow(wndconfig *wndconfig, fbconfig *fbconfig) er
 			style |= _WS_MAXIMIZE
 		}
 
-		if mylog.Check(_AdjustWindowRectEx(&rect, style, false, exStyle)); err != nil {
-			return err
-		}
+		 mylog.Check(_AdjustWindowRectEx(&rect, style, false, exStyle)); 
 
 		frameX = _CW_USEDEFAULT
 		frameY = _CW_USEDEFAULT
@@ -1220,15 +1168,9 @@ func (w *Window) createNativeWindow(wndconfig *wndconfig, fbconfig *fbconfig) er
 	handleToWindow[w.platform.handle] = w
 
 	if !microsoftgdk.IsXbox() && winver.IsWindows7OrGreater() {
-		if mylog.Check(_ChangeWindowMessageFilterEx(w.platform.handle, _WM_DROPFILES, _MSGFLT_ALLOW, nil)); err != nil {
-			return err
-		}
-		if mylog.Check(_ChangeWindowMessageFilterEx(w.platform.handle, _WM_COPYDATA, _MSGFLT_ALLOW, nil)); err != nil {
-			return err
-		}
-		if mylog.Check(_ChangeWindowMessageFilterEx(w.platform.handle, _WM_COPYGLOBALDATA, _MSGFLT_ALLOW, nil)); err != nil {
-			return err
-		}
+		 mylog.Check(_ChangeWindowMessageFilterEx(w.platform.handle, _WM_DROPFILES, _MSGFLT_ALLOW, nil)); 
+		 mylog.Check(_ChangeWindowMessageFilterEx(w.platform.handle, _WM_COPYDATA, _MSGFLT_ALLOW, nil)); 
+		 mylog.Check(_ChangeWindowMessageFilterEx(w.platform.handle, _WM_COPYGLOBALDATA, _MSGFLT_ALLOW, nil)); 
 	}
 
 	w.platform.scaleToMonitor = wndconfig.scaleToMonitor
@@ -1261,13 +1203,9 @@ func (w *Window) createNativeWindow(wndconfig *wndconfig, fbconfig *fbconfig) er
 		rect = mylog.Check2(w.clientToScreen(rect))
 
 		if winver.IsWindows10AnniversaryUpdateOrGreater() {
-			if mylog.Check(_AdjustWindowRectExForDpi(&rect, style, false, exStyle, _GetDpiForWindow(w.platform.handle))); err != nil {
-				return err
-			}
+			 mylog.Check(_AdjustWindowRectExForDpi(&rect, style, false, exStyle, _GetDpiForWindow(w.platform.handle))); 
 		} else {
-			if mylog.Check(_AdjustWindowRectEx(&rect, style, false, exStyle)); err != nil {
-				return err
-			}
+			 mylog.Check(_AdjustWindowRectEx(&rect, style, false, exStyle)); 
 		}
 
 		// Only update the restored window rect as the window may be maximized
@@ -1277,20 +1215,16 @@ func (w *Window) createNativeWindow(wndconfig *wndconfig, fbconfig *fbconfig) er
 
 		wp.rcNormalPosition = rect
 		wp.showCmd = _SW_HIDE
-		if mylog.Check(_SetWindowPlacement(w.platform.handle, &wp)); err != nil {
-			return err
-		}
+		 mylog.Check(_SetWindowPlacement(w.platform.handle, &wp)); 
 
 		// Adjust rect of maximized undecorated window, because by default Windows will
 		// make such a window cover the whole monitor instead of its workarea
 
 		if wndconfig.maximized && !wndconfig.decorated {
 			mi, _ := _GetMonitorInfoW(mh)
-			if mylog.Check(_SetWindowPos(w.platform.handle, _HWND_TOP,
+			 mylog.Check(_SetWindowPos(w.platform.handle, _HWND_TOP,
 				mi.rcWork.left, mi.rcWork.top, mi.rcWork.right-mi.rcWork.left, mi.rcWork.bottom-mi.rcWork.top,
-				_SWP_NOACTIVATE|_SWP_NOZORDER)); err != nil {
-				return err
-			}
+				_SWP_NOACTIVATE|_SWP_NOZORDER)); 
 		}
 	}
 
@@ -1299,9 +1233,7 @@ func (w *Window) createNativeWindow(wndconfig *wndconfig, fbconfig *fbconfig) er
 	}
 
 	if fbconfig.transparent {
-		if mylog.Check(w.updateFramebufferTransparency()); err != nil {
-			return err
-		}
+		 mylog.Check(w.updateFramebufferTransparency()); 
 		w.platform.transparent = true
 	}
 
@@ -1334,65 +1266,43 @@ func registerWindowClassWin32() error {
 		wc.hIcon = _HICON(icon)
 	}
 
-	if _ := mylog.Check2(_RegisterClassExW(&wc)); err != nil {
-		return err
-	}
+	if _ := mylog.Check2(_RegisterClassExW(&wc)); 
 	return nil
 }
 
 func unregisterWindowClassWin32() error {
-	if mylog.Check(_UnregisterClassW(_GLFW_WNDCLASSNAME, _glfw.platformWindow.instance)); err != nil {
-		return err
-	}
+	 mylog.Check(_UnregisterClassW(_GLFW_WNDCLASSNAME, _glfw.platformWindow.instance)); 
 	return nil
 }
 
 func (w *Window) platformCreateWindow(wndconfig *wndconfig, ctxconfig *ctxconfig, fbconfig *fbconfig) error {
-	if mylog.Check(w.createNativeWindow(wndconfig, fbconfig)); err != nil {
-		return err
-	}
+	 mylog.Check(w.createNativeWindow(wndconfig, fbconfig)); 
 
 	if ctxconfig.client != NoAPI {
 		if ctxconfig.source == NativeContextAPI {
-			if mylog.Check(initWGL()); err != nil {
-				return err
-			}
-			if mylog.Check(w.createContextWGL(ctxconfig, fbconfig)); err != nil {
-				return err
-			}
+			 mylog.Check(initWGL()); 
+			 mylog.Check(w.createContextWGL(ctxconfig, fbconfig)); 
 		}
-		if mylog.Check(w.refreshContextAttribs(ctxconfig)); err != nil {
-			return err
-		}
+		 mylog.Check(w.refreshContextAttribs(ctxconfig)); 
 	}
 
 	if wndconfig.mousePassthrough {
-		if mylog.Check(w.platformSetWindowMousePassthrough(true)); err != nil {
-			return err
-		}
+		 mylog.Check(w.platformSetWindowMousePassthrough(true)); 
 	}
 
 	if w.monitor != nil {
 		w.platformShowWindow()
-		if mylog.Check(w.platformFocusWindow()); err != nil {
-			return err
-		}
-		if mylog.Check(w.acquireMonitor()); err != nil {
-			return err
-		}
-		if mylog.Check(w.fitToMonitor()); err != nil {
-			return err
-		}
+		 mylog.Check(w.platformFocusWindow()); 
+		 mylog.Check(w.acquireMonitor()); 
+		 mylog.Check(w.fitToMonitor()); 
 		if wndconfig.centerCursor {
-			if mylog.Check(w.centerCursorInContentArea()); err != nil {
-				return err
-			}
+			 mylog.Check(w.centerCursorInContentArea()); 
 		}
 	} else {
 		if wndconfig.visible {
 			w.platformShowWindow()
 			if wndconfig.focused {
-				if mylog.Check(w.platformFocusWindow()); err != nil {
+				 mylog.Check(w.platformFocusWindow()); err != nil {
 					return err
 				}
 			}
@@ -1404,34 +1314,26 @@ func (w *Window) platformCreateWindow(wndconfig *wndconfig, ctxconfig *ctxconfig
 
 func (w *Window) platformDestroyWindow() error {
 	if w.monitor != nil {
-		if mylog.Check(w.releaseMonitor()); err != nil {
-			return err
-		}
+		 mylog.Check(w.releaseMonitor()); 
 	}
 
 	if w.context.destroy != nil {
-		if mylog.Check(w.context.destroy(w)); err != nil {
-			return err
-		}
+		 mylog.Check(w.context.destroy(w)); 
 	}
 
 	if _glfw.platformWindow.disabledCursorWindow == w {
-		if mylog.Check(w.enableCursor()); err != nil {
-			return err
-		}
+		 mylog.Check(w.enableCursor()); 
 	}
 
 	if _glfw.platformWindow.capturedCursorWindow == w {
-		if mylog.Check(releaseCursor()); err != nil {
-			return err
-		}
+		 mylog.Check(releaseCursor()); 
 	}
 
 	if w.platform.handle != 0 {
 		if !microsoftgdk.IsXbox() {
 			// An error 'invalid window handle' can occur without any specific reasons (#2551).
 			// As there is nothing to do, just ignore this error.
-			if mylog.Check(_DestroyWindow(w.platform.handle)); err != nil && !errors.Is(err, windows.ERROR_INVALID_WINDOW_HANDLE) {
+			 mylog.Check(_DestroyWindow(w.platform.handle)); err != nil && !errors.Is(err, windows.ERROR_INVALID_WINDOW_HANDLE) {
 				return err
 			}
 		}
@@ -1440,15 +1342,11 @@ func (w *Window) platformDestroyWindow() error {
 	}
 
 	if w.platform.bigIcon != 0 {
-		if mylog.Check(_DestroyIcon(w.platform.bigIcon)); err != nil {
-			return err
-		}
+		 mylog.Check(_DestroyIcon(w.platform.bigIcon)); 
 	}
 
 	if w.platform.smallIcon != 0 {
-		if mylog.Check(_DestroyIcon(w.platform.smallIcon)); err != nil {
-			return err
-		}
+		 mylog.Check(_DestroyIcon(w.platform.smallIcon)); 
 	}
 
 	return nil
@@ -1493,15 +1391,11 @@ func (w *Window) platformSetWindowIcon(images []*Image) error {
 	_SendMessageW(w.platform.handle, _WM_SETICON, _ICON_SMALL, _LPARAM(smallIcon))
 
 	if w.platform.bigIcon != 0 {
-		if mylog.Check(_DestroyIcon(w.platform.bigIcon)); err != nil {
-			return err
-		}
+		 mylog.Check(_DestroyIcon(w.platform.bigIcon)); 
 	}
 
 	if w.platform.smallIcon != 0 {
-		if mylog.Check(_DestroyIcon(w.platform.smallIcon)); err != nil {
-			return err
-		}
+		 mylog.Check(_DestroyIcon(w.platform.smallIcon)); 
 	}
 
 	if len(images) > 0 {
@@ -1520,7 +1414,7 @@ func (w *Window) platformGetWindowPos() (xpos, ypos int) {
 	}
 
 	var pos _POINT
-	if mylog.Check(_ClientToScreen(w.platform.handle, &pos)); err != nil {
+	 mylog.Check(_ClientToScreen(w.platform.handle, &pos)); err != nil {
 		return 0, 0
 	}
 	return int(pos.x), int(pos.y)
@@ -1538,18 +1432,12 @@ func (w *Window) platformSetWindowPos(xpos, ypos int) error {
 		bottom: int32(ypos),
 	}
 	if winver.IsWindows10AnniversaryUpdateOrGreater() {
-		if mylog.Check(_AdjustWindowRectExForDpi(&rect, w.getWindowStyle(), false, w.getWindowExStyle(), _GetDpiForWindow(w.platform.handle))); err != nil {
-			return err
-		}
+		 mylog.Check(_AdjustWindowRectExForDpi(&rect, w.getWindowStyle(), false, w.getWindowExStyle(), _GetDpiForWindow(w.platform.handle))); 
 	} else {
-		if mylog.Check(_AdjustWindowRectEx(&rect, w.getWindowStyle(), false, w.getWindowExStyle())); err != nil {
-			return err
-		}
+		 mylog.Check(_AdjustWindowRectEx(&rect, w.getWindowStyle(), false, w.getWindowExStyle())); 
 	}
 
-	if mylog.Check(_SetWindowPos(w.platform.handle, 0, rect.left, rect.top, 0, 0, _SWP_NOACTIVATE|_SWP_NOZORDER|_SWP_NOSIZE)); err != nil {
-		return err
-	}
+	 mylog.Check(_SetWindowPos(w.platform.handle, 0, rect.left, rect.top, 0, 0, _SWP_NOACTIVATE|_SWP_NOZORDER|_SWP_NOSIZE)); 
 	return nil
 }
 
@@ -1562,12 +1450,8 @@ func (w *Window) platformGetWindowSize() (width, height int) {
 func (w *Window) platformSetWindowSize(width, height int) error {
 	if w.monitor != nil {
 		if w.monitor.window == w {
-			if mylog.Check(w.acquireMonitor()); err != nil {
-				return err
-			}
-			if mylog.Check(w.fitToMonitor()); err != nil {
-				return err
-			}
+			 mylog.Check(w.acquireMonitor()); 
+			 mylog.Check(w.fitToMonitor()); 
 		}
 	} else {
 		rect := _RECT{
@@ -1578,20 +1462,14 @@ func (w *Window) platformSetWindowSize(width, height int) error {
 		}
 
 		if winver.IsWindows10AnniversaryUpdateOrGreater() {
-			if mylog.Check(_AdjustWindowRectExForDpi(&rect, w.getWindowStyle(), false, w.getWindowExStyle(), _GetDpiForWindow(w.platform.handle))); err != nil {
-				return err
-			}
+			 mylog.Check(_AdjustWindowRectExForDpi(&rect, w.getWindowStyle(), false, w.getWindowExStyle(), _GetDpiForWindow(w.platform.handle))); 
 		} else {
-			if mylog.Check(_AdjustWindowRectEx(&rect, w.getWindowStyle(), false, w.getWindowExStyle())); err != nil {
-				return err
-			}
+			 mylog.Check(_AdjustWindowRectEx(&rect, w.getWindowStyle(), false, w.getWindowExStyle())); 
 		}
 
-		if mylog.Check(_SetWindowPos(w.platform.handle, _HWND_TOP,
+		 mylog.Check(_SetWindowPos(w.platform.handle, _HWND_TOP,
 			0, 0, rect.right-rect.left, rect.bottom-rect.top,
-			_SWP_NOACTIVATE|_SWP_NOOWNERZORDER|_SWP_NOMOVE|_SWP_NOZORDER)); err != nil {
-			return err
-		}
+			_SWP_NOACTIVATE|_SWP_NOOWNERZORDER|_SWP_NOMOVE|_SWP_NOZORDER)); 
 	}
 
 	return nil
@@ -1604,13 +1482,9 @@ func (w *Window) platformSetWindowSizeLimits(minwidth, minheight, maxwidth, maxh
 
 	area := mylog.Check2(_GetWindowRect(w.platform.handle))
 
-	if mylog.Check(_MoveWindow(w.platform.handle, area.left, area.top, area.right-area.left, area.bottom-area.top, true)); err != nil {
-		return err
-	}
+	 mylog.Check(_MoveWindow(w.platform.handle, area.left, area.top, area.right-area.left, area.bottom-area.top, true)); 
 
-	if mylog.Check(w.updateWindowStyles()); err != nil {
-		return err
-	}
+	 mylog.Check(w.updateWindowStyles()); 
 	return nil
 }
 
@@ -1621,12 +1495,8 @@ func (w *Window) platformSetWindowAspectRatio(numer, denom int) error {
 
 	area := mylog.Check2(_GetWindowRect(w.platform.handle))
 
-	if mylog.Check(w.applyAspectRatio(_WMSZ_BOTTOMRIGHT, &area)); err != nil {
-		return err
-	}
-	if mylog.Check(_MoveWindow(w.platform.handle, area.left, area.top, area.right-area.left, area.bottom-area.top, true)); err != nil {
-		return err
-	}
+	 mylog.Check(w.applyAspectRatio(_WMSZ_BOTTOMRIGHT, &area)); 
+	 mylog.Check(_MoveWindow(w.platform.handle, area.left, area.top, area.right-area.left, area.bottom-area.top, true)); 
 	return nil
 }
 
@@ -1644,11 +1514,11 @@ func (w *Window) platformGetWindowFrameSize() (left, top, right, bottom int) {
 		bottom: int32(height),
 	}
 	if winver.IsWindows10AnniversaryUpdateOrGreater() {
-		if mylog.Check(_AdjustWindowRectExForDpi(&rect, w.getWindowStyle(), false, w.getWindowExStyle(), _GetDpiForWindow(w.platform.handle))); err != nil {
+		 mylog.Check(_AdjustWindowRectExForDpi(&rect, w.getWindowStyle(), false, w.getWindowExStyle(), _GetDpiForWindow(w.platform.handle))); err != nil {
 			return 0, 0, 0, 0
 		}
 	} else {
-		if mylog.Check(_AdjustWindowRectEx(&rect, w.getWindowStyle(), false, w.getWindowExStyle())); err != nil {
+		 mylog.Check(_AdjustWindowRectEx(&rect, w.getWindowStyle(), false, w.getWindowExStyle())); err != nil {
 			return 0, 0, 0, 0
 		}
 	}
@@ -1673,9 +1543,7 @@ func (w *Window) platformMaximizeWindow() error {
 	if _IsWindowVisible(w.platform.handle) {
 		_ShowWindow(w.platform.handle, _SW_MAXIMIZE)
 	} else {
-		if mylog.Check(w.maximizeWindowManually()); err != nil {
-			return err
-		}
+		 mylog.Check(w.maximizeWindowManually()); 
 	}
 	return nil
 }
@@ -1697,13 +1565,9 @@ func (w *Window) platformFocusWindow() error {
 		return nil
 	}
 
-	if mylog.Check(_BringWindowToTop(w.platform.handle)); err != nil {
-		return err
-	}
+	 mylog.Check(_BringWindowToTop(w.platform.handle)); 
 	_SetForegroundWindow(w.platform.handle)
-	if _ := mylog.Check2(_SetFocus(w.platform.handle)); err != nil {
-		return err
-	}
+	if _ := mylog.Check2(_SetFocus(w.platform.handle)); 
 	return nil
 }
 
@@ -1711,10 +1575,10 @@ func (w *Window) platformSetWindowMonitor(monitor *Monitor, xpos, ypos, width, h
 	if w.monitor == monitor {
 		if monitor != nil {
 			if monitor.window == w {
-				if mylog.Check(w.acquireMonitor()); err != nil {
+				 mylog.Check(w.acquireMonitor()); err != nil {
 					return err
 				}
-				if mylog.Check(w.fitToMonitor()); err != nil {
+				 mylog.Check(w.fitToMonitor()); err != nil {
 					return err
 				}
 			}
@@ -1726,29 +1590,25 @@ func (w *Window) platformSetWindowMonitor(monitor *Monitor, xpos, ypos, width, h
 				bottom: int32(ypos + height),
 			}
 			if winver.IsWindows10AnniversaryUpdateOrGreater() {
-				if mylog.Check(_AdjustWindowRectExForDpi(&rect, w.getWindowStyle(), false, w.getWindowExStyle(), _GetDpiForWindow(w.platform.handle))); err != nil {
+				 mylog.Check(_AdjustWindowRectExForDpi(&rect, w.getWindowStyle(), false, w.getWindowExStyle(), _GetDpiForWindow(w.platform.handle))); err != nil {
 					return err
 				}
 			} else {
-				if mylog.Check(_AdjustWindowRectEx(&rect, w.getWindowStyle(), false, w.getWindowExStyle())); err != nil {
+				 mylog.Check(_AdjustWindowRectEx(&rect, w.getWindowStyle(), false, w.getWindowExStyle())); err != nil {
 					return err
 				}
 			}
 
-			if mylog.Check(_SetWindowPos(w.platform.handle, _HWND_TOP,
+			 mylog.Check(_SetWindowPos(w.platform.handle, _HWND_TOP,
 				rect.left, rect.top, rect.right-rect.left, rect.bottom-rect.top,
-				_SWP_NOCOPYBITS|_SWP_NOACTIVATE|_SWP_NOZORDER)); err != nil {
-				return err
-			}
+				_SWP_NOCOPYBITS|_SWP_NOACTIVATE|_SWP_NOZORDER)); 
 		}
 
 		return nil
 	}
 
 	if w.monitor != nil {
-		if mylog.Check(w.releaseMonitor()); err != nil {
-			return err
-		}
+		 mylog.Check(w.releaseMonitor()); 
 	}
 
 	w.inputWindowMonitor(monitor)
@@ -1761,29 +1621,23 @@ func (w *Window) platformSetWindowMonitor(monitor *Monitor, xpos, ypos, width, h
 			style := uint32(s)
 			style &^= _WS_OVERLAPPEDWINDOW
 			style |= w.getWindowStyle()
-			if _ := mylog.Check2(_SetWindowLongW(w.platform.handle, _GWL_STYLE, int32(style))); err != nil {
-				return err
-			}
+			if _ := mylog.Check2(_SetWindowLongW(w.platform.handle, _GWL_STYLE, int32(style))); 
 			flags |= _SWP_FRAMECHANGED
 		}
 
-		if mylog.Check(w.acquireMonitor()); err != nil {
-			return err
-		}
+		 mylog.Check(w.acquireMonitor()); 
 
 		mi, _ := _GetMonitorInfoW(w.monitor.platform.handle)
 		var hWnd windows.HWND = _HWND_NOTOPMOST
 		if w.floating {
 			hWnd = _HWND_TOPMOST
 		}
-		if mylog.Check(_SetWindowPos(w.platform.handle, hWnd,
+		 mylog.Check(_SetWindowPos(w.platform.handle, hWnd,
 			mi.rcMonitor.left,
 			mi.rcMonitor.top,
 			mi.rcMonitor.right-mi.rcMonitor.left,
 			mi.rcMonitor.bottom-mi.rcMonitor.top,
-			flags)); err != nil {
-			return err
-		}
+			flags)); 
 	} else {
 		var flags uint32 = _SWP_NOACTIVATE | _SWP_NOCOPYBITS
 		if w.decorated {
@@ -1792,9 +1646,7 @@ func (w *Window) platformSetWindowMonitor(monitor *Monitor, xpos, ypos, width, h
 			style := uint32(s)
 			style &^= _WS_POPUP
 			style |= w.getWindowStyle()
-			if _ := mylog.Check2(_SetWindowLongW(w.platform.handle, _GWL_STYLE, int32(style))); err != nil {
-				return err
-			}
+			if _ := mylog.Check2(_SetWindowLongW(w.platform.handle, _GWL_STYLE, int32(style))); 
 			flags |= _SWP_FRAMECHANGED
 		}
 
@@ -1805,16 +1657,12 @@ func (w *Window) platformSetWindowMonitor(monitor *Monitor, xpos, ypos, width, h
 			bottom: int32(ypos + height),
 		}
 		if winver.IsWindows10AnniversaryUpdateOrGreater() {
-			if mylog.Check(_AdjustWindowRectExForDpi(&rect, w.getWindowStyle(),
+			 mylog.Check(_AdjustWindowRectExForDpi(&rect, w.getWindowStyle(),
 				false, w.getWindowExStyle(),
-				_GetDpiForWindow(w.platform.handle))); err != nil {
-				return err
-			}
+				_GetDpiForWindow(w.platform.handle))); 
 		} else {
-			if mylog.Check(_AdjustWindowRectEx(&rect, w.getWindowStyle(),
-				false, w.getWindowExStyle())); err != nil {
-				return err
-			}
+			 mylog.Check(_AdjustWindowRectEx(&rect, w.getWindowStyle(),
+				false, w.getWindowExStyle())); 
 		}
 
 		var after windows.HWND
@@ -1823,11 +1671,9 @@ func (w *Window) platformSetWindowMonitor(monitor *Monitor, xpos, ypos, width, h
 		} else {
 			after = _HWND_NOTOPMOST
 		}
-		if mylog.Check(_SetWindowPos(w.platform.handle, after,
+		 mylog.Check(_SetWindowPos(w.platform.handle, after,
 			rect.left, rect.top, rect.right-rect.left, rect.bottom-rect.top,
-			flags)); err != nil {
-			return err
-		}
+			flags)); 
 	}
 
 	return nil
@@ -1939,14 +1785,10 @@ func (w *Window) platformSetWindowMousePassthrough(enabled bool) error {
 		}
 	}
 
-	if _ := mylog.Check2(_SetWindowLongW(w.platform.handle, _GWL_EXSTYLE, exStyle)); err != nil {
-		return err
-	}
+	if _ := mylog.Check2(_SetWindowLongW(w.platform.handle, _GWL_EXSTYLE, exStyle)); 
 
 	if enabled {
-		if mylog.Check(_SetLayeredWindowAttributes(w.platform.handle, key, alpha, flags)); err != nil {
-			return err
-		}
+		 mylog.Check(_SetLayeredWindowAttributes(w.platform.handle, key, alpha, flags)); 
 	}
 
 	return nil
@@ -1972,19 +1814,13 @@ func (w *Window) platformSetWindowOpacity(opacity float32) error {
 		style := mylog.Check2(_GetWindowLongW(w.platform.handle, _GWL_EXSTYLE))
 
 		style |= _WS_EX_LAYERED
-		if _ := mylog.Check2(_SetWindowLongW(w.platform.handle, _GWL_EXSTYLE, style)); err != nil {
-			return err
-		}
-		if mylog.Check(_SetLayeredWindowAttributes(w.platform.handle, 0, alpha, _LWA_ALPHA)); err != nil {
-			return err
-		}
+		if _ := mylog.Check2(_SetWindowLongW(w.platform.handle, _GWL_EXSTYLE, style)); 
+		 mylog.Check(_SetLayeredWindowAttributes(w.platform.handle, 0, alpha, _LWA_ALPHA)); 
 	} else {
 		style := mylog.Check2(_GetWindowLongW(w.platform.handle, _GWL_EXSTYLE))
 
 		style &^= _WS_EX_LAYERED
-		if _ := mylog.Check2(_SetWindowLongW(w.platform.handle, _GWL_EXSTYLE, style)); err != nil {
-			return err
-		}
+		if _ := mylog.Check2(_SetWindowLongW(w.platform.handle, _GWL_EXSTYLE, style)); 
 	}
 
 	return nil
@@ -1996,13 +1832,9 @@ func (w *Window) platformSetRawMouseMotion(enabled bool) error {
 	}
 
 	if enabled {
-		if mylog.Check(w.enableRawMouseMotion()); err != nil {
-			return err
-		}
+		 mylog.Check(w.enableRawMouseMotion()); 
 	} else {
-		if mylog.Check(w.disableRawMouseMotion()); err != nil {
-			return err
-		}
+		 mylog.Check(w.disableRawMouseMotion()); 
 	}
 	return nil
 }
@@ -2080,9 +1912,7 @@ func platformPollEvents() error {
 		//       to avoid breaking glfwWaitEvents with WM_MOUSEMOVE
 		// The re-center is required in order to prevent the mouse cursor stopping at the edges of the screen.
 		if window.platform.lastCursorPosX != width/2 || window.platform.lastCursorPosY != height/2 {
-			if mylog.Check(window.platformSetCursorPos(float64(width/2), float64(height/2))); err != nil {
-				return err
-			}
+			 mylog.Check(window.platformSetCursorPos(float64(width/2), float64(height/2))); 
 		}
 	}
 
@@ -2090,22 +1920,14 @@ func platformPollEvents() error {
 }
 
 func platformWaitEvents() error {
-	if mylog.Check(_WaitMessage()); err != nil {
-		return err
-	}
-	if mylog.Check(platformPollEvents()); err != nil {
-		return err
-	}
+	 mylog.Check(_WaitMessage()); 
+	 mylog.Check(platformPollEvents()); 
 	return nil
 }
 
 func platformWaitEventsTimeout(timeout float64) error {
-	if _ := mylog.Check2(_MsgWaitForMultipleObjects(0, nil, false, uint32(timeout*1e3), _QS_ALLINPUT)); err != nil {
-		return err
-	}
-	if mylog.Check(platformPollEvents()); err != nil {
-		return err
-	}
+	if _ := mylog.Check2(_MsgWaitForMultipleObjects(0, nil, false, uint32(timeout*1e3), _QS_ALLINPUT)); 
+	 mylog.Check(platformPollEvents()); 
 	return nil
 }
 
@@ -2117,7 +1939,7 @@ func (w *Window) platformGetCursorPos() (xpos, ypos float64) {
 	pos := mylog.Check2(_GetCursorPos())
 
 	if !microsoftgdk.IsXbox() {
-		if mylog.Check(_ScreenToClient(w.platform.handle, &pos)); err != nil {
+		 mylog.Check(_ScreenToClient(w.platform.handle, &pos)); err != nil {
 			return 0, 0
 		}
 	}
@@ -2135,13 +1957,9 @@ func (w *Window) platformSetCursorPos(xpos, ypos float64) error {
 	w.platform.lastCursorPosY = int(pos.y)
 
 	if !microsoftgdk.IsXbox() {
-		if mylog.Check(_ClientToScreen(w.platform.handle, &pos)); err != nil {
-			return err
-		}
+		 mylog.Check(_ClientToScreen(w.platform.handle, &pos)); 
 	}
-	if mylog.Check(_SetCursorPos(pos.x, pos.y)); err != nil {
-		return err
-	}
+	 mylog.Check(_SetCursorPos(pos.x, pos.y)); 
 	return nil
 }
 
@@ -2151,48 +1969,38 @@ func (w *Window) platformSetCursorMode(mode int) error {
 			xpos, ypos := w.platformGetCursorPos()
 			_glfw.platformWindow.restoreCursorPosX = xpos
 			_glfw.platformWindow.restoreCursorPosY = ypos
-			if mylog.Check(w.centerCursorInContentArea()); err != nil {
-				return err
-			}
+			 mylog.Check(w.centerCursorInContentArea()); 
 			if w.rawMouseMotion {
-				if mylog.Check(w.enableRawMouseMotion()); err != nil {
+				 mylog.Check(w.enableRawMouseMotion()); err != nil {
 					return err
 				}
 			}
 		} else if _glfw.platformWindow.disabledCursorWindow == w {
 			if w.rawMouseMotion {
-				if mylog.Check(w.disableRawMouseMotion()); err != nil {
+				 mylog.Check(w.disableRawMouseMotion()); err != nil {
 					return err
 				}
 			}
 		}
 
 		if mode == CursorDisabled {
-			if mylog.Check(captureCursor(w)); err != nil {
-				return err
-			}
+			 mylog.Check(captureCursor(w)); 
 		} else {
-			if mylog.Check(releaseCursor()); err != nil {
-				return err
-			}
+			 mylog.Check(releaseCursor()); 
 		}
 
 		if mode == CursorDisabled {
 			_glfw.platformWindow.disabledCursorWindow = w
 		} else if _glfw.platformWindow.disabledCursorWindow == w {
 			_glfw.platformWindow.disabledCursorWindow = nil
-			if mylog.Check(w.platformSetCursorPos(_glfw.platformWindow.restoreCursorPosX, _glfw.platformWindow.restoreCursorPosY)); err != nil {
-				return err
-			}
+			 mylog.Check(w.platformSetCursorPos(_glfw.platformWindow.restoreCursorPosX, _glfw.platformWindow.restoreCursorPosY)); 
 		}
 	}
 
 	in := mylog.Check2(w.cursorInContentArea())
 
 	if in {
-		if mylog.Check(w.updateCursorImage()); err != nil {
-			return err
-		}
+		 mylog.Check(w.updateCursorImage()); 
 	}
 
 	return nil
@@ -2253,9 +2061,7 @@ func (c *Cursor) platformCreateStandardCursor(shape StandardCursor) error {
 
 func (c *Cursor) platformDestroyCursor() error {
 	if c.platform.handle != 0 {
-		if mylog.Check(_DestroyIcon(_HICON(c.platform.handle))); err != nil {
-			return err
-		}
+		 mylog.Check(_DestroyIcon(_HICON(c.platform.handle))); 
 	}
 	return nil
 }
@@ -2264,9 +2070,7 @@ func (w *Window) platformSetCursor(cursor *Cursor) error {
 	in := mylog.Check2(w.cursorInContentArea())
 
 	if in {
-		if mylog.Check(w.updateCursorImage()); err != nil {
-			return err
-		}
+		 mylog.Check(w.updateCursorImage()); 
 	}
 	return nil
 }

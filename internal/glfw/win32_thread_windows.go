@@ -21,9 +21,8 @@ func (t *tls) create() error {
 
 func (t *tls) destroy() error {
 	if t.platform.allocated {
-		if mylog.Check(_TlsFree(t.platform.index)); err != nil {
-			return err
-		}
+		mylog.Check(_TlsFree(t.platform.index))
+
 	}
 	t.platform.allocated = false
 	t.platform.index = 0

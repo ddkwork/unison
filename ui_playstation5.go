@@ -81,9 +81,8 @@ func (u *UserInterface) initOnMainThread(options *RunOptions) error {
 
 func (u *UserInterface) loopGame() error {
 	for {
-		if mylog.Check(u.context.updateFrame(u.graphicsDriver, screenWidth, screenHeight, theMonitor.DeviceScaleFactor(), u)); err != nil {
-			return err
-		}
+		mylog.Check(u.context.updateFrame(u.graphicsDriver, screenWidth, screenHeight, theMonitor.DeviceScaleFactor(), u))
+
 	}
 	return nil
 }

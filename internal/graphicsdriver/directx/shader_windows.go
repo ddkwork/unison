@@ -135,7 +135,8 @@ func compileShader(program *shaderir.Program) (vsh, psh *_ID3DBlob, ferr error) 
 		return nil
 	})
 
-	if mylog.Check(wg.Wait()); err != nil {
+	mylog.Check(wg.Wait())
+	err != nil{
 		return nil, nil, err
 	}
 

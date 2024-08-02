@@ -123,7 +123,7 @@ func (i *Image) ReadPixels(pixels []byte, region image.Rectangle) {
 
 	i.flushBigOffscreenBufferIfNeeded()
 
-	if mylog.Check(i.ui.readPixels(i.mipmap, pixels, region)); err != nil {
+	 mylog.Check(i.ui.readPixels(i.mipmap, pixels, region)); err != nil {
 		if panicOnErrorOnReadingPixels {
 			panic(err)
 		}

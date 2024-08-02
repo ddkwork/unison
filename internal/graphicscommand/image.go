@@ -155,9 +155,8 @@ func (i *Image) ReadPixels(graphicsDriver graphicsdriver.Graphics, args []graphi
 		args: args,
 	}
 	theCommandQueueManager.enqueueCommand(c)
-	if mylog.Check(theCommandQueueManager.flush(graphicsDriver, false)); err != nil {
-		return err
-	}
+	mylog.Check(theCommandQueueManager.flush(graphicsDriver, false))
+
 	return nil
 }
 
@@ -199,14 +198,13 @@ func (i *Image) dumpTo(w io.Writer, graphicsDriver graphicsdriver.Graphics, blac
 	}
 
 	pix := make([]byte, 4*i.width*i.height)
-	if mylog.Check(i.ReadPixels(graphicsDriver, []graphicsdriver.PixelsArgs{
+	mylog.Check(i.ReadPixels(graphicsDriver, []graphicsdriver.PixelsArgs{
 		{
 			Pixels: pix,
 			Region: image.Rect(0, 0, i.width, i.height),
 		},
-	})); err != nil {
-		return err
-	}
+	}))
+
 
 	if blackbg {
 		for i := 0; i < len(pix)/4; i++ {
@@ -214,13 +212,12 @@ func (i *Image) dumpTo(w io.Writer, graphicsDriver graphicsdriver.Graphics, blac
 		}
 	}
 
-	if mylog.Check(png.Encode(w, (&image.RGBA{
+	mylog.Check(png.Encode(w, (&image.RGBA{
 		Pix:    pix,
 		Stride: 4 * i.width,
 		Rect:   image.Rect(0, 0, i.width, i.height),
-	}).SubImage(rect))); err != nil {
-		return err
-	}
+	}).SubImage(rect)))
+
 
 	return nil
 }

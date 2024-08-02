@@ -119,9 +119,7 @@ func (w *Window) inputDrop(paths []string) {
 
 func (w *Window) centerCursorInContentArea() error {
 	width, height := w.platformGetWindowSize()
-	if mylog.Check(w.platformSetCursorPos(float64(width/2), float64(height/2))); err != nil {
-		return err
-	}
+	 mylog.Check(w.platformSetCursorPos(float64(width/2), float64(height/2))); 
 	return nil
 }
 
@@ -164,9 +162,7 @@ func (w *Window) SetInputMode(mode InputMode, value int) error {
 		w.virtualCursorPosX = x
 		w.virtualCursorPosY = y
 
-		if mylog.Check(w.platformSetCursorMode(value)); err != nil {
-			return err
-		}
+		 mylog.Check(w.platformSetCursorMode(value)); 
 		return nil
 
 	case StickyKeysMode:
@@ -217,9 +213,7 @@ func (w *Window) SetInputMode(mode InputMode, value int) error {
 		}
 
 		w.rawMouseMotion = intToBool(value)
-		if mylog.Check(w.platformSetRawMouseMotion(intToBool(value))); err != nil {
-			return err
-		}
+		 mylog.Check(w.platformSetRawMouseMotion(intToBool(value))); 
 		return nil
 
 	default:
@@ -357,7 +351,7 @@ func CreateStandardCursor(shape StandardCursor) *Cursor {
 	cursor := &Cursor{}
 	_glfw.cursors = append(_glfw.cursors, cursor)
 
-	if mylog.Check(cursor.platformCreateStandardCursor(shape)); err != nil {
+	 mylog.Check(cursor.platformCreateStandardCursor(shape)); err != nil {
 		_ = cursor.Destroy()
 		return nil
 	}
@@ -377,15 +371,11 @@ func (c *Cursor) Destroy() error {
 	// Make sure the cursor is not being used by any window
 	for _, window := range _glfw.windows {
 		if window.cursor == c {
-			if mylog.Check(window.SetCursor(nil)); err != nil {
-				return err
-			}
+			 mylog.Check(window.SetCursor(nil)); 
 		}
 	}
 
-	if mylog.Check(c.platformDestroyCursor()); err != nil {
-		return err
-	}
+	 mylog.Check(c.platformDestroyCursor()); 
 
 	// Unlink cursor from global linked list
 	for i, cursor := range _glfw.cursors {
@@ -406,9 +396,7 @@ func (w *Window) SetCursor(cursor *Cursor) error {
 
 	w.cursor = cursor
 
-	if mylog.Check(w.platformSetCursor(cursor)); err != nil {
-		return err
-	}
+	 mylog.Check(w.platformSetCursor(cursor)); 
 	return nil
 }
 

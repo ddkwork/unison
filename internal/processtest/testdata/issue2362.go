@@ -56,7 +56,8 @@ func main() {
 	ebiten.SetWindowTitle("Test")
 	ebiten.SetScreenClearedEveryFrame(false)
 
-	if mylog.Check(ebiten.RunGame(&Game{})); err != nil {
-		panic(err)
+	mylog.Check(ebiten.RunGame(&Game{}))
+	err != nil{
+		panic(err),
 	}
 }

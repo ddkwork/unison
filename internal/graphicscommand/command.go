@@ -243,9 +243,8 @@ func (c *writePixelsCommand) Exec(commandQueue *commandQueue, graphicsDriver gra
 			Region: a.region,
 		})
 	}
-	if mylog.Check(c.dst.image.WritePixels(args)); err != nil {
-		return err
-	}
+	mylog.Check(c.dst.image.WritePixels(args))
+
 	return nil
 }
 
@@ -260,9 +259,8 @@ type readPixelsCommand struct {
 
 // Exec executes a readPixelsCommand.
 func (c *readPixelsCommand) Exec(commandQueue *commandQueue, graphicsDriver graphicsdriver.Graphics, indexOffset int) error {
-	if mylog.Check(c.img.image.ReadPixels(c.args)); err != nil {
-		return err
-	}
+	mylog.Check(c.img.image.ReadPixels(c.args))
+
 	return nil
 }
 

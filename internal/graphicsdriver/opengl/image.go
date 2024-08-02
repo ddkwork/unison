@@ -62,21 +62,18 @@ func (i *Image) Dispose() {
 }
 
 func (i *Image) setViewport() error {
-	if mylog.Check(i.ensureFramebuffer()); err != nil {
-		return err
-	}
+	mylog.Check(i.ensureFramebuffer())
+
 	i.graphics.context.setViewport(i.framebuffer)
 	return nil
 }
 
 func (i *Image) ReadPixels(args []graphicsdriver.PixelsArgs) error {
-	if mylog.Check(i.ensureFramebuffer()); err != nil {
-		return err
-	}
+	mylog.Check(i.ensureFramebuffer())
+
 	for _, arg := range args {
-		if mylog.Check(i.graphics.context.framebufferPixels(arg.Pixels, i.framebuffer, arg.Region)); err != nil {
-			return err
-		}
+		mylog.Check(i.graphics.context.framebufferPixels(arg.Pixels, i.framebuffer, arg.Region))
+
 	}
 	return nil
 }
@@ -113,17 +110,15 @@ func (i *Image) ensureStencilBuffer() error {
 		return nil
 	}
 
-	if mylog.Check(i.ensureFramebuffer()); err != nil {
-		return err
-	}
+	mylog.Check(i.ensureFramebuffer())
+
 
 	r := mylog.Check2(i.graphics.context.newRenderbuffer(i.viewportSize()))
 
 	i.stencil = r
 
-	if mylog.Check(i.graphics.context.bindStencilBuffer(i.framebuffer.native, i.stencil)); err != nil {
-		return err
-	}
+	mylog.Check(i.graphics.context.bindStencilBuffer(i.framebuffer.native, i.stencil))
+
 	return nil
 }
 

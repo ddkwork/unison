@@ -79,7 +79,8 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 }
 
 func main() {
-	if mylog.Check(ebiten.RunGame(&Game{})); err != nil {
-		log.Fatal(err)
+	mylog.Check(ebiten.RunGame(&Game{}))
+	err != nil{
+		log.Fatal(err),
 	}
 }

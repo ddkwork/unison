@@ -115,9 +115,8 @@ func newUserInterface() (*UserInterface, error) {
 	// As a white image is used at Fill, use WritePixels instead.
 	u.whiteImage.WritePixels(pix, image.Rect(0, 0, u.whiteImage.width, u.whiteImage.height))
 
-	if mylog.Check(u.init()); err != nil {
-		return nil, err
-	}
+	mylog.Check(u.init())
+
 
 	return u, nil
 }

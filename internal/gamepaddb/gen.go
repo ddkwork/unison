@@ -81,18 +81,17 @@ var additionalGLFWGamepads = []byte(` + "`" + `
 {{end}}
 
 func init() {
-	if err := Update(controllerBytes); err != nil {
-		panic(err)
+	if err := Update(controllerBytes); 
 	}{{if .HasGLFWGamepads}}
-	if err := Update(additionalGLFWGamepads); err != nil {
-		panic(err)
+	if err := Update(additionalGLFWGamepads); 
 	}{{end}}
 }
 `
 
 func main() {
-	if mylog.Check(run()); err != nil {
-		log.Fatal(err)
+	mylog.Check(run())
+	err != nil{
+		log.Fatal(err),
 	}
 }
 
@@ -138,9 +137,8 @@ func run() error {
 		}
 
 		// Write each chunk into separate text file for embedding into respective generated files.
-		if mylog.Check(os.WriteFile(fmt.Sprintf("gamecontrollerdb_%s.txt", platform.filenameSuffix), []byte(controllerDB), 0666)); err != nil {
-			return err
-		}
+		mylog.Check(os.WriteFile(fmt.Sprintf("gamecontrollerdb_%s.txt", platform.filenameSuffix), []byte(controllerDB), 0666))
+
 
 		path := fmt.Sprintf("db_%s.go", platform.filenameSuffix)
 		tmpl := mylog.Check2(template.New(path).Parse(dbTemplate))
@@ -150,7 +148,7 @@ func run() error {
 		defer f.Close()
 
 		w := bufio.NewWriter(f)
-		if mylog.Check(tmpl.Execute(w, struct {
+		mylog.Check(tmpl.Execute(w, struct {
 			License          string
 			DoNotEdit        string
 			BuildConstraints string
@@ -162,12 +160,10 @@ func run() error {
 			BuildConstraints: platform.buildConstraints,
 			FileNameSuffix:   platform.filenameSuffix,
 			HasGLFWGamepads:  platform.hasGLFWGamepads,
-		})); err != nil {
-			return err
-		}
-		if mylog.Check(w.Flush()); err != nil {
-			return err
-		}
+		}))
+
+		mylog.Check(w.Flush())
+
 	}
 
 	return nil
@@ -190,9 +186,8 @@ func splitDBsByPlatform(controllerDB []byte) (map[string]string, error) {
 			}
 		}
 	}
-	if mylog.Check(s.Err()); err != nil {
-		return nil, err
-	}
+	mylog.Check(s.Err())
+
 
 	return dbs, nil
 }

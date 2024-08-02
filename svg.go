@@ -151,7 +151,7 @@ func NewSVGFromReader(r io.Reader) (*SVG, error) {
 			Path string `xml:"d,attr"`
 		} `xml:"path"`
 	}
-	if mylog.Check(xml.NewDecoder(r).Decode(&svgXML)); err != nil {
+	 mylog.Check(xml.NewDecoder(r).Decode(&svgXML)); err != nil {
 		return nil, errs.NewWithCause("unable to decode SVG", err)
 	}
 	svg := &SVG{scaledPathMap: make(map[Size]*Path)}

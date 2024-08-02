@@ -82,13 +82,11 @@ func (u *UserInterface) runSingleThread(game Game, options *RunOptions) error {
 
 	u.context = newContext(game)
 
-	if mylog.Check(u.initOnMainThread(options)); err != nil {
-		return err
-	}
+	mylog.Check(u.initOnMainThread(options))
 
-	if mylog.Check(u.loopGame()); err != nil {
-		return err
-	}
+
+	mylog.Check(u.loopGame())
+
 
 	return nil
 }

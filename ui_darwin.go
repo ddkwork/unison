@@ -123,8 +123,9 @@ func (u *UserInterface) initializePlatform() error {
 			{
 				Cmd: sel_windowWillEnterFullScreen,
 				Fn: func(id objc.ID, cmd objc.SEL, notification objc.ID) {
-					if mylog.Check(u.setOrigWindowPosWithCurrentPos()); err != nil {
-						u.setError(err)
+					mylog.Check(u.setOrigWindowPosWithCurrentPos())
+					err != nil{
+						u.setError(err),
 						return
 					}
 					pushResizableState(id, cocoa.NSNotification{ID: notification}.Object())
@@ -143,8 +144,9 @@ func (u *UserInterface) initializePlatform() error {
 					// Even a window has a size limitation, a window can be fullscreen by calling SetFullscreen(true).
 					// In this case, the window size limitation is disabled temporarily.
 					// When exiting from fullscreen, reset the window size limitation.
-					if mylog.Check(u.updateWindowSizeLimits()); err != nil {
-						u.setError(err)
+					mylog.Check(u.updateWindowSizeLimits())
+					err != nil{
+						u.setError(err),
 						return
 					}
 				},
@@ -320,9 +322,8 @@ func (u *UserInterface) isNativeFullscreenAvailable() bool {
 
 func (u *UserInterface) setNativeFullscreen(fullscreen bool) error {
 	// Toggling fullscreen might ignore events like keyUp. Ensure that events are fired.
-	if mylog.Check(glfw.WaitEventsTimeout(0.1)); err != nil {
-		return err
-	}
+	mylog.Check(glfw.WaitEventsTimeout(0.1))
+
 	w := mylog.Check2(u.window.GetCocoaWindow())
 
 	window := cocoa.NSWindow{ID: objc.ID(w)}

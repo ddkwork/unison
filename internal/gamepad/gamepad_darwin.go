@@ -40,12 +40,10 @@ func newNativeGamepadsImpl() nativeGamepads {
 }
 
 func (g *nativeGamepadsImpl) init(gamepads *gamepads) error {
-	if mylog.Check(initializeCF()); err != nil {
-		return err
-	}
-	if mylog.Check(initializeIOKit()); err != nil {
-		return err
-	}
+	mylog.Check(initializeCF())
+
+	mylog.Check(initializeIOKit())
+
 
 	var dicts []_CFDictionaryRef
 

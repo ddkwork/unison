@@ -40,9 +40,8 @@ func newShader(id graphicsdriver.ShaderID, graphics *Graphics, program *shaderir
 		graphics: graphics,
 		ir:       program,
 	}
-	if mylog.Check(s.compile()); err != nil {
-		return nil, err
-	}
+	mylog.Check(s.compile())
+
 	return s, nil
 }
 

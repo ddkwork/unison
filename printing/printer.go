@@ -94,7 +94,8 @@ func (p *Printer) Attributes(timeout time.Duration, allowCachedReturn bool) (*Pr
 	defer cancel()
 	rsp := mylog.Check2(p.sendRequest(ctx, req, nil, 0))
 
-	if mylog.Check(checkIPPStatus(rsp)); err != nil {
+	mylog.Check(checkIPPStatus(rsp))
+	err != nil{
 		return NewAttributes(nil).ForPrinter(), err
 	}
 	p.attributes = NewAttributes(rsp.Printer).ForPrinter()
@@ -112,9 +113,8 @@ func (p *Printer) Validate(ctx context.Context, jobName, mimeType string, attrib
 	req.Job = attributes.toIPP()
 	rsp := mylog.Check2(p.sendRequest(ctx, req, nil, 0))
 
-	if mylog.Check(checkIPPStatus(rsp)); err != nil {
-		return nil, err
-	}
+	mylog.Check(checkIPPStatus(rsp))
+
 	return NewAttributes(rsp.Unsupported).ForJob(), nil
 }
 
@@ -198,7 +198,8 @@ func (p *Printer) sendRequest(ctx context.Context, req *goipp.Message, fileData 
 		return nil, errs.Newf("unexpected http response code: %d", httpResp.StatusCode)
 	}
 	rsp := goipp.NewResponse(0, 0, 0)
-	if mylog.Check(rsp.Decode(httpResp.Body)); err != nil {
+	mylog.Check(rsp.Decode(httpResp.Body))
+	err != nil{
 		return nil, errs.Wrap(err)
 	}
 	return rsp, nil

@@ -61,8 +61,9 @@ func (p *PrintManager) ScanForPrinters(ctx context.Context, printers chan<- *Pri
 
 	entries := make(chan *zeroconf.ServiceEntry, 8)
 	go p.collectPrinters(ctx, entries, printers)
-	if mylog.Check(resolver.Browse(ctx, "_ipp._tcp", "local.", entries)); err != nil {
-		errs.Log(errs.NewWithCause("browsing for printers failed", err))
+	mylog.Check(resolver.Browse(ctx, "_ipp._tcp", "local.", entries))
+	err != nil{
+		errs.Log(errs.NewWithCause("browsing for printers failed", err)),
 	}
 }
 

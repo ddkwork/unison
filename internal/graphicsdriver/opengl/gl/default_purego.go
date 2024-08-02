@@ -103,9 +103,8 @@ type defaultContext struct {
 
 func NewDefaultContext() (Context, error) {
 	ctx := &defaultContext{}
-	if mylog.Check(ctx.init()); err != nil {
-		return nil, err
-	}
+	mylog.Check(ctx.init())
+
 	return ctx, nil
 }
 

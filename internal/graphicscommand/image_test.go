@@ -59,13 +59,14 @@ func TestClear(t *testing.T) {
 	dst.DrawTriangles([graphics.ShaderSrcImageCount]*graphicscommand.Image{src}, vs, is, graphicsdriver.BlendClear, dr, [graphics.ShaderSrcImageCount]image.Rectangle{}, nearestFilterShader, nil, graphicsdriver.FillRuleFillAll)
 
 	pix := make([]byte, 4*w*h)
-	if mylog.Check(dst.ReadPixels(ui.Get().GraphicsDriverForTesting(), []graphicsdriver.PixelsArgs{
+	mylog.Check(dst.ReadPixels(ui.Get().GraphicsDriverForTesting(), []graphicsdriver.PixelsArgs{
 		{
 			Pixels: pix,
 			Region: image.Rect(0, 0, w, h),
 		},
-	})); err != nil {
-		t.Fatal(err)
+	}))
+	err != nil{
+		t.Fatal(err),
 	}
 	for j := 0; j < h/2; j++ {
 		for i := 0; i < w/2; i++ {
@@ -113,13 +114,14 @@ func TestShader(t *testing.T) {
 	dst.DrawTriangles([graphics.ShaderSrcImageCount]*graphicscommand.Image{}, vs, is, graphicsdriver.BlendSourceOver, dr, [graphics.ShaderSrcImageCount]image.Rectangle{}, s, nil, graphicsdriver.FillRuleFillAll)
 
 	pix := make([]byte, 4*w*h)
-	if mylog.Check(dst.ReadPixels(g, []graphicsdriver.PixelsArgs{
+	mylog.Check(dst.ReadPixels(g, []graphicsdriver.PixelsArgs{
 		{
 			Pixels: pix,
 			Region: image.Rect(0, 0, w, h),
 		},
-	})); err != nil {
-		t.Fatal(err)
+	}))
+	err != nil{
+		t.Fatal(err),
 	}
 	for j := 0; j < h; j++ {
 		for i := 0; i < w; i++ {

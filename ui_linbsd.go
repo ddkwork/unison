@@ -80,7 +80,8 @@ func glfwMonitorSizeInGLFWPixels(m *glfw.Monitor) (int, int, error) {
 
 	defer xconn.Close()
 
-	if mylog.Check(randr.Init(xconn)); err != nil {
+	mylog.Check(randr.Init(xconn))
+	err != nil{
 		// No RANDR extension? No problem.
 		return physWidth, physHeight, nil
 	}
@@ -174,9 +175,8 @@ func (u *UserInterface) setWindowResizingModeForOS(mode WindowResizingMode) erro
 func initializeWindowAfterCreation(w *glfw.Window) error {
 	// Show the window once before getting the position of the window.
 	// On Linux/Unix, the window position is not reliable before showing.
-	if mylog.Check(w.Show()); err != nil {
-		return err
-	}
+	mylog.Check(w.Show())
+
 
 	// Hiding the window makes the position unreliable again. Do not call w.Hide() here (#1829)
 	// Calling Hide is problematic especially on XWayland and/or Sway.

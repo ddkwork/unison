@@ -100,9 +100,8 @@ func (s *shader11) use(uniforms []uint32, srcs [graphics.ShaderSrcImageCount]*im
 	// Send the constant buffer data.
 	uniforms = adjustUniforms(s.uniformTypes, s.uniformOffsets, uniforms)
 	var mapped _D3D11_MAPPED_SUBRESOURCE
-	if mylog.Check(s.graphics.deviceContext.Map(unsafe.Pointer(cb), 0, _D3D11_MAP_WRITE_DISCARD, 0, &mapped)); err != nil {
-		return err
-	}
+	mylog.Check(s.graphics.deviceContext.Map(unsafe.Pointer(cb), 0, _D3D11_MAP_WRITE_DISCARD, 0, &mapped))
+
 	copy(unsafe.Slice((*uint32)(mapped.pData), len(uniforms)), uniforms)
 	s.graphics.deviceContext.Unmap(unsafe.Pointer(cb), 0)
 

@@ -74,9 +74,8 @@ func (i *image12) ReadPixels(args []graphicsdriver.PixelsArgs) error {
 		return errors.New("directx: Pixels cannot be called on the screen")
 	}
 
-	if mylog.Check(i.graphics.flushCommandList(i.graphics.drawCommandList)); err != nil {
-		return err
-	}
+	mylog.Check(i.graphics.flushCommandList(i.graphics.drawCommandList))
+
 
 	var unionRegion image.Rectangle
 	for _, a := range args {
@@ -132,9 +131,8 @@ func (i *image12) ReadPixels(args []graphicsdriver.PixelsArgs) error {
 			back:   1,
 		})
 
-	if mylog.Check(i.graphics.flushCommandList(i.graphics.copyCommandList)); err != nil {
-		return err
-	}
+	mylog.Check(i.graphics.flushCommandList(i.graphics.copyCommandList))
+
 
 	stride := int(layouts.Footprint.RowPitch)
 	srcPix := unsafe.Slice((*byte)(unsafe.Pointer(m)), totalBytes)
@@ -160,9 +158,8 @@ func (i *image12) WritePixels(args []graphicsdriver.PixelsArgs) error {
 		return errors.New("directx: WritePixels cannot be called on the screen")
 	}
 
-	if mylog.Check(i.graphics.flushCommandList(i.graphics.drawCommandList)); err != nil {
-		return err
-	}
+	mylog.Check(i.graphics.flushCommandList(i.graphics.drawCommandList))
+
 
 	var region image.Rectangle
 	for _, a := range args {
@@ -280,9 +277,8 @@ func (i *image12) internalSize() (int, int) {
 }
 
 func (i *image12) setAsRenderTarget(drawCommandList *_ID3D12GraphicsCommandList, device *_ID3D12Device, useStencil bool) error {
-	if mylog.Check(i.ensureRenderTargetView(device)); err != nil {
-		return err
-	}
+	mylog.Check(i.ensureRenderTargetView(device))
+
 
 	if i.screen {
 		if useStencil {
@@ -302,9 +298,8 @@ func (i *image12) setAsRenderTarget(drawCommandList *_ID3D12GraphicsCommandList,
 		return nil
 	}
 
-	if mylog.Check(i.ensureDepthStencilView(device)); err != nil {
-		return err
-	}
+	mylog.Check(i.ensureDepthStencilView(device))
+
 	dsv := mylog.Check2(i.dsvDescriptorHeap.GetCPUDescriptorHandleForHeapStart())
 
 	drawCommandList.OMSetStencilRef(0)

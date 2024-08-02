@@ -183,8 +183,9 @@ func (c *context) reset() error {
 	var err1 error
 	c.initOnce.Do(func() {
 		// Load OpenGL functions after WGL is initialized especially for Windows (#2452).
-		if mylog.Check(c.ctx.LoadFunctions()); err != nil {
-			err1 = err
+		mylog.Check(c.ctx.LoadFunctions())
+		err != nil{
+			err1, = err
 			return
 		}
 	})

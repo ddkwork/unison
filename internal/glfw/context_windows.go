@@ -260,12 +260,9 @@ func (w *Window) refreshContextAttribs(ctxconfig *ctxconfig) (ferr error) {
 	defer func() {
 		mylog.Check(previous.MakeContextCurrent())
 		if ferr == nil {
-			ferr = err
 		}
 	}()
-	if mylog.Check(w.MakeContextCurrent()); err != nil {
-		return err
-	}
+	 mylog.Check(w.MakeContextCurrent()); 
 
 	p2 := mylog.Check2(_glfw.contextSlot.get())
 
@@ -464,16 +461,12 @@ func (w *Window) MakeContextCurrent() error {
 
 	if previous != nil {
 		if w == nil || w.context.source != previous.context.source {
-			if mylog.Check(previous.context.makeCurrent(nil)); err != nil {
-				return err
-			}
+			 mylog.Check(previous.context.makeCurrent(nil)); 
 		}
 	}
 
 	if w != nil {
-		if mylog.Check(w.context.makeCurrent(w)); err != nil {
-			return err
-		}
+		 mylog.Check(w.context.makeCurrent(w)); 
 	}
 	return nil
 }
@@ -496,9 +489,7 @@ func (w *Window) SwapBuffers() error {
 		return fmt.Errorf("glfw: cannot swap buffers of a window that has no OpenGL or OpenGL ES context: %w", NoWindowContext)
 	}
 
-	if mylog.Check(w.context.swapBuffers(w)); err != nil {
-		return err
-	}
+	 mylog.Check(w.context.swapBuffers(w)); 
 	return nil
 }
 
@@ -514,9 +505,7 @@ func SwapInterval(interval int) error {
 		return fmt.Errorf("glfw: cannot set swap interval without a current OpenGL or OpenGL ES context %w", NoCurrentContext)
 	}
 
-	if mylog.Check(window.context.swapInterval(interval)); err != nil {
-		return err
-	}
+	 mylog.Check(window.context.swapInterval(interval)); 
 	return nil
 }
 

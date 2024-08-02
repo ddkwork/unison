@@ -99,7 +99,8 @@ func NewGraphics() (graphicsdriver.Graphics, error) {
 	if runtime.GOOS != "ios" {
 		// Initializing a Metal device and a layer must be done in the main thread on macOS.
 		// Note that this assumes NewGraphics is called on the main thread on desktops.
-		if mylog.Check(g.view.initialize(systemDefaultDevice)); err != nil {
+		mylog.Check(g.view.initialize(systemDefaultDevice))
+		err != nil{
 			return nil, err
 		}
 	}
@@ -384,9 +385,8 @@ func (g *Graphics) Initialize() error {
 
 	if runtime.GOOS == "ios" {
 		// Initializing a Metal device and a layer must be done in the render thread on iOS.
-		if mylog.Check(g.view.initialize(systemDefaultDevice)); err != nil {
-			return err
-		}
+		mylog.Check(g.view.initialize(systemDefaultDevice))
+
 	}
 	if g.transparent {
 		g.view.ml.SetOpaque(false)
@@ -669,9 +669,8 @@ func (g *Graphics) DrawTriangles(dstID graphicsdriver.ImageID, srcIDs [graphics.
 		idx += n
 	}
 
-	if mylog.Check(g.draw(dst, dstRegions, srcs, indexOffset, g.shaders[shaderID], uniformVars, blend, fillRule)); err != nil {
-		return err
-	}
+	mylog.Check(g.draw(dst, dstRegions, srcs, indexOffset, g.shaders[shaderID], uniformVars, blend, fillRule))
+
 
 	return nil
 }

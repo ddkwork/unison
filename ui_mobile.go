@@ -62,9 +62,8 @@ func (u *UserInterface) Update() error {
 		return nil
 	}
 
-	if mylog.Check(gamepad.Update()); err != nil {
-		return err
-	}
+	mylog.Check(gamepad.Update())
+
 
 	ctx, cancel := stdcontext.WithCancel(stdcontext.Background())
 	defer cancel()
@@ -116,8 +115,9 @@ func (u *UserInterface) Run(game Game, options *RunOptions) error {
 
 func (u *UserInterface) RunWithoutMainLoop(game Game, options *RunOptions) {
 	go func() {
-		if mylog.Check(u.runMobile(game, options)); err != nil {
-			u.errCh <- err
+		mylog.Check(u.runMobile(game, options))
+		err != nil{
+			u.errCh, <- err
 		}
 	}()
 }
@@ -147,9 +147,8 @@ func (u *UserInterface) runMobile(game Game, options *RunOptions) (err error) {
 	close(u.graphicsLibraryInitCh)
 
 	for {
-		if mylog.Check(u.update()); err != nil {
-			return err
-		}
+		mylog.Check(u.update())
+
 	}
 }
 
@@ -168,9 +167,8 @@ func (u *UserInterface) update() error {
 	}()
 
 	w, h := u.outsideSize()
-	if mylog.Check(u.context.updateFrame(u.graphicsDriver, w, h, theMonitor.DeviceScaleFactor(), u)); err != nil {
-		return err
-	}
+	mylog.Check(u.context.updateFrame(u.graphicsDriver, w, h, theMonitor.DeviceScaleFactor(), u))
+
 	return nil
 }
 
