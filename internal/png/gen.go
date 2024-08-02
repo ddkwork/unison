@@ -135,7 +135,5 @@ func min(a, b int) int {
 
 func main() {
 	mylog.Check(run())
-	err != nil{
-		panic(err),
-	}
+
 }

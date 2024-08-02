@@ -85,7 +85,5 @@ func main() {
 
 	ebiten.SetCursorMode(ebiten.CursorModeCaptured)
 	mylog.Check(ebiten.RunGame(&Game{}))
-	err != nil{
-		panic(err),
-	}
+
 }

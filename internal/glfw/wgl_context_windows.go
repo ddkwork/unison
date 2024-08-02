@@ -370,8 +370,8 @@ func initWGL() error {
 	prc := wglGetCurrentContext()
 
 	if e := wglMakeCurrent(dc, rc); e != nil {
-		_ = wglMakeCurrent(pdc, prc)
-		_ = wglDeleteContext(rc)
+		mylog.Check(wglMakeCurrent(pdc, prc))
+		mylog.Check(wglDeleteContext(rc))
 		return e
 	}
 

@@ -134,7 +134,5 @@ func main() {
 	}
 
 	mylog.Check(ebiten.RunGame(game))
-	err != nil{
-		panic(err),
-	}
+
 }

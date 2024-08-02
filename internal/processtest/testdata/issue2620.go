@@ -37,7 +37,5 @@ func (g *Game) Layout(width, height int) (int, int) {
 func main() {
 	ebiten.SetRunnableOnUnfocused(false)
 	mylog.Check(ebiten.RunGame(&Game{}))
-	err != nil{
-		panic(err),
-	}
+
 }

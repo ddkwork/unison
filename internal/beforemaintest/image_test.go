@@ -76,9 +76,6 @@ func TestMain(m *testing.M) {
 		endCh: endCh,
 	}
 	mylog.Check(ebiten.RunGame(g))
-	err != nil{
-		panic(err),
-	}
 
 	os.Exit(<-codeCh)
 }

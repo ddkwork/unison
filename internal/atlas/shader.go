@@ -15,7 +15,6 @@
 package atlas
 
 import (
-	"fmt"
 	"runtime"
 
 	"github.com/ddkwork/golibrary/mylog"
@@ -107,7 +106,4 @@ func init() {
 		return nil
 	})
 	mylog.Check(wg.Wait())
-	err != nil{
-		panic(err),
-	}
 }

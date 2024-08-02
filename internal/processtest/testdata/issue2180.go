@@ -85,7 +85,5 @@ func main() {
 	ebiten.SetWindowTitle("Test")
 
 	mylog.Check(ebiten.RunGame(&Game{}))
-	err != nil{
-		panic(err),
-	}
+
 }

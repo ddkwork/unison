@@ -43,7 +43,5 @@ func main() {
 		}
 	}()
 	mylog.Check(ebiten.RunGame(&Game{}))
-	err != nil{
-		panic(err),
-	}
+
 }

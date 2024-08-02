@@ -632,9 +632,7 @@ func (i *Image) ReadPixels(graphicsDriver graphicsdriver.Graphics, pixels []byte
 	// To prevent memory leaks, flush the deferred functions here.
 	flushDeferred()
 
-	 mylog.Check(i.readPixels(graphicsDriver, pixels, region)); err != nil {
-		return false, err
-	}
+	mylog.Check(i.readPixels(graphicsDriver, pixels, region))
 	return true, nil
 }
 
@@ -646,12 +644,12 @@ func (i *Image) readPixels(graphicsDriver graphicsdriver.Graphics, pixels []byte
 		return nil
 	}
 
-	 mylog.Check(i.backend.image.ReadPixels(graphicsDriver, []graphicsdriver.PixelsArgs{
+	mylog.Check(i.backend.image.ReadPixels(graphicsDriver, []graphicsdriver.PixelsArgs{
 		{
 			Pixels: pixels,
 			Region: region.Add(i.regionWithPadding().Min),
 		},
-	})); 
+	}))
 	return nil
 }
 
@@ -872,7 +870,7 @@ func SwapBuffers(graphicsDriver graphicsdriver.Graphics) error {
 		}
 		graphicscommand.LogImagesInfo(imgs)
 	}
-	 mylog.Check(graphicscommand.FlushCommands(graphicsDriver, true)); 
+	mylog.Check(graphicscommand.FlushCommands(graphicsDriver, true))
 	return nil
 }
 
