@@ -43,8 +43,6 @@ func (c *defaultContext) getProcAddress(namea string) (uintptr, error) {
 	}
 
 	p := opengl32.NewProc(namea)
-	if mylog.Check(p.Find()); err != nil {
-		return 0, err
-	}
+	mylog.Check(p.Find())
 	return p.Addr(), nil
 }

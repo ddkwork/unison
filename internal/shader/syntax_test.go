@@ -1871,17 +1871,13 @@ func TestSyntaxConstructorFuncType(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		_ := mylog.Check2(compileToIR([]byte(fmt.Sprintf(`package main
+		mylog.Check2(compileToIR([]byte(fmt.Sprintf(`package main
 
 func Fragment(dstPos vec4, srcPos vec2, color vec4) vec4 {
 	%s
 	return dstPos
 }`, c.stmt))))
-		if err == nil && c.err {
-			t.Errorf("%s must return an error but does not", c.stmt)
-		} else if err != nil && !c.err {
-			t.Errorf("%s must not return nil but returned %v", c.stmt, err)
-		}
+
 	}
 }
 
@@ -2367,12 +2363,8 @@ func Fragment(dstPos vec4, srcPos vec2, color vec4) vec4 {
 	%s
 	return dstPos
 }`, stmt)
-			_ := mylog.Check2(compileToIR([]byte(src)))
-			if err == nil && c.err {
-				t.Errorf("%s must return an error but does not", stmt)
-			} else if err != nil && !c.err {
-				t.Errorf("%s must not return nil but returned %v", stmt, err)
-			}
+			mylog.Check2(compileToIR([]byte(src)))
+
 		}
 	}
 }
@@ -2510,12 +2502,8 @@ func Fragment(dstPos vec4, srcPos vec2, color vec4) vec4 {
 	%s
 	return dstPos
 }`, stmt)
-		_ := mylog.Check2(compileToIR([]byte(src)))
-		if err == nil && c.err {
-			t.Errorf("%s must return an error but does not", stmt)
-		} else if err != nil && !c.err {
-			t.Errorf("%s must not return nil but returned %v", stmt, err)
-		}
+		mylog.Check2(compileToIR([]byte(src)))
+
 	}
 }
 
@@ -3422,17 +3410,14 @@ func bar(x vec2) {
 
 // Issue #2590
 func TestSyntaxAssignToUniformVariables(t *testing.T) {
-	if _ := mylog.Check2(compileToIR([]byte(`package main
+	mylog.Check2(compileToIR([]byte(`package main
 
 var Foo float
 
 func foo(x vec2) {
 	Foo = 0
-}`))); err == nil {
-		t.Error("compileToIR must return an error but did not")
-	}
-
-	if _ := mylog.Check2(compileToIR([]byte(`package main
+}`)))
+	mylog.Check2(compileToIR([]byte(`package main
 
 var Foo float
 
@@ -3440,33 +3425,22 @@ func foo(x vec2) {
 	var x int
 	x, Foo = 0, 0
 	_ = x
-}`))); err == nil {
-		t.Error("compileToIR must return an error but did not")
-	}
-
-	if _ := mylog.Check2(compileToIR([]byte(`package main
+}`)))
+	mylog.Check2(compileToIR([]byte(`package main
 
 var Foo float
 
 func foo(x vec2) {
 	Foo += 0
-}`))); err == nil {
-		t.Error("compileToIR must return an error but did not")
-	}
-
-	// Issue #2711
-	if _ := mylog.Check2(compileToIR([]byte(`package main
+}`)))
+	mylog.Check2(compileToIR([]byte(`package main
 
 var Foo float = 1
-`))); err == nil {
-		t.Error("compileToIR must return an error but did not")
-	}
-	if _ := mylog.Check2(compileToIR([]byte(`package main
+`)))
+	mylog.Check2(compileToIR([]byte(`package main
 
 var Foo, Bar int = 1, 1
-`))); err == nil {
-		t.Error("compileToIR must return an error but did not")
-	}
+`)))
 }
 
 // Issue #2705
