@@ -254,9 +254,7 @@ func (w *Window) refreshContextAttribs(ctxconfig *ctxconfig) (ferr error) {
 	w.context.client = OpenGLAPI
 
 	p1, err := _glfw.contextSlot.get()
-	if err != nil {
-		return err
-	}
+
 	previous := (*Window)(unsafe.Pointer(p1))
 	defer func() {
 		err := previous.MakeContextCurrent()
@@ -269,9 +267,7 @@ func (w *Window) refreshContextAttribs(ctxconfig *ctxconfig) (ferr error) {
 	}
 
 	p2, err := _glfw.contextSlot.get()
-	if err != nil {
-		return err
-	}
+
 	if (*Window)(unsafe.Pointer(p2)) != w {
 		return nil
 	}
@@ -397,9 +393,7 @@ func (w *Window) refreshContextAttribs(ctxconfig *ctxconfig) (ferr error) {
 
 		// Read back robustness strategy
 		ok, err := ExtensionSupported("GL_ARB_robustness")
-		if err != nil {
-			return err
-		}
+
 		if ok {
 			// NOTE: We avoid using the context flags for detection, as they are
 			//       only present from 3.0 while the extension applies from 1.1
@@ -416,9 +410,7 @@ func (w *Window) refreshContextAttribs(ctxconfig *ctxconfig) (ferr error) {
 	} else {
 		// Read back robustness strategy
 		ok, err := ExtensionSupported("GL_EXT_robustness")
-		if err != nil {
-			return err
-		}
+
 		if ok {
 			// NOTE: The values of these constants match those of the OpenGL ARB
 			//       one, so we can reuse them here
@@ -435,9 +427,7 @@ func (w *Window) refreshContextAttribs(ctxconfig *ctxconfig) (ferr error) {
 	}
 
 	ok, err := ExtensionSupported("GL_KHR_context_flush_control")
-	if err != nil {
-		return err
-	}
+
 	if ok {
 		var behavior int32
 		_, _, _ = purego.SyscallN(getIntegerv, GL_CONTEXT_RELEASE_BEHAVIOR, uintptr(unsafe.Pointer(&behavior)))
@@ -469,9 +459,7 @@ func (w *Window) MakeContextCurrent() error {
 	}
 
 	ptr, err := _glfw.contextSlot.get()
-	if err != nil {
-		return err
-	}
+
 	previous := (*Window)(unsafe.Pointer(ptr))
 
 	if w != nil && w.context.client == NoAPI {
@@ -526,9 +514,7 @@ func SwapInterval(interval int) error {
 	}
 
 	ptr, err := _glfw.contextSlot.get()
-	if err != nil {
-		return err
-	}
+
 	window := (*Window)(unsafe.Pointer(ptr))
 	if window == nil {
 		return fmt.Errorf("glfw: cannot set swap interval without a current OpenGL or OpenGL ES context %w", NoCurrentContext)

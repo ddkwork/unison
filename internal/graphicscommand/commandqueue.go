@@ -479,9 +479,7 @@ func (c *commandQueueManager) flush(graphicsDriver graphicsdriver.Graphics, endF
 	// Switch the command queue.
 	prev := c.current
 	q, err := c.pool.get()
-	if err != nil {
-		return err
-	}
+
 	c.current = q
 
 	if prev == nil {

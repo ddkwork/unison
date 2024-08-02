@@ -58,29 +58,19 @@ func run() error {
 		return fmt.Errorf("png: unexpected Go version: %s", verStr)
 	}
 	ver, err := strconv.Atoi(m[1])
-	if err != nil {
-		return err
-	}
+
 	if ver < 22 {
 		return fmt.Errorf("png: use Go 1.22 or newer")
 	}
 
 	dir, err := pngDir()
-	if err != nil {
-		return err
-	}
 
 	files, err := pngFiles()
-	if err != nil {
-		return err
-	}
 
 	const prefix = "stdlib"
 
 	matches, err := filepath.Glob(prefix + "*.go")
-	if err != nil {
-		return err
-	}
+
 	for _, f := range matches {
 		if err := os.Remove(f); err != nil {
 			return err
@@ -89,9 +79,7 @@ func run() error {
 
 	for _, f := range files {
 		out, err := os.Create(prefix + f)
-		if err != nil {
-			return err
-		}
+
 		defer out.Close()
 
 		w := bufio.NewWriter(out)
@@ -99,14 +87,9 @@ func run() error {
 		// TODO: Remove call of RegisterDecoder
 
 		data, err := os.ReadFile(filepath.Join(dir, f))
-		if err != nil {
-			return err
-		}
+
 		fset := token.NewFileSet()
 		tree, err := parser.ParseFile(fset, "", string(data), parser.ParseComments)
-		if err != nil {
-			return err
-		}
 
 		astutil.Apply(tree, func(c *astutil.Cursor) bool {
 			stmt, ok := c.Node().(*ast.ExprStmt)

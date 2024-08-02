@@ -306,9 +306,7 @@ func zeroMemory(v []uint8) {
 func (e *encoder) writeImage(w io.Writer, m image.Image, cb int, level int) error {
 	if e.zw == nil || e.zwLevel != level {
 		zw, err := zlib.NewWriterLevel(w, level)
-		if err != nil {
-			return err
-		}
+
 		e.zw = zw
 		e.zwLevel = level
 	} else {

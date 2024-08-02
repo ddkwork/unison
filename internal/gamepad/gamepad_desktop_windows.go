@@ -137,9 +137,7 @@ func (g *nativeGamepadsDesktop) init(gamepads *gamepads) error {
 		g.dinput8 = h
 
 		p, err := windows.GetProcAddress(h, "DirectInput8Create")
-		if err != nil {
-			return err
-		}
+
 		g.procDirectInput8Create = p
 	}
 
@@ -175,9 +173,6 @@ func (g *nativeGamepadsDesktop) init(gamepads *gamepads) error {
 	if g.dinput8 != 0 {
 		// TODO: Use _GetModuleHandleExW to align with GLFW v3.3.8.
 		m, err := _GetModuleHandleW()
-		if err != nil {
-			return err
-		}
 
 		var api *_IDirectInput8W
 		if err := g.directInput8Create(m, _DIRECTINPUT_VERSION, &_IID_IDirectInput8W, &api, nil); err != nil {
@@ -569,9 +564,7 @@ func (g *nativeGamepadsDesktop) update(gamepads *gamepads) error {
 		}
 		// Note that a Win32API GetActiveWindow doesn't work on Xbox.
 		h, err := _SetWindowLongPtrW(g.nativeWindow, _GWL_WNDPROC, g.wndProcCallback)
-		if err != nil {
-			return err
-		}
+
 		g.origWndProc = h
 	}
 

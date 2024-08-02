@@ -20,10 +20,6 @@ import (
 	"sync"
 	"syscall/js"
 	"time"
-
-	"github.com/hajimehoshi/ebiten/v2/internal/file"
-
-	"github.com/hajimehoshi/ebiten/v2/internal/graphicsdriver/opengl"
 )
 
 type graphicsDriverCreatorImpl struct {
@@ -715,10 +711,7 @@ func (u *UserInterface) appendDroppedFiles(data js.Value) {
 	}
 	if len(entries) > 0 {
 		fs, err := file.NewFileEntryFS(entries)
-		if err != nil {
-			u.setError(err)
-			return
-		}
+
 		u.inputState.DroppedFiles = fs
 	}
 }
@@ -766,9 +759,7 @@ func (u *UserInterface) initOnMainThread(options *RunOptions) error {
 	g, lib, err := newGraphicsDriver(&graphicsDriverCreatorImpl{
 		canvas: canvas,
 	}, options.GraphicsLibrary)
-	if err != nil {
-		return err
-	}
+
 	u.graphicsDriver = g
 	u.setGraphicsLibrary(lib)
 

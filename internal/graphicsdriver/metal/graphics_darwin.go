@@ -544,28 +544,20 @@ func (g *Graphics) draw(dst *Image, dstRegions []graphicsdriver.DstRegion, srcs 
 	switch fillRule {
 	case graphicsdriver.FillRuleFillAll:
 		s, err := shader.RenderPipelineState(&g.view, blend, noStencil, dst.screen)
-		if err != nil {
-			return err
-		}
+
 		noStencilRpss = s
 	case graphicsdriver.FillRuleNonZero:
 		s, err := shader.RenderPipelineState(&g.view, blend, incrementStencil, dst.screen)
-		if err != nil {
-			return err
-		}
+
 		incrementStencilRpss = s
 	case graphicsdriver.FillRuleEvenOdd:
 		s, err := shader.RenderPipelineState(&g.view, blend, invertStencil, dst.screen)
-		if err != nil {
-			return err
-		}
+
 		invertStencilRpss = s
 	}
 	if fillRule != graphicsdriver.FillRuleFillAll {
 		s, err := shader.RenderPipelineState(&g.view, blend, drawWithStencil, dst.screen)
-		if err != nil {
-			return err
-		}
+
 		drawWithStencilRpss = s
 	}
 

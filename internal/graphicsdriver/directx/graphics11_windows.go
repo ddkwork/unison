@@ -292,9 +292,7 @@ func (g *graphics11) End(present bool) error {
 		}
 
 		t, err := g.graphicsInfra.getBuffer(0, &_IID_ID3D11Texture2D)
-		if err != nil {
-			return err
-		}
+
 		g.screenImage.width = g.newScreenWidth
 		g.screenImage.height = g.newScreenHeight
 		g.screenImage.texture = (*_ID3D11Texture2D)(t)
@@ -327,9 +325,7 @@ func (g *graphics11) SetVertices(vertices []float32, indices []uint32) error {
 			BindFlags:      uint32(_D3D11_BIND_VERTEX_BUFFER),
 			CPUAccessFlags: uint32(_D3D11_CPU_ACCESS_WRITE),
 		}, nil)
-		if err != nil {
-			return err
-		}
+
 		g.vertexBuffer = b
 		g.vertexBufferSizeInBytes = size
 		g.deviceContext.IASetVertexBuffers(0, []*_ID3D11Buffer{g.vertexBuffer},
@@ -346,9 +342,7 @@ func (g *graphics11) SetVertices(vertices []float32, indices []uint32) error {
 			BindFlags:      uint32(_D3D11_BIND_INDEX_BUFFER),
 			CPUAccessFlags: uint32(_D3D11_CPU_ACCESS_WRITE),
 		}, nil)
-		if err != nil {
-			return err
-		}
+
 		g.indexBuffer = b
 		g.indexBufferSizeInBytes = size
 		g.deviceContext.IASetIndexBuffer(g.indexBuffer, _DXGI_FORMAT_R32_UINT, 0)
@@ -553,15 +547,11 @@ func (g *graphics11) DrawTriangles(dstID graphicsdriver.ImageID, srcIDs [graphic
 
 	if fillRule == graphicsdriver.FillRuleFillAll {
 		bs, err := g.blendState(blend, noStencil)
-		if err != nil {
-			return err
-		}
+
 		g.deviceContext.OMSetBlendState(bs, nil, 0xffffffff)
 
 		dss, err := g.depthStencilState(noStencil)
-		if err != nil {
-			return err
-		}
+
 		g.deviceContext.OMSetDepthStencilState(dss, 0)
 	}
 

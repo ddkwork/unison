@@ -79,15 +79,15 @@ var (
 	procGetCursorPos      = user32.NewProc("GetCursorPos")
 )
 
-func _CoCreateInstance(rclsid *windows.GUID, pUnkOuter unsafe.Pointer, dwClsContext uint32, riid *windows.GUID) (unsafe.Pointer, error) {
+func _CoCreateInstance(rclsid *windows.GUID, pUnkOuter unsafe.Pointer, dwClsContext uint32, riid *windows.GUID) unsafe.Pointer {
 	var ptr unsafe.Pointer
 	r, _, _ := procCoCreateInstance.Call(uintptr(unsafe.Pointer(rclsid)), uintptr(pUnkOuter), uintptr(dwClsContext), uintptr(unsafe.Pointer(riid)), uintptr(unsafe.Pointer(&ptr)))
 	runtime.KeepAlive(rclsid)
 	runtime.KeepAlive(riid)
 	if uint32(r) != uint32(windows.S_OK) {
-		return nil, fmt.Errorf("ui: CoCreateInstance failed: error code: HRESULT(%d)", uint32(r))
+		return nil //, fmt.Errorf("ui: CoCreateInstance failed: error code: HRESULT(%d)", uint32(r))
 	}
-	return ptr, nil
+	return ptr
 }
 
 func _GetSystemMetrics(nIndex int) (int32, error) {

@@ -29,7 +29,6 @@ import (
 	"fmt"
 
 	"github.com/hajimehoshi/ebiten/v2/internal/graphicsdriver/metal"
-	"github.com/hajimehoshi/ebiten/v2/internal/graphicsdriver/opengl"
 )
 
 type graphicsDriverCreatorImpl struct {

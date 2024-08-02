@@ -289,9 +289,7 @@ func swapBuffersWGL(window *Window) error {
 
 func swapIntervalWGL(interval int) error {
 	ptr, err := _glfw.contextSlot.get()
-	if err != nil {
-		return err
-	}
+
 	window := (*Window)(unsafe.Pointer(ptr))
 
 	window.context.platform.interval = interval
@@ -386,9 +384,7 @@ func initWGL() error {
 	//       creation failure occurs during manual pixel format enumeration
 
 	dc, err := _GetDC(_glfw.platformWindow.helperWindowHandle)
-	if err != nil {
-		return err
-	}
+
 	pfd := _PIXELFORMATDESCRIPTOR{
 		nVersion:   1,
 		dwFlags:    _PFD_DRAW_TO_WINDOW | _PFD_SUPPORT_OPENGL | _PFD_DOUBLEBUFFER,
@@ -398,17 +394,12 @@ func initWGL() error {
 	pfd.nSize = uint16(unsafe.Sizeof(pfd))
 
 	format, err := _ChoosePixelFormat(dc, &pfd)
-	if err != nil {
-		return err
-	}
+
 	if err := _SetPixelFormat(dc, format, &pfd); err != nil {
 		return err
 	}
 
 	rc, err := wglCreateContext(dc)
-	if err != nil {
-		return err
-	}
 
 	pdc := wglGetCurrentDC()
 	prc := wglGetCurrentContext()
@@ -460,15 +451,10 @@ func (w *Window) createContextWGL(ctxconfig *ctxconfig, fbconfig *fbconfig) erro
 	}
 
 	dc, err := _GetDC(w.platform.handle)
-	if err != nil {
-		return err
-	}
+
 	w.context.platform.dc = dc
 
 	pixelFormat, err := w.choosePixelFormat(ctxconfig, fbconfig)
-	if err != nil {
-		return err
-	}
 
 	var pfd _PIXELFORMATDESCRIPTOR
 	if _, err := _DescribePixelFormat(w.context.platform.dc, int32(pixelFormat), uint32(unsafe.Sizeof(pfd)), &pfd); err != nil {
@@ -562,15 +548,10 @@ func (w *Window) createContextWGL(ctxconfig *ctxconfig, fbconfig *fbconfig) erro
 
 		var err error
 		w.context.platform.handle, err = wglCreateContextAttribsARB(w.context.platform.dc, share, &attribs[0])
-		if err != nil {
-			return err
-		}
+
 	} else {
 		var err error
 		w.context.platform.handle, err = wglCreateContext(w.context.platform.dc)
-		if err != nil {
-			return err
-		}
 
 		if share != 0 {
 			if err := wglShareLists(share, w.context.platform.handle); err != nil {

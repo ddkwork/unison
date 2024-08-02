@@ -57,21 +57,14 @@ func (s *Shader) compile() error {
 	vssrc, fssrc := glsl.Compile(s.ir, s.graphics.context.glslVersion())
 
 	vs, err := s.graphics.context.newShader(gl.VERTEX_SHADER, vssrc)
-	if err != nil {
-		return err
-	}
+
 	defer s.graphics.context.ctx.DeleteShader(uint32(vs))
 
 	fs, err := s.graphics.context.newShader(gl.FRAGMENT_SHADER, fssrc)
-	if err != nil {
-		return err
-	}
+
 	defer s.graphics.context.ctx.DeleteShader(uint32(fs))
 
 	p, err := s.graphics.context.newProgram([]shader{vs, fs}, theArrayBufferLayout.names())
-	if err != nil {
-		return err
-	}
 
 	// Check errors only after linking fails.
 	// See https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/WebGL_best_practices#dont_check_shader_compile_status_unless_linking_fails

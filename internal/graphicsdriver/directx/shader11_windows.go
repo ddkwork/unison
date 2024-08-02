@@ -79,27 +79,19 @@ func (s *shader11) disposeImpl() {
 
 func (s *shader11) use(uniforms []uint32, srcs [graphics.ShaderSrcImageCount]*image11) error {
 	vs, err := s.ensureVertexShader()
-	if err != nil {
-		return err
-	}
+
 	s.graphics.deviceContext.VSSetShader(vs, nil)
 
 	ps, err := s.ensurePixelShader()
-	if err != nil {
-		return err
-	}
+
 	s.graphics.deviceContext.PSSetShader(ps, nil)
 
 	il, err := s.ensureInputLayout()
-	if err != nil {
-		return err
-	}
+
 	s.graphics.deviceContext.IASetInputLayout(il)
 
 	cb, err := s.ensureConstantBuffer()
-	if err != nil {
-		return err
-	}
+
 	s.graphics.deviceContext.VSSetConstantBuffers(0, []*_ID3D11Buffer{cb})
 	s.graphics.deviceContext.PSSetConstantBuffers(0, []*_ID3D11Buffer{cb})
 
@@ -119,9 +111,7 @@ func (s *shader11) use(uniforms []uint32, srcs [graphics.ShaderSrcImageCount]*im
 			continue
 		}
 		srv, err := src.getShaderResourceView()
-		if err != nil {
-			return err
-		}
+
 		srvs[i] = srv
 	}
 	s.graphics.deviceContext.PSSetShaderResources(0, srvs[:])

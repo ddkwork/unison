@@ -68,16 +68,12 @@ func (u *UserInterface) updateInputStateImpl() error {
 
 	for uk, gk := range uiKeyToGLFWKey {
 		s, err := u.window.GetKey(gk)
-		if err != nil {
-			return err
-		}
+
 		u.inputState.KeyPressed[uk] = s == glfw.Press
 	}
 	for gb, ub := range glfwMouseButtonToMouseButton {
 		s, err := u.window.GetMouseButton(gb)
-		if err != nil {
-			return err
-		}
+
 		u.inputState.MouseButtonPressed[ub] = s == glfw.Press
 	}
 
@@ -131,10 +127,7 @@ func (u *UserInterface) KeyName(key Key) string {
 			return
 		}
 		n, err := glfw.GetKeyName(gk, 0)
-		if err != nil {
-			u.setError(err)
-			return
-		}
+
 		name = n
 	})
 	return name

@@ -45,9 +45,6 @@ func Fragment(dstPos vec4, srcPos vec2, color vec4) vec4 {
 	return vec4(%d/255.0)
 }
 `, g.count)))
-	if err != nil {
-		return err
-	}
 
 	// Use the shader to ensure that the shader is actually allocated.
 	g.img.DrawRectShader(1, 1, s, nil)

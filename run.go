@@ -60,9 +60,6 @@ func (u *UserInterface) runMultiThread(game Game, options *RunOptions) error {
 				err = err1
 			}
 		})
-		if err != nil {
-			return err
-		}
 
 		// setRunning(true) should be called in initOnMainThread for each platform.
 		defer u.setRunning(false)

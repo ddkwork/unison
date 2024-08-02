@@ -25,7 +25,6 @@ import (
 	"github.com/jezek/xgb/randr"
 	"github.com/jezek/xgb/xproto"
 
-	"github.com/hajimehoshi/ebiten/v2/internal/graphicsdriver/opengl"
 	"github.com/richardwilkes/unison/internal/glfw"
 )
 

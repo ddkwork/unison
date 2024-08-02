@@ -124,23 +124,23 @@ func (w *Window) centerCursorInContentArea() error {
 	return nil
 }
 
-func (w *Window) GetInputMode(mode InputMode) (int, error) {
+func (w *Window) GetInputMode(mode InputMode) int {
 	if !_glfw.initialized {
 		mylog.Check(NotInitialized.Error())
 	}
 	switch mode {
 	case CursorMode:
-		return w.cursorMode, nil
+		return w.cursorMode
 	case StickyKeysMode:
-		return boolToInt(w.stickyKeys), nil
+		return boolToInt(w.stickyKeys)
 	case StickyMouseButtonsMode:
-		return boolToInt(w.stickyMouseButtons), nil
+		return boolToInt(w.stickyMouseButtons)
 	case LockKeyMods:
-		return boolToInt(w.lockKeyMods), nil
+		return boolToInt(w.lockKeyMods)
 	case RawMouseMotion:
-		return boolToInt(w.rawMouseMotion), nil
+		return boolToInt(w.rawMouseMotion)
 	default:
-		return 0, fmt.Errorf("glfw: invalid input mode 0x%08X: %w", mode, InvalidEnum)
+		return 0 //, fmt.Errorf("glfw: invalid input mode 0x%08X: %w", mode, InvalidEnum)
 	}
 }
 

@@ -96,9 +96,7 @@ func (i *image11) ReadPixels(args []graphicsdriver.PixelsArgs) error {
 		CPUAccessFlags: uint32(_D3D11_CPU_ACCESS_READ),
 		MiscFlags:      0,
 	}, nil)
-	if err != nil {
-		return err
-	}
+
 	defer staging.Release()
 
 	i.graphics.deviceContext.CopySubresourceRegion(unsafe.Pointer(staging), 0, 0, 0, 0, unsafe.Pointer(i.texture), 0, &_D3D11_BOX{
@@ -151,9 +149,7 @@ func (i *image11) WritePixels(args []graphicsdriver.PixelsArgs) error {
 func (i *image11) setAsRenderTarget(useStencil bool) error {
 	if i.renderTargetView == nil {
 		rtv, err := i.graphics.device.CreateRenderTargetView(unsafe.Pointer(i.texture), nil)
-		if err != nil {
-			return err
-		}
+
 		i.renderTargetView = rtv
 	}
 
@@ -183,17 +179,13 @@ func (i *image11) setAsRenderTarget(useStencil bool) error {
 			CPUAccessFlags: 0,
 			MiscFlags:      0,
 		}, nil)
-		if err != nil {
-			return err
-		}
+
 		i.stencil = s
 	}
 
 	if i.stencilView == nil {
 		sv, err := i.graphics.device.CreateDepthStencilView(unsafe.Pointer(i.stencil), nil)
-		if err != nil {
-			return err
-		}
+
 		i.stencilView = sv
 	}
 

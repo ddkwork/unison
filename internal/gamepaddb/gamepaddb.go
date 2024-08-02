@@ -525,9 +525,7 @@ func Update(mappingData []byte) error {
 	for s.Scan() {
 		line := s.Text()
 		id, name, buttons, axes, err := parseLine(line, currentPlatform())
-		if err != nil {
-			return err
-		}
+
 		if id != "" {
 			lines = append(lines, parsedLine{
 				id:      id,

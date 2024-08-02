@@ -130,9 +130,6 @@ func (u *UserInterface) readPixels(mipmap *mipmap.Mipmap, pixels []byte, region 
 	}
 
 	ok, err := mipmap.ReadPixels(u.graphicsDriver, pixels, region)
-	if err != nil {
-		return err
-	}
 
 	// ReadPixels failed since this was called in between two frames.
 	// Try this again at the next frame.

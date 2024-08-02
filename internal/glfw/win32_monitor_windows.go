@@ -165,9 +165,7 @@ adapterLoop:
 
 func (m *Monitor) setVideoModeWin32(desired *VidMode) error {
 	best, err := m.chooseVideoMode(desired)
-	if err != nil {
-		return err
-	}
+
 	current := m.platformGetVideoMode()
 	if best.equals(current) {
 		return nil

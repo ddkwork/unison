@@ -102,9 +102,7 @@ func (s *Shader) init(device mtl.Device) error {
 	var src string
 	if libBin := thePrecompiledLibraries.get(s.ir.SourceHash); len(libBin) > 0 {
 		lib, err := device.NewLibraryWithData(libBin)
-		if err != nil {
-			return err
-		}
+
 		s.lib = lib
 	} else {
 		src = msl.Compile(s.ir)

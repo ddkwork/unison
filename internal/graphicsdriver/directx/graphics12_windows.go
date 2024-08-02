@@ -134,9 +134,7 @@ func (g *graphics12) initializeDesktop(useWARP bool, useDebugLayer bool, feature
 	// The debug interface is optional and might not exist.
 	if useDebugLayer {
 		d, err := _D3D12GetDebugInterface()
-		if err != nil {
-			return err
-		}
+
 		g.debug = d
 		defer func() {
 			if ferr != nil {
@@ -148,13 +146,9 @@ func (g *graphics12) initializeDesktop(useWARP bool, useDebugLayer bool, feature
 	}
 
 	f, err := _CreateDXGIFactory()
-	if err != nil {
-		return err
-	}
+
 	gi, err := newGraphicsInfra(f)
-	if err != nil {
-		return err
-	}
+
 	g.graphicsInfra = gi
 	defer func() {
 		if ferr != nil {
@@ -164,9 +158,7 @@ func (g *graphics12) initializeDesktop(useWARP bool, useDebugLayer bool, feature
 	}()
 
 	adapters, err := g.graphicsInfra.appendAdapters(nil, useWARP)
-	if err != nil {
-		return err
-	}
+
 	defer func() {
 		for _, a := range adapters {
 			a.Release()
@@ -202,9 +194,7 @@ func (g *graphics12) initializeDesktop(useWARP bool, useDebugLayer bool, feature
 	}
 
 	d, err := _D3D12CreateDevice(unsafe.Pointer(adapter), featureLevel, &_IID_ID3D12Device, true)
-	if err != nil {
-		return err
-	}
+
 	g.device = (*_ID3D12Device)(d)
 
 	if err := g.initializeMembers(g.frameIndex); err != nil {
@@ -214,9 +204,7 @@ func (g *graphics12) initializeDesktop(useWARP bool, useDebugLayer bool, feature
 	// GetCopyableFootprints might return an invalid value with Wine (#2114).
 	// To check this early, call NewImage here.
 	i, err := g.NewImage(1, 1)
-	if err != nil {
-		return err
-	}
+
 	i.Dispose()
 
 	return nil
@@ -239,9 +227,7 @@ func (g *graphics12) initializeXbox(useWARP bool, useDebugLayer bool) (ferr erro
 		params.ProcessDebugFlags = _D3D12_PROCESS_DEBUG_FLAG_DEBUG_LAYER_ENABLED
 	}
 	d, err := _D3D12XboxCreateDevice(nil, params, &_IID_ID3D12Device)
-	if err != nil {
-		return err
-	}
+
 	g.device = (*_ID3D12Device)(d)
 
 	if err := g.initializeMembers(g.frameIndex); err != nil {
@@ -273,22 +259,16 @@ func (g *graphics12) initializeXbox(useWARP bool, useDebugLayer bool) (ferr erro
 
 func (g *graphics12) registerFrameEventForXbox() error {
 	d, err := g.device.QueryInterface(&_IID_IDXGIDevice)
-	if err != nil {
-		return err
-	}
+
 	dxgiDevice := (*_IDXGIDevice)(d)
 	defer dxgiDevice.Release()
 
 	dxgiAdapter, err := dxgiDevice.GetAdapter()
-	if err != nil {
-		return err
-	}
+
 	defer dxgiAdapter.Release()
 
 	dxgiOutput, err := dxgiAdapter.EnumOutputs(0)
-	if err != nil {
-		return err
-	}
+
 	defer dxgiOutput.Release()
 
 	if err := g.device.SetFrameIntervalX(dxgiOutput, _D3D12XBOX_FRAME_INTERVAL_60_HZ, frameCount-1, _D3D12XBOX_FRAME_INTERVAL_FLAG_NONE); err != nil {
@@ -315,9 +295,7 @@ func (g *graphics12) initializeMembers(frameIndex int) (ferr error) {
 		Flags: _D3D12_COMMAND_QUEUE_FLAG_NONE,
 	}
 	c, err := g.device.CreateCommandQueue(&desc)
-	if err != nil {
-		return err
-	}
+
 	g.commandQueue = c
 	defer func() {
 		if ferr != nil {
@@ -329,9 +307,7 @@ func (g *graphics12) initializeMembers(frameIndex int) (ferr error) {
 	// Create command allocators.
 	for i := 0; i < frameCount; i++ {
 		dca, err := g.device.CreateCommandAllocator(_D3D12_COMMAND_LIST_TYPE_DIRECT)
-		if err != nil {
-			return err
-		}
+
 		g.drawCommandAllocators[i] = dca
 		defer func(i int) {
 			if ferr != nil {
@@ -341,9 +317,7 @@ func (g *graphics12) initializeMembers(frameIndex int) (ferr error) {
 		}(i)
 
 		cca, err := g.device.CreateCommandAllocator(_D3D12_COMMAND_LIST_TYPE_DIRECT)
-		if err != nil {
-			return err
-		}
+
 		g.copyCommandAllocators[i] = cca
 		defer func(i int) {
 			if ferr != nil {
@@ -355,9 +329,7 @@ func (g *graphics12) initializeMembers(frameIndex int) (ferr error) {
 
 	// Create a frame fence.
 	f, err := g.device.CreateFence(0, _D3D12_FENCE_FLAG_NONE)
-	if err != nil {
-		return err
-	}
+
 	g.fence = f
 	defer func() {
 		if ferr != nil {
@@ -369,9 +341,7 @@ func (g *graphics12) initializeMembers(frameIndex int) (ferr error) {
 
 	// Create command lists.
 	dcl, err := g.device.CreateCommandList(0, _D3D12_COMMAND_LIST_TYPE_DIRECT, g.drawCommandAllocators[0], nil)
-	if err != nil {
-		return err
-	}
+
 	g.drawCommandList = dcl
 	defer func() {
 		if ferr != nil {
@@ -381,9 +351,7 @@ func (g *graphics12) initializeMembers(frameIndex int) (ferr error) {
 	}()
 
 	ccl, err := g.device.CreateCommandList(0, _D3D12_COMMAND_LIST_TYPE_DIRECT, g.copyCommandAllocators[0], nil)
-	if err != nil {
-		return err
-	}
+
 	g.copyCommandList = ccl
 	defer func() {
 		if ferr != nil {
@@ -407,9 +375,7 @@ func (g *graphics12) initializeMembers(frameIndex int) (ferr error) {
 		Flags:          _D3D12_DESCRIPTOR_HEAP_FLAG_NONE,
 		NodeMask:       0,
 	})
-	if err != nil {
-		return err
-	}
+
 	g.rtvDescriptorHeap = h
 	defer func() {
 		if ferr != nil {
@@ -501,9 +467,7 @@ func (g *graphics12) initSwapChainDesktop(width, height int) error {
 	}
 
 	idx, err := g.graphicsInfra.currentBackBufferIndex()
-	if err != nil {
-		return err
-	}
+
 	g.frameIndex = idx
 
 	return nil
@@ -511,9 +475,6 @@ func (g *graphics12) initSwapChainDesktop(width, height int) error {
 
 func (g *graphics12) initSwapChainXbox(width, height int) (ferr error) {
 	h, err := g.rtvDescriptorHeap.GetCPUDescriptorHandleForHeapStart()
-	if err != nil {
-		return err
-	}
 
 	for i := 0; i < frameCount; i++ {
 		r, err := g.device.CreateCommittedResource(&_D3D12_HEAP_PROPERTIES{
@@ -539,9 +500,6 @@ func (g *graphics12) initSwapChainXbox(width, height int) (ferr error) {
 		}, _D3D12_RESOURCE_STATE_PRESENT, &_D3D12_CLEAR_VALUE{
 			Format: _DXGI_FORMAT_B8G8R8A8_UNORM,
 		})
-		if err != nil {
-			return err
-		}
 
 		g.renderTargets[i] = r
 		defer func(i int) {
@@ -590,14 +548,10 @@ func (g *graphics12) resizeSwapChainDesktop(width, height int) error {
 func (g *graphics12) createRenderTargetViewsDesktop() (ferr error) {
 	// Create frame resources.
 	h, err := g.rtvDescriptorHeap.GetCPUDescriptorHandleForHeapStart()
-	if err != nil {
-		return err
-	}
+
 	for i := 0; i < frameCount; i++ {
 		r, err := g.graphicsInfra.getBuffer(uint32(i), &_IID_ID3D12Resource)
-		if err != nil {
-			return err
-		}
+
 		g.renderTargets[i] = (*_ID3D12Resource)(r)
 		defer func(i int) {
 			if ferr != nil {
@@ -755,9 +709,7 @@ func (g *graphics12) moveToNextFrame() error {
 		g.frameIndex = (g.frameIndex + 1) % frameCount
 	} else {
 		idx, err := g.graphicsInfra.currentBackBufferIndex()
-		if err != nil {
-			return err
-		}
+
 		g.frameIndex = idx
 	}
 
@@ -891,9 +843,7 @@ func (g *graphics12) SetVertices(vertices []float32, indices []uint32) (ferr err
 	if g.vertices[g.frameIndex][vidx] == nil {
 		// TODO: Use the default heap for efficiently. See the official example HelloTriangle.
 		vs, err := createBuffer(g.device, uint64(vsize), _D3D12_HEAP_TYPE_UPLOAD)
-		if err != nil {
-			return err
-		}
+
 		g.vertices[g.frameIndex][vidx] = &resourceWithSize{
 			value:       vs,
 			sizeInBytes: vsize,
@@ -919,9 +869,7 @@ func (g *graphics12) SetVertices(vertices []float32, indices []uint32) (ferr err
 	}
 	if g.indices[g.frameIndex][iidx] == nil {
 		is, err := createBuffer(g.device, uint64(isize), _D3D12_HEAP_TYPE_UPLOAD)
-		if err != nil {
-			return err
-		}
+
 		g.indices[g.frameIndex][iidx] = &resourceWithSize{
 			value:       is,
 			sizeInBytes: isize,
@@ -935,16 +883,12 @@ func (g *graphics12) SetVertices(vertices []float32, indices []uint32) (ferr err
 	}
 
 	m, err := g.vertices[g.frameIndex][vidx].value.Map(0, &_D3D12_RANGE{0, 0})
-	if err != nil {
-		return err
-	}
+
 	copy(unsafe.Slice((*float32)(unsafe.Pointer(m)), len(vertices)), vertices)
 	g.vertices[g.frameIndex][vidx].value.Unmap(0, nil)
 
 	m, err = g.indices[g.frameIndex][iidx].value.Map(0, &_D3D12_RANGE{0, 0})
-	if err != nil {
-		return err
-	}
+
 	copy(unsafe.Slice((*uint32)(unsafe.Pointer(m)), len(indices)), indices)
 	g.indices[g.frameIndex][iidx].value.Unmap(0, nil)
 

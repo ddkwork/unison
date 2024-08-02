@@ -11,9 +11,7 @@ func (t *tls) create() error {
 	}
 
 	i, err := _TlsAlloc()
-	if err != nil {
-		return err
-	}
+
 	t.platform.index = i
 	t.platform.allocated = true
 	return nil

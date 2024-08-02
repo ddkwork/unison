@@ -70,9 +70,6 @@ type nativeGamepadsXbox struct {
 
 func (n *nativeGamepadsXbox) init(gamepads *gamepads) error {
 	g, err := _GameInputCreate()
-	if err != nil {
-		return err
-	}
 
 	n.gameInput = g
 	n.deviceCallbackPtr = windows.NewCallbackCDecl(n.deviceCallback)
@@ -127,9 +124,7 @@ type nativeGamepadXbox struct {
 func (n *nativeGamepadXbox) update(gamepads *gamepads) error {
 	gameInput := gamepads.native.(*nativeGamepadsXbox).gameInput
 	r, err := gameInput.GetCurrentReading(_GameInputKindGamepad, n.gameInputDevice)
-	if err != nil {
-		return err
-	}
+
 	defer r.Release()
 
 	state, ok := r.GetGamepadState()

@@ -18,15 +18,14 @@ import (
 	"errors"
 	"fmt"
 	"github.com/richardwilkes/unison/internal/graphicsdriver"
+	"github.com/richardwilkes/unison/internal/graphicsdriver/directx"
+	"github.com/richardwilkes/unison/internal/graphicsdriver/opengl"
 	"github.com/richardwilkes/unison/internal/microsoftgdk"
 	"github.com/richardwilkes/unison/internal/winver"
 	"runtime"
 	"syscall"
 
 	"golang.org/x/sys/windows"
-
-	"github.com/hajimehoshi/ebiten/v2/internal/graphicsdriver/directx"
-	"github.com/hajimehoshi/ebiten/v2/internal/graphicsdriver/opengl"
 
 	"github.com/richardwilkes/unison/internal/glfw"
 )
@@ -39,48 +38,42 @@ type graphicsDriverCreatorImpl struct {
 	transparent bool
 }
 
-func (g *graphicsDriverCreatorImpl) newAuto() (graphicsdriver.Graphics, GraphicsLibrary, error) {
-	var dxErr error
-	var glErr error
+func (g *graphicsDriverCreatorImpl) newAuto() (graphicsdriver.Graphics, GraphicsLibrary) {
 	if winver.IsWindows10OrGreater() {
-		d, err := g.newDirectX()
-		if err == nil {
-			return d, GraphicsLibraryDirectX, nil
+		d := g.newDirectX()
+		if d != nil {
+			return d, GraphicsLibraryDirectX
 		}
-		dxErr = err
 
-		o, err := g.newOpenGL()
-		if err == nil {
-			return o, GraphicsLibraryOpenGL, nil
+		o := g.newOpenGL()
+		if o != nil {
+			return o, GraphicsLibraryOpenGL
 		}
-		glErr = err
 	} else {
 		// Creating a swap chain on an older machine than Windows 10 might fail (#2613).
 		// Prefer OpenGL to DirectX.
-		o, err := g.newOpenGL()
-		if err == nil {
-			return o, GraphicsLibraryOpenGL, nil
+		o := g.newOpenGL()
+		if o != nil {
+			return o, GraphicsLibraryOpenGL
 		}
-		glErr = err
 
 		// Initializing OpenGL can fail, though this is pretty rare.
-		d, err := g.newDirectX()
-		if err == nil {
-			return d, GraphicsLibraryDirectX, nil
+		d := g.newDirectX()
+		if d != nil {
+			return d, GraphicsLibraryDirectX
 		}
-		dxErr = err
 	}
 
-	return nil, GraphicsLibraryUnknown, fmt.Errorf("ui: failed to choose graphics drivers: DirectX: %v, OpenGL: %v", dxErr, glErr)
+	return nil, GraphicsLibraryUnknown //, fmt.Errorf("ui: failed to choose graphics drivers: DirectX: %v, OpenGL: %v", dxErr, glErr)
 }
 
-func (*graphicsDriverCreatorImpl) newOpenGL() (graphicsdriver.Graphics, error) {
+func (*graphicsDriverCreatorImpl) newOpenGL() graphicsdriver.Graphics {
 	return opengl.NewGraphics()
 }
 
-func (g *graphicsDriverCreatorImpl) newDirectX() (graphicsdriver.Graphics, error) {
+func (g *graphicsDriverCreatorImpl) newDirectX() graphicsdriver.Graphics {
 	if g.transparent {
-		return nil, errors.New("ui: DirectX is not available with a transparent window")
+		return nil //, errors.New("ui: DirectX is not available with a transparent window")
 	}
 	return directx.NewGraphics()
 }
@@ -94,12 +87,9 @@ func (*graphicsDriverCreatorImpl) newPlayStation5() (graphicsdriver.Graphics, er
 }
 
 // glfwMonitorSizeInGLFWPixels must be called from the main thread.
-func glfwMonitorSizeInGLFWPixels(m *glfw.Monitor) (int, int, error) {
-	vm, err := m.GetVideoMode()
-	if err != nil {
-		return 0, 0, err
-	}
-	return vm.Width, vm.Height, nil
+func glfwMonitorSizeInGLFWPixels(m *glfw.Monitor) (int, int) {
+	vm := m.GetVideoMode()
+	return vm.Width, vm.Height
 }
 
 func dipFromGLFWPixel(x float64, deviceScaleFactor float64) float64 {
@@ -132,22 +122,22 @@ func (u *UserInterface) adjustWindowPosition(x, y int, monitor *Monitor) (int, i
 	return x, y
 }
 
-func initialMonitorByOS() (*Monitor, error) {
+func initialMonitorByOS() *Monitor {
 	if microsoftgdk.IsXbox() {
-		return theMonitors.primaryMonitor(), nil
+		return theMonitors.primaryMonitor()
 	}
 
 	px, py, err := _GetCursorPos()
 	if err != nil {
 		if errors.Is(err, windows.ERROR_ACCESS_DENIED) {
-			return nil, nil
+			return nil
 		}
-		return nil, err
+		return nil
 	}
 	x, y := int(px), int(py)
 
 	// Find the monitor including the cursor.
-	return theMonitors.monitorFromPosition(x, y), nil
+	return theMonitors.monitorFromPosition(x, y)
 }
 
 func monitorFromWindowByOS(w *glfw.Window) *Monitor {
@@ -184,9 +174,9 @@ func monitorFromWin32Window(w windows.HWND) *Monitor {
 	return nil
 }
 
-func (u *UserInterface) nativeWindow() (uintptr, error) {
-	w, err := u.window.GetWin32Window()
-	return uintptr(w), err
+func (u *UserInterface) nativeWindow() uintptr {
+	w := u.window.GetWin32Window()
+	return uintptr(w)
 }
 
 func (u *UserInterface) isNativeFullscreen() bool {
@@ -221,18 +211,11 @@ func (u *UserInterface) skipTaskbar() error {
 	// CoUninitialize should be called even when CoInitializeEx returns S_FALSE.
 	defer windows.CoUninitialize()
 
-	ptr, err := _CoCreateInstance(&_CLSID_TaskbarList, nil, _CLSCTX_SERVER, &_IID_ITaskbarList)
-	if err != nil {
-		return err
-	}
-
+	ptr := _CoCreateInstance(&_CLSID_TaskbarList, nil, _CLSCTX_SERVER, &_IID_ITaskbarList)
 	t := (*_ITaskbarList)(ptr)
 	defer t.Release()
 
-	w, err := u.window.GetWin32Window()
-	if err != nil {
-		return err
-	}
+	w := u.window.GetWin32Window()
 	if err := t.DeleteTab(w); err != nil {
 		return err
 	}

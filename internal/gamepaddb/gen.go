@@ -128,9 +128,6 @@ func run() error {
 	}
 
 	controllerDBs, err := splitDBsByPlatform(gameControllerDB)
-	if err != nil {
-		return err
-	}
 
 	for sdlPlatformName, platform := range platforms {
 		controllerDB, ok := controllerDBs[sdlPlatformName]
@@ -145,14 +142,9 @@ func run() error {
 
 		path := fmt.Sprintf("db_%s.go", platform.filenameSuffix)
 		tmpl, err := template.New(path).Parse(dbTemplate)
-		if err != nil {
-			return err
-		}
 
 		f, err := os.Create(path)
-		if err != nil {
-			return err
-		}
+
 		defer f.Close()
 
 		w := bufio.NewWriter(f)

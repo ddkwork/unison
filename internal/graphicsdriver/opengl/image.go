@@ -101,9 +101,7 @@ func (i *Image) ensureFramebuffer() error {
 	}
 
 	f, err := i.graphics.context.newFramebuffer(i.texture, w, h)
-	if err != nil {
-		return err
-	}
+
 	i.framebuffer = f
 	return nil
 }
@@ -118,9 +116,7 @@ func (i *Image) ensureStencilBuffer() error {
 	}
 
 	r, err := i.graphics.context.newRenderbuffer(i.viewportSize())
-	if err != nil {
-		return err
-	}
+
 	i.stencil = r
 
 	if err := i.graphics.context.bindStencilBuffer(i.framebuffer.native, i.stencil); err != nil {

@@ -280,9 +280,7 @@ func (g *graphicsInfra) initSwapChain(width, height int, device unsafe.Pointer, 
 		desc.Flags |= uint32(_DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING)
 	}
 	s, err := g.factory.CreateSwapChain(device, desc)
-	if err != nil {
-		return err
-	}
+
 	g.swapChain = s
 	defer func() {
 		if ferr != nil {
@@ -345,9 +343,7 @@ func (g *graphicsInfra) present(vsyncEnabled bool) error {
 	}
 
 	occluded, err := g.swapChain.Present(syncInterval, uint32(flags))
-	if err != nil {
-		return err
-	}
+
 	g.occluded = occluded
 
 	// Reduce FPS when the screen is invisible.

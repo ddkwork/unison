@@ -918,9 +918,6 @@ func BeginFrame(graphicsDriver graphicsdriver.Graphics) error {
 
 		graphicsDriverInitialized = true
 	})
-	if err != nil {
-		return err
-	}
 
 	flushDeferred()
 	putImagesOnSourceBackend()

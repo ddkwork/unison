@@ -60,26 +60,14 @@ var (
 
 func initializeCF() error {
 	corefoundation, err := purego.Dlopen("/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation", purego.RTLD_LAZY|purego.RTLD_GLOBAL)
-	if err != nil {
-		return err
-	}
 
 	kCFTypeDictionaryKeyCallBacks, err = purego.Dlsym(corefoundation, "kCFTypeDictionaryKeyCallBacks")
-	if err != nil {
-		return err
-	}
+
 	kCFTypeDictionaryValueCallBacks, err = purego.Dlsym(corefoundation, "kCFTypeDictionaryValueCallBacks")
-	if err != nil {
-		return err
-	}
+
 	kCFTypeArrayCallBacks, err = purego.Dlsym(corefoundation, "kCFTypeArrayCallBacks")
-	if err != nil {
-		return err
-	}
+
 	kCFRunLoopDefaultMode, err = purego.Dlsym(corefoundation, "kCFRunLoopDefaultMode")
-	if err != nil {
-		return err
-	}
 
 	purego.RegisterLibFunc(&_CFNumberCreate, corefoundation, "CFNumberCreate")
 	purego.RegisterLibFunc(&_CFNumberGetValue, corefoundation, "CFNumberGetValue")

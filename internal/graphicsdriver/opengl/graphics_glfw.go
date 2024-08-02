@@ -17,7 +17,6 @@
 package opengl
 
 import (
-	"fmt"
 	"github.com/richardwilkes/unison/internal/graphicsdriver"
 	"github.com/richardwilkes/unison/internal/graphicsdriver/opengl/gl"
 	"github.com/richardwilkes/unison/internal/microsoftgdk"
@@ -32,21 +31,21 @@ type graphicsPlatform struct {
 
 // NewGraphics creates an implementation of graphicsdriver.Graphics for OpenGL.
 // The returned graphics value is nil iff the error is not nil.
-func NewGraphics() (graphicsdriver.Graphics, error) {
+func NewGraphics() graphicsdriver.Graphics {
 	if microsoftgdk.IsXbox() {
-		return nil, fmt.Errorf("opengl: OpenGL is not supported on Xbox")
+		return nil //, fmt.Errorf("opengl: OpenGL is not supported on Xbox")
 	}
 
 	ctx, err := gl.NewDefaultContext()
 	if err != nil {
-		return nil, err
+		return nil
 	}
 
 	if err := setGLFWClientAPI(ctx.IsES()); err != nil {
-		return nil, err
+		return nil
 	}
 
-	return newGraphics(ctx), nil
+	return newGraphics(ctx)
 }
 
 func setGLFWClientAPI(isES bool) error {

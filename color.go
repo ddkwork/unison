@@ -305,9 +305,7 @@ func (c Color) MarshalText() ([]byte, error) {
 // UnmarshalText implements encoding.TextUnmarshaler.
 func (c *Color) UnmarshalText(text []byte) error {
 	color, err := ColorDecode(string(text))
-	if err != nil {
-		return err
-	}
+
 	*c = color
 	return nil
 }

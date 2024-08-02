@@ -199,9 +199,6 @@ func updateKeyNamesWin32() {
 
 func createHelperWindow() error {
 	h, err := _CreateWindowExW(_WS_EX_OVERLAPPEDWINDOW, _GLFW_WNDCLASSNAME, "GLFW message window", _WS_CLIPSIBLINGS|_WS_CLIPCHILDREN, 0, 0, 1, 1, 0, 0, _glfw.platformWindow.instance, nil)
-	if err != nil {
-		return err
-	}
 
 	_glfw.platformWindow.helperWindowHandle = h
 
@@ -223,9 +220,7 @@ func createHelperWindow() error {
 		dbi.dbcc_devicetype = _DBT_DEVTYP_DEVICEINTERFACE
 		dbi.dbcc_classguid = _GUID_DEVINTERFACE_HID
 		notify, err := _RegisterDeviceNotificationW(windows.Handle(_glfw.platformWindow.helperWindowHandle), unsafe.Pointer(&dbi), _DEVICE_NOTIFY_WINDOW_HANDLE)
-		if err != nil {
-			return err
-		}
+
 		_glfw.platformWindow.deviceNotificationHandle = notify
 	}
 
@@ -242,13 +237,9 @@ func createBlankCursor() error {
 	// HACK: Create a transparent cursor as using the NULL cursor breaks
 	//       using SetCursorPos when connected over RDP
 	cursorWidth, err := _GetSystemMetrics(_SM_CXCURSOR)
-	if err != nil {
-		return err
-	}
+
 	cursorHeight, err := _GetSystemMetrics(_SM_CYCURSOR)
-	if err != nil {
-		return err
-	}
+
 	andMask := make([]byte, cursorWidth*cursorHeight/8)
 	for i := range andMask {
 		andMask[i] = 0xff
@@ -270,9 +261,7 @@ func initRemoteSession() error {
 
 	// Check if the current progress was started with Remote Desktop.
 	r, err := _GetSystemMetrics(_SM_REMOTESESSION)
-	if err != nil {
-		return err
-	}
+
 	_glfw.platformWindow.isRemoteSession = r > 0
 
 	// With Remote desktop, we need to create a blank cursor because of the cursor is Set to nil
@@ -292,9 +281,7 @@ func platformInit() error {
 	// See https://github.com/glfw/glfw/commit/58b48a3a00d9c2a5ca10cc23069a71d8773cc7a4
 
 	m, err := _GetModuleHandleExW(_GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS|_GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, unsafe.Pointer(&_glfw))
-	if err != nil {
-		return err
-	}
+
 	_glfw.platformWindow.instance = _HINSTANCE(m)
 
 	createKeyTables()

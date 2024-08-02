@@ -98,9 +98,7 @@ func (i *image12) ReadPixels(args []graphicsdriver.PixelsArgs) error {
 	}
 	layouts, _, _, totalBytes := i.graphics.device.GetCopyableFootprints(&desc, 0, 1, 0)
 	readingStagingBuffer, err := createBuffer(i.graphics.device, totalBytes, _D3D12_HEAP_TYPE_READBACK)
-	if err != nil {
-		return err
-	}
+
 	defer func() {
 		readingStagingBuffer.Release()
 	}()
@@ -110,9 +108,6 @@ func (i *image12) ReadPixels(args []graphicsdriver.PixelsArgs) error {
 	}
 
 	m, err := readingStagingBuffer.Map(0, &_D3D12_RANGE{0, 0})
-	if err != nil {
-		return err
-	}
 
 	dst := _D3D12_TEXTURE_COPY_LOCATION_PlacedFootPrint{
 		pResource:       readingStagingBuffer,
@@ -189,9 +184,7 @@ func (i *image12) WritePixels(args []graphicsdriver.PixelsArgs) error {
 	}
 	layouts, _, _, totalBytes := i.graphics.device.GetCopyableFootprints(&desc, 0, 1, 0)
 	uploadingStagingBuffer, err := createBuffer(i.graphics.device, totalBytes, _D3D12_HEAP_TYPE_UPLOAD)
-	if err != nil {
-		return err
-	}
+
 	i.uploadingStagingBuffers = append(i.uploadingStagingBuffers, uploadingStagingBuffer)
 
 	if rb, ok := i.transiteState(_D3D12_RESOURCE_STATE_COPY_DEST); ok {
@@ -199,9 +192,6 @@ func (i *image12) WritePixels(args []graphicsdriver.PixelsArgs) error {
 	}
 
 	m, err := uploadingStagingBuffer.Map(0, &_D3D12_RANGE{0, 0})
-	if err != nil {
-		return err
-	}
 
 	i.graphics.needFlushCopyCommandList = true
 
@@ -297,18 +287,13 @@ func (i *image12) setAsRenderTarget(drawCommandList *_ID3D12GraphicsCommandList,
 			return fmt.Errorf("directx: stencils are not available on the screen framebuffer")
 		}
 		rtv, err := i.graphics.rtvDescriptorHeap.GetCPUDescriptorHandleForHeapStart()
-		if err != nil {
-			return err
-		}
+
 		rtv.Offset(int32(i.graphics.frameIndex), i.graphics.rtvDescriptorSize)
 		drawCommandList.OMSetRenderTargets([]_D3D12_CPU_DESCRIPTOR_HANDLE{rtv}, false, nil)
 		return nil
 	}
 
 	rtv, err := i.rtvDescriptorHeap.GetCPUDescriptorHandleForHeapStart()
-	if err != nil {
-		return err
-	}
 
 	if !useStencil {
 		drawCommandList.OMSetRenderTargets([]_D3D12_CPU_DESCRIPTOR_HANDLE{rtv}, false, nil)
@@ -319,9 +304,7 @@ func (i *image12) setAsRenderTarget(drawCommandList *_ID3D12GraphicsCommandList,
 		return err
 	}
 	dsv, err := i.dsvDescriptorHeap.GetCPUDescriptorHandleForHeapStart()
-	if err != nil {
-		return err
-	}
+
 	drawCommandList.OMSetStencilRef(0)
 	drawCommandList.OMSetRenderTargets([]_D3D12_CPU_DESCRIPTOR_HANDLE{rtv}, false, &dsv)
 	drawCommandList.ClearDepthStencilView(dsv, _D3D12_CLEAR_FLAG_STENCIL, 0, 0, nil)
@@ -344,15 +327,11 @@ func (i *image12) ensureRenderTargetView(device *_ID3D12Device) error {
 		Flags:          _D3D12_DESCRIPTOR_HEAP_FLAG_NONE,
 		NodeMask:       0,
 	})
-	if err != nil {
-		return err
-	}
+
 	i.rtvDescriptorHeap = h
 
 	rtv, err := i.rtvDescriptorHeap.GetCPUDescriptorHandleForHeapStart()
-	if err != nil {
-		return err
-	}
+
 	device.CreateRenderTargetView(i.texture, nil, rtv)
 
 	return nil
@@ -373,15 +352,11 @@ func (i *image12) ensureDepthStencilView(device *_ID3D12Device) error {
 		Flags:          _D3D12_DESCRIPTOR_HEAP_FLAG_NONE,
 		NodeMask:       0,
 	})
-	if err != nil {
-		return err
-	}
+
 	i.dsvDescriptorHeap = h
 
 	dsv, err := i.dsvDescriptorHeap.GetCPUDescriptorHandleForHeapStart()
-	if err != nil {
-		return err
-	}
+
 	if i.stencil == nil {
 		s, err := device.CreateCommittedResource(&_D3D12_HEAP_PROPERTIES{
 			Type:                 _D3D12_HEAP_TYPE_DEFAULT,
@@ -406,9 +381,7 @@ func (i *image12) ensureDepthStencilView(device *_ID3D12Device) error {
 		}, _D3D12_RESOURCE_STATE_DEPTH_WRITE, &_D3D12_CLEAR_VALUE{
 			Format: _DXGI_FORMAT_D24_UNORM_S8_UINT,
 		})
-		if err != nil {
-			return err
-		}
+
 		i.stencil = s
 	}
 	device.CreateDepthStencilView(i.stencil, nil, dsv)

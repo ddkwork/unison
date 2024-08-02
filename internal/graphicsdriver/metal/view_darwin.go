@@ -62,9 +62,7 @@ func (v *view) initialize(device mtl.Device) error {
 	v.device = device
 
 	ml, err := ca.NewMetalLayer()
-	if err != nil {
-		return err
-	}
+
 	v.ml = ml
 	v.ml.SetDevice(v.device)
 	// https://developer.apple.com/documentation/quartzcore/cametallayer/1478155-pixelformat

@@ -33,9 +33,7 @@ func main() {
 
 func run() error {
 	f, err := os.Create("debug.go")
-	if err != nil {
-		return err
-	}
+
 	defer f.Close()
 
 	out := bufio.NewWriter(f)

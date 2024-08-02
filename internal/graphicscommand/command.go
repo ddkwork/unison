@@ -350,9 +350,7 @@ func (c *newShaderCommand) String() string {
 // Exec executes a newShaderCommand.
 func (c *newShaderCommand) Exec(commandQueue *commandQueue, graphicsDriver graphicsdriver.Graphics, indexOffset int) error {
 	s, err := graphicsDriver.NewShader(c.ir)
-	if err != nil {
-		return err
-	}
+
 	c.result.shader = s
 	return nil
 }

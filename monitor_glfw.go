@@ -141,9 +141,7 @@ func (m *monitors) update() error {
 		videoMode := m.GetVideoMode()
 		name := m.GetName()
 		w, h, err := glfwMonitorSizeInGLFWPixels(m)
-		if err != nil {
-			return err
-		}
+
 		b := image.Rect(x, y, x+w, y+h)
 		newMonitors = append(newMonitors, &Monitor{
 			m:                  m,

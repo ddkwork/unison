@@ -40,9 +40,7 @@ func (v *VidMode) equals(other *VidMode) bool {
 func (m *Monitor) refreshVideoModes() error {
 	m.modes = m.modes[:0]
 	modes, err := m.platformAppendVideoModes(m.modes)
-	if err != nil {
-		return err
-	}
+
 	sort.Slice(modes, func(i, j int) bool {
 		a := modes[i]
 		b := modes[j]

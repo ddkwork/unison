@@ -27,7 +27,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/internal/cocoa"
 
 	"github.com/hajimehoshi/ebiten/v2/internal/graphicsdriver/metal"
-	"github.com/hajimehoshi/ebiten/v2/internal/graphicsdriver/opengl"
+
 	"github.com/richardwilkes/unison/internal/glfw"
 )
 
@@ -157,9 +157,7 @@ func (u *UserInterface) initializePlatform() error {
 			},
 		},
 	)
-	if err != nil {
-		return err
-	}
+
 	class_EbitengineWindowDelegate = d
 
 	return nil
@@ -333,9 +331,7 @@ func (u *UserInterface) setNativeFullscreen(fullscreen bool) error {
 		return err
 	}
 	w, err := u.window.GetCocoaWindow()
-	if err != nil {
-		return err
-	}
+
 	window := cocoa.NSWindow{ID: objc.ID(w)}
 	if window.StyleMask()&cocoa.NSWindowStyleMaskFullScreen != 0 == fullscreen {
 		return nil
@@ -364,9 +360,7 @@ func (u *UserInterface) adjustViewSizeAfterFullscreen() error {
 	}
 
 	w, err := u.window.GetCocoaWindow()
-	if err != nil {
-		return err
-	}
+
 	window := cocoa.NSWindow{ID: objc.ID(w)}
 	if window.StyleMask()&cocoa.NSWindowStyleMaskFullScreen == 0 {
 		return nil
@@ -411,9 +405,7 @@ func (u *UserInterface) setWindowResizingModeForOS(mode WindowResizingMode) erro
 		collectionBehavior |= cocoa.NSWindowCollectionBehaviorFullScreenNone
 	}
 	w, err := u.window.GetCocoaWindow()
-	if err != nil {
-		return err
-	}
+
 	objc.ID(w).Send(sel_setCollectionBehavior, collectionBehavior)
 	return nil
 }
@@ -422,9 +414,7 @@ func initializeWindowAfterCreation(w *glfw.Window) error {
 	// TODO: Register NSWindowWillEnterFullScreenNotification and so on.
 	// Enable resizing temporary before making the window fullscreen.
 	cocoaWindow, err := w.GetCocoaWindow()
-	if err != nil {
-		return err
-	}
+
 	nswindow := objc.ID(cocoaWindow)
 	delegate := objc.ID(class_EbitengineWindowDelegate).Send(sel_alloc).Send(sel_initWithOrigDelegate, nswindow.Send(sel_delegate))
 	nswindow.Send(sel_setDelegate, delegate)
@@ -438,9 +428,7 @@ func (u *UserInterface) skipTaskbar() error {
 // setDocumentEdited must be called from the main thread.
 func (u *UserInterface) setDocumentEdited(edited bool) error {
 	w, err := u.window.GetCocoaWindow()
-	if err != nil {
-		return err
-	}
+
 	objc.ID(w).Send(sel_setDocumentEdited, edited)
 	return nil
 }

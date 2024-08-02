@@ -234,9 +234,7 @@ func (d *decoder) parsePLTE(length uint32) error {
 		return FormatError("bad PLTE length")
 	}
 	n, err := io.ReadFull(d.r, d.tmp[:3*np])
-	if err != nil {
-		return err
-	}
+	
 	d.crc.Write(d.tmp[:n])
 	switch d.cb {
 	case cbP1, cbP2, cbP4, cbP8:
@@ -269,9 +267,7 @@ func (d *decoder) parsetRNS(length uint32) error {
 			return FormatError("bad tRNS length")
 		}
 		n, err := io.ReadFull(d.r, d.tmp[:length])
-		if err != nil {
-			return err
-		}
+
 		d.crc.Write(d.tmp[:n])
 
 		copy(d.transparent[:], d.tmp[:length])
@@ -290,9 +286,7 @@ func (d *decoder) parsetRNS(length uint32) error {
 			return FormatError("bad tRNS length")
 		}
 		n, err := io.ReadFull(d.r, d.tmp[:length])
-		if err != nil {
-			return err
-		}
+
 		d.crc.Write(d.tmp[:n])
 
 		copy(d.transparent[:], d.tmp[:length])
@@ -303,9 +297,7 @@ func (d *decoder) parsetRNS(length uint32) error {
 			return FormatError("bad tRNS length")
 		}
 		n, err := io.ReadFull(d.r, d.tmp[:length])
-		if err != nil {
-			return err
-		}
+
 		d.crc.Write(d.tmp[:n])
 
 		if len(d.palette) < n {
@@ -856,9 +848,7 @@ func (d *decoder) mergePassInto(dst image.Image, src image.Image, pass int) {
 func (d *decoder) parseIDAT(length uint32) (err error) {
 	d.idatLength = length
 	d.img, err = d.decode()
-	if err != nil {
-		return err
-	}
+	
 	return d.verifyChecksum()
 }
 
@@ -936,9 +926,7 @@ func (d *decoder) parseChunk(configOnly bool) error {
 	var ignored [4096]byte
 	for length > 0 {
 		n, err := io.ReadFull(d.r, ignored[:min(len(ignored), int(length))])
-		if err != nil {
-			return err
-		}
+
 		d.crc.Write(ignored[:n])
 		length -= uint32(n)
 	}
@@ -957,9 +945,7 @@ func (d *decoder) verifyChecksum() error {
 
 func (d *decoder) checkHeader() error {
 	_, err := io.ReadFull(d.r, d.tmp[:len(pngHeader)])
-	if err != nil {
-		return err
-	}
+	
 	if string(d.tmp[:len(pngHeader)]) != pngHeader {
 		return FormatError("not a PNG file")
 	}

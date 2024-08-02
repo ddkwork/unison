@@ -139,9 +139,7 @@ func (p *pipelineStates) initialize(device *_ID3D12Device) (ferr error) {
 		Flags:          _D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE,
 		NodeMask:       0,
 	})
-	if err != nil {
-		return err
-	}
+
 	p.shaderDescriptorHeap = shaderH
 	defer func() {
 		if ferr != nil {
@@ -157,15 +155,11 @@ func (p *pipelineStates) initialize(device *_ID3D12Device) (ferr error) {
 		Flags:          _D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE,
 		NodeMask:       0,
 	})
-	if err != nil {
-		return err
-	}
+
 	p.samplerDescriptorHeap = samplerH
 
 	h, err := p.samplerDescriptorHeap.GetCPUDescriptorHandleForHeapStart()
-	if err != nil {
-		return err
-	}
+
 	device.CreateSampler(&_D3D12_SAMPLER_DESC{
 		Filter:         _D3D12_FILTER_MIN_MAG_MIP_POINT,
 		AddressU:       _D3D12_TEXTURE_ADDRESS_MODE_WRAP,
@@ -213,15 +207,11 @@ func (p *pipelineStates) drawTriangles(device *_ID3D12Device, commandList *_ID3D
 	if cb == nil {
 		var err error
 		cb, err = createBuffer(device, uint64(bufferSize), _D3D12_HEAP_TYPE_UPLOAD)
-		if err != nil {
-			return err
-		}
+
 		p.constantBuffers[frameIndex][idx] = cb
 
 		h, err := p.shaderDescriptorHeap.GetCPUDescriptorHandleForHeapStart()
-		if err != nil {
-			return err
-		}
+
 		offset := int32(numConstantBufferAndSourceTextures * (frameIndex*numDescriptorsPerFrame + idx))
 		h.Offset(offset, p.shaderDescriptorSize)
 		device.CreateConstantBufferView(&_D3D12_CONSTANT_BUFFER_VIEW_DESC{
@@ -230,9 +220,7 @@ func (p *pipelineStates) drawTriangles(device *_ID3D12Device, commandList *_ID3D
 		}, h)
 
 		m, err = cb.Map(0, &_D3D12_RANGE{0, 0})
-		if err != nil {
-			return err
-		}
+
 		p.constantBufferMaps[frameIndex][idx] = m
 	}
 	if m == 0 {
@@ -240,9 +228,7 @@ func (p *pipelineStates) drawTriangles(device *_ID3D12Device, commandList *_ID3D
 	}
 
 	h, err := p.shaderDescriptorHeap.GetCPUDescriptorHandleForHeapStart()
-	if err != nil {
-		return err
-	}
+
 	offset := int32(numConstantBufferAndSourceTextures * (frameIndex*numDescriptorsPerFrame + idx))
 	h.Offset(offset, p.shaderDescriptorSize)
 	for _, src := range srcs {
@@ -264,9 +250,7 @@ func (p *pipelineStates) drawTriangles(device *_ID3D12Device, commandList *_ID3D
 	copy(unsafe.Slice((*uint32)(unsafe.Pointer(m)), len(uniforms)), uniforms)
 
 	rs, err := p.ensureRootSignature(device)
-	if err != nil {
-		return err
-	}
+
 	commandList.SetGraphicsRootSignature(rs)
 
 	commandList.SetDescriptorHeaps([]*_ID3D12DescriptorHeap{
@@ -276,23 +260,17 @@ func (p *pipelineStates) drawTriangles(device *_ID3D12Device, commandList *_ID3D
 
 	// Match the indices with rootParams in graphicsPipelineState.
 	gh, err := p.shaderDescriptorHeap.GetGPUDescriptorHandleForHeapStart()
-	if err != nil {
-		return err
-	}
+
 	gh.Offset(offset, p.shaderDescriptorSize)
 	commandList.SetGraphicsRootDescriptorTable(0, gh)
 	commandList.SetGraphicsRootDescriptorTable(1, gh)
 	sh, err := p.samplerDescriptorHeap.GetGPUDescriptorHandleForHeapStart()
-	if err != nil {
-		return err
-	}
+
 	commandList.SetGraphicsRootDescriptorTable(2, sh)
 
 	if fillRule == graphicsdriver.FillRuleFillAll {
 		s, err := shader.pipelineState(blend, noStencil, screen)
-		if err != nil {
-			return err
-		}
+
 		commandList.SetPipelineState(s)
 	}
 

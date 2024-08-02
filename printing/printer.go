@@ -131,9 +131,7 @@ func (p *Printer) Print(ctx context.Context, jobName, mimeType string, fileData 
 	addAttributesForJob(req, jobName, mimeType)
 	req.Job = attributes.toIPP()
 	rsp, err := p.sendRequest(ctx, req, fileData, fileLength)
-	if err != nil {
-		return err
-	}
+
 	return checkIPPStatus(rsp)
 }
 

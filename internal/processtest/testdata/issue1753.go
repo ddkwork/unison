@@ -40,9 +40,6 @@ var Color vec4
 func Fragment(dstPos vec4, srcPos vec2, color vec4) vec4 {
 	return Color
 }`))
-		if err != nil {
-			return err
-		}
 
 		g.dst = ebiten.NewImage(w, h)
 
@@ -72,9 +69,6 @@ var A, B, G, R float
 func Fragment(dstPos vec4, srcPos vec2, color vec4) vec4 {
 	return vec4(R, G, B, A)
 }`))
-		if err != nil {
-			return err
-		}
 
 		op := &ebiten.DrawRectShaderOptions{}
 		op.Blend = ebiten.BlendCopy
