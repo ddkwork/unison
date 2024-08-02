@@ -182,7 +182,7 @@ func (w *Window) choosePixelFormat(ctxconfig *ctxconfig, fbconfig_ *fbconfig) (i
 			// Get pixel format attributes through legacy PFDs
 
 			var pfd _PIXELFORMATDESCRIPTOR
-			if _ := mylog.Check2(_DescribePixelFormat(w.context.platform.dc, int32(pixelFormat), uint32(unsafe.Sizeof(pfd)), &pfd)); err != nil {
+			 mylog.Check2(_DescribePixelFormat(w.context.platform.dc, int32(pixelFormat), uint32(unsafe.Sizeof(pfd)), &pfd)); err != nil {
 				return 0, err
 			}
 
@@ -437,7 +437,7 @@ func (w *Window) createContextWGL(ctxconfig *ctxconfig, fbconfig *fbconfig) erro
 	pixelFormat := mylog.Check2(w.choosePixelFormat(ctxconfig, fbconfig))
 
 	var pfd _PIXELFORMATDESCRIPTOR
-	if _ := mylog.Check2(_DescribePixelFormat(w.context.platform.dc, int32(pixelFormat), uint32(unsafe.Sizeof(pfd)), &pfd)); 
+	 mylog.Check2(_DescribePixelFormat(w.context.platform.dc, int32(pixelFormat), uint32(unsafe.Sizeof(pfd)), &pfd)); 
 
 	 mylog.Check(_SetPixelFormat(w.context.platform.dc, int32(pixelFormat), &pfd)); 
 

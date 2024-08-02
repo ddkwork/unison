@@ -1883,7 +1883,7 @@ func Fragment(dstPos vec4, srcPos vec2, color vec4) vec4 {
 
 // Issue #2248
 func TestSyntaxDiscard(t *testing.T) {
-	if _ := mylog.Check2(compileToIR([]byte(`package main
+	 mylog.Check2(compileToIR([]byte(`package main
 
 func Fragment(dstPos vec4, srcPos vec2, color vec4) vec4 {
 	if true {
@@ -1891,21 +1891,17 @@ func Fragment(dstPos vec4, srcPos vec2, color vec4) vec4 {
 	}
 	return vec4(0)
 }
-`))); err != nil {
-		t.Error(err)
-	}
+`)));
 	// discard without return doesn't work so far.
 	// TODO: Allow discard without return.
-	if _ := mylog.Check2(compileToIR([]byte(`package main
+	 mylog.Check2(compileToIR([]byte(`package main
 
 func Fragment(dstPos vec4, srcPos vec2, color vec4) vec4 {
 	discard()
 	return vec4(0)
 }
-`))); err != nil {
-		t.Error(err)
-	}
-	if _ := mylog.Check2(compileToIR([]byte(`package main
+`)));
+	 mylog.Check2(compileToIR([]byte(`package main
 
 func foo() {
 	discard()
@@ -3394,7 +3390,7 @@ func Fragment(dstPos vec4, srcPos vec2, color vec4) vec4 {
 
 // Issue #2654
 func TestSyntaxOmittedReturnType(t *testing.T) {
-	if _ := mylog.Check2(compileToIR([]byte(`package main
+	 mylog.Check2(compileToIR([]byte(`package main
 
 func foo(x vec2) {
 	x = bar(x)
@@ -3445,15 +3441,13 @@ var Foo, Bar int = 1, 1
 
 // Issue #2705
 func TestSyntaxInitWithNegativeInteger(t *testing.T) {
-	if _ := mylog.Check2(compileToIR([]byte(`package main
+	 mylog.Check2(compileToIR([]byte(`package main
 
 func Fragment(dstPos vec4, srcPos vec2, color vec4) vec4 {
 	var x float = -0
 	_ = x
 	return dstPos
-}`))); err != nil {
-		t.Error(err)
-	}
+}`)));
 }
 
 // Issue #2706
@@ -3691,7 +3685,7 @@ func Fragment(dstPos vec4, srcPos vec2, color vec4) vec4 {
 
 // Issue #2680
 func TestSyntaxForWithLocalVariable(t *testing.T) {
-	if _ := mylog.Check2(compileToIR([]byte(`package main
+	 mylog.Check2(compileToIR([]byte(`package main
 
 func foo() {
 	i := 0
@@ -3700,7 +3694,7 @@ func foo() {
 }`))); err == nil {
 		t.Error("compileToIR must return an error but did not")
 	}
-	if _ := mylog.Check2(compileToIR([]byte(`package main
+	 mylog.Check2(compileToIR([]byte(`package main
 
 func foo() {
 	for i, j := 0, 0; i < 1; i++ {
@@ -3713,14 +3707,14 @@ func foo() {
 
 // Issue #2648
 func TestSyntaxDuplicatedUniformVariables(t *testing.T) {
-	if _ := mylog.Check2(compileToIR([]byte(`package main
+	 mylog.Check2(compileToIR([]byte(`package main
 
 var Foo int
 var Foo int
 `))); err == nil {
 		t.Error("compileToIR must return an error but did not")
 	}
-	if _ := mylog.Check2(compileToIR([]byte(`package main
+	 mylog.Check2(compileToIR([]byte(`package main
 
 var Foo int
 var Bar float
@@ -3732,7 +3726,7 @@ var Foo vec2
 
 // Issue #2747
 func TestSyntaxMultipleAssignmentsAndTypeCheck(t *testing.T) {
-	if _ := mylog.Check2(compileToIR([]byte(`package main
+	 mylog.Check2(compileToIR([]byte(`package main
 
 func Foo() (float, bool) {
 	return 0, false
@@ -3743,10 +3737,8 @@ func Bar() {
 	_, _ = f, b
 	return
 }
-`))); err != nil {
-		t.Error(err)
-	}
-	if _ := mylog.Check2(compileToIR([]byte(`package main
+`)));
+	 mylog.Check2(compileToIR([]byte(`package main
 
 func Foo() (float, bool) {
 	return 0, false
@@ -3759,11 +3751,9 @@ func Bar() {
 	_, _ = f, b
 	return
 }
-`))); err != nil {
-		t.Error(err)
-	}
+`)));
 
-	if _ := mylog.Check2(compileToIR([]byte(`package main
+	 mylog.Check2(compileToIR([]byte(`package main
 
 func Foo() {
 	a, b := 0
@@ -3773,7 +3763,7 @@ func Foo() {
 		t.Error("compileToIR must return an error but did not")
 	}
 
-	if _ := mylog.Check2(compileToIR([]byte(`package main
+	 mylog.Check2(compileToIR([]byte(`package main
 
 func Foo() {
 	a, b, c := 0, 0
@@ -3783,7 +3773,7 @@ func Foo() {
 		t.Error("compileToIR must return an error but did not")
 	}
 
-	if _ := mylog.Check2(compileToIR([]byte(`package main
+	 mylog.Check2(compileToIR([]byte(`package main
 
 func Foo() {
 	var a, b int
@@ -3794,7 +3784,7 @@ func Foo() {
 		t.Error("compileToIR must return an error but did not")
 	}
 
-	if _ := mylog.Check2(compileToIR([]byte(`package main
+	 mylog.Check2(compileToIR([]byte(`package main
 
 func Foo() {
 	var a, b, c int
@@ -3888,7 +3878,7 @@ func Fragment(dstPos vec4, srcPos vec2, color vec4) vec4 {
 
 // Issue #2891
 func TestSyntaxInvalidArgument(t *testing.T) {
-	if _ := mylog.Check2(compileToIR([]byte(`package main
+	 mylog.Check2(compileToIR([]byte(`package main
 
 func Foo(x int) int {
 	return 0
@@ -3904,7 +3894,7 @@ func Bar() int {
 
 // Issue #2891, #2910
 func TestSyntaxTailingUnaryOperator(t *testing.T) {
-	if _ := mylog.Check2(compileToIR([]byte(`package main
+	 mylog.Check2(compileToIR([]byte(`package main
 
 func Foo() {
 	1 + x := vec2(2)
@@ -3912,7 +3902,7 @@ func Foo() {
 `))); err == nil {
 		t.Error("compileToIR must return an error but did not")
 	}
-	if _ := mylog.Check2(compileToIR([]byte(`package main
+	 mylog.Check2(compileToIR([]byte(`package main
 
 func Foo() {
 	1 + x, y := Bar()
@@ -3928,7 +3918,7 @@ func Bar() (int, int) {
 
 // Issue #2926, #2989
 func TestSyntaxNonTypeExpression(t *testing.T) {
-	if _ := mylog.Check2(compileToIR([]byte(`package main
+	 mylog.Check2(compileToIR([]byte(`package main
 
 func Foo() {
 }
@@ -3939,7 +3929,7 @@ func Bar() float {
 `))); err == nil {
 		t.Error("compileToIR must return an error but did not")
 	}
-	if _ := mylog.Check2(compileToIR([]byte(`package main
+	 mylog.Check2(compileToIR([]byte(`package main
 
 func Foo() {
 }
@@ -3950,7 +3940,7 @@ func Bar() float {
 `))); err == nil {
 		t.Error("compileToIR must return an error but did not")
 	}
-	if _ := mylog.Check2(compileToIR([]byte(`package main
+	 mylog.Check2(compileToIR([]byte(`package main
 
 func Foo() {
 }
@@ -3961,7 +3951,7 @@ func Bar() float {
 `))); err == nil {
 		t.Error("compileToIR must return an error but did not")
 	}
-	if _ := mylog.Check2(compileToIR([]byte(`package main
+	 mylog.Check2(compileToIR([]byte(`package main
 
 func Foo() {
 }
@@ -3972,7 +3962,7 @@ func Bar() float {
 `))); err == nil {
 		t.Error("compileToIR must return an error but did not")
 	}
-	if _ := mylog.Check2(compileToIR([]byte(`package main
+	 mylog.Check2(compileToIR([]byte(`package main
 
 func Foo() {
 }
@@ -3987,7 +3977,7 @@ func Bar() float {
 
 // Issue #2993
 func TestSyntaxIfAndConstBool(t *testing.T) {
-	if _ := mylog.Check2(compileToIR([]byte(`package main
+	 mylog.Check2(compileToIR([]byte(`package main
 
 func Foo() int {
 	const X = true
@@ -3996,10 +3986,8 @@ func Foo() int {
 	}
 	return 0
 }
-`))); err != nil {
-		t.Error(err)
-	}
-	if _ := mylog.Check2(compileToIR([]byte(`package main
+`)));
+	 mylog.Check2(compileToIR([]byte(`package main
 
 func Foo() int {
 	const X bool = true
@@ -4008,7 +3996,5 @@ func Foo() int {
 	}
 	return 0
 }
-`))); err != nil {
-		t.Error(err)
-	}
+`)));
 }

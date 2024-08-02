@@ -144,7 +144,7 @@ func (u *UserInterface) init() error {
 
 	 mylog.Check(u.initializePlatform()); 
 	 mylog.Check(u.initializeGLFW()); 
-	if _ := mylog.Check2(glfw.SetMonitorCallback(func(monitor *glfw.Monitor, event glfw.PeripheralEvent) {
+	 mylog.Check2(glfw.SetMonitorCallback(func(monitor *glfw.Monitor, event glfw.PeripheralEvent) {
 		 mylog.Check(theMonitors.update()); err != nil {
 			u.setError(err)
 		}
@@ -825,7 +825,7 @@ func (u *UserInterface) registerWindowCloseCallback() error {
 			}
 		}
 	}
-	if _ := mylog.Check2(u.window.SetCloseCallback(u.closeCallback)); 
+	 mylog.Check2(u.window.SetCloseCallback(u.closeCallback)); 
 	return nil
 }
 
@@ -857,7 +857,7 @@ func (u *UserInterface) registerWindowFramebufferSizeCallback() error {
 			}
 		}
 	}
-	if _ := mylog.Check2(u.window.SetFramebufferSizeCallback(u.defaultFramebufferSizeCallback)); 
+	 mylog.Check2(u.window.SetFramebufferSizeCallback(u.defaultFramebufferSizeCallback)); 
 	return nil
 }
 
@@ -869,7 +869,7 @@ func (u *UserInterface) registerDropCallback() error {
 			u.inputState.DroppedFiles = file.NewVirtualFS(names)
 		}
 	}
-	if _ := mylog.Check2(u.window.SetDropCallback(u.dropCallback)); 
+	 mylog.Check2(u.window.SetDropCallback(u.dropCallback)); 
 	return nil
 }
 
@@ -891,7 +891,7 @@ func (u *UserInterface) waitForFramebufferSizeCallback(window *glfw.Window, f fu
 			}
 		}
 	}
-	if _ := mylog.Check2(window.SetFramebufferSizeCallback(u.framebufferSizeCallback)); 
+	 mylog.Check2(window.SetFramebufferSizeCallback(u.framebufferSizeCallback)); 
 
 	if f != nil {
 		 mylog.Check(f()); 
@@ -913,7 +913,7 @@ event:
 			time.Sleep(time.Millisecond)
 		}
 	}
-	if _ := mylog.Check2(window.SetFramebufferSizeCallback(u.defaultFramebufferSizeCallback)); 
+	 mylog.Check2(window.SetFramebufferSizeCallback(u.defaultFramebufferSizeCallback)); 
 
 	close(u.framebufferSizeCallbackCh)
 	u.framebufferSizeCallbackCh = nil

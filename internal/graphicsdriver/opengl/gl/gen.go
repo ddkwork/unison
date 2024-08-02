@@ -40,7 +40,7 @@ func run() error {
 
 	out := bufio.NewWriter(f)
 
-	if _ := mylog.Check2(fmt.Fprintf(out, `// Copyright 2023 The Ebitengine Authors
+	 mylog.Check2(fmt.Fprintf(out, `// Copyright 2023 The Ebitengine Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -92,31 +92,31 @@ var _ Context = (*DebugContext)(nil)
 			outNames = append(outNames, fmt.Sprintf("out%d", j))
 		}
 
-		if _ := mylog.Check2(fmt.Fprintf(out, "\nfunc (d *DebugContext) %s(%s) (%s) {\n", name, strings.Join(argNamesAndTypes, ", "), strings.Join(outTypes, ","))); 
+		 mylog.Check2(fmt.Fprintf(out, "\nfunc (d *DebugContext) %s(%s) (%s) {\n", name, strings.Join(argNamesAndTypes, ", "), strings.Join(outTypes, ","))); 
 		if len(outTypes) > 0 {
-			if _ := mylog.Check2(fmt.Fprintf(out, "\t%s := ", strings.Join(outNames, ", "))); 
+			 mylog.Check2(fmt.Fprintf(out, "\t%s := ", strings.Join(outNames, ", "))); 
 		} else {
-			if _ := mylog.Check2(fmt.Fprintf(out, "\t")); 
+			 mylog.Check2(fmt.Fprintf(out, "\t")); 
 		}
-		if _ := mylog.Check2(fmt.Fprintf(out, "d.Context.%s(%s)\n", name, strings.Join(argNames, ", "))); 
+		 mylog.Check2(fmt.Fprintf(out, "d.Context.%s(%s)\n", name, strings.Join(argNames, ", "))); 
 
 		// Print logs.
 		if name != "LoadFunctions" && name != "IsES" {
-			if _ := mylog.Check2(fmt.Fprintf(out, "\tfmt.Fprintln(os.Stderr, %q)\n", name)); 
+			 mylog.Check2(fmt.Fprintf(out, "\tfmt.Fprintln(os.Stderr, %q)\n", name)); 
 		}
 
 		// Check errors.
 		if name != "LoadFunctions" && name != "IsES" && name != "GetError" {
-			if _ := mylog.Check2(fmt.Fprintf(out, `	if e := d.Context.GetError(); e != NO_ERROR {
+			 mylog.Check2(fmt.Fprintf(out, `	if e := d.Context.GetError(); e != NO_ERROR {
 		panic(fmt.Sprintf("gl: GetError() returned %%d at %s", e))
 	}
 `, name)); 
 		}
 
 		if len(outTypes) > 0 {
-			if _ := mylog.Check2(fmt.Fprintf(out, "\treturn %s\n", strings.Join(outNames, ", "))); 
+			 mylog.Check2(fmt.Fprintf(out, "\treturn %s\n", strings.Join(outNames, ", "))); 
 		}
-		if _ := mylog.Check2(fmt.Fprintf(out, "}\n")); 
+		 mylog.Check2(fmt.Fprintf(out, "}\n")); 
 	}
 
 	 mylog.Check(out.Flush()); 

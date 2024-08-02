@@ -49,7 +49,7 @@ func init() {
 		Title:      "New Demo Window",
 		KeyBinding: unison.KeyBinding{KeyCode: unison.KeyN, Modifiers: unison.OSMenuCmdModifier()},
 		ExecuteCallback: func(_ *unison.Action, _ any) {
-			if _ := mylog.Check2(NewDemoWindow(initialWindowLocation())); err != nil {
+			 mylog.Check2(NewDemoWindow(initialWindowLocation())); err != nil {
 				errs.Log(err)
 			}
 		},
@@ -60,7 +60,7 @@ func init() {
 		Title:      "New Demo Table Window",
 		KeyBinding: unison.KeyBinding{KeyCode: unison.KeyT, Modifiers: unison.OSMenuCmdModifier()},
 		ExecuteCallback: func(_ *unison.Action, _ any) {
-			if _ := mylog.Check2(NewDemoTableWindow(initialWindowLocation())); err != nil {
+			 mylog.Check2(NewDemoTableWindow(initialWindowLocation())); err != nil {
 				errs.Log(err)
 			}
 		},
@@ -71,7 +71,7 @@ func init() {
 		Title:      "New Demo Dock Window",
 		KeyBinding: unison.KeyBinding{KeyCode: unison.KeyD, Modifiers: unison.OSMenuCmdModifier()},
 		ExecuteCallback: func(_ *unison.Action, _ any) {
-			if _ := mylog.Check2(NewDemoDockWindow(initialWindowLocation())); err != nil {
+			 mylog.Check2(NewDemoDockWindow(initialWindowLocation())); err != nil {
 				errs.Log(err)
 			}
 		},
@@ -82,7 +82,7 @@ func init() {
 		Title:      "New Demo Markdown Window",
 		KeyBinding: unison.KeyBinding{KeyCode: unison.KeyK, Modifiers: unison.ShiftModifier | unison.OSMenuCmdModifier()},
 		ExecuteCallback: func(_ *unison.Action, _ any) {
-			if _ := mylog.Check2(NewDemoMarkdownWindow(initialWindowLocation())); err != nil {
+			 mylog.Check2(NewDemoMarkdownWindow(initialWindowLocation())); err != nil {
 				errs.Log(err)
 			}
 		},
@@ -93,7 +93,7 @@ func init() {
 		Title:      "Show Colors",
 		KeyBinding: unison.KeyBinding{KeyCode: unison.KeyK, Modifiers: unison.OSMenuCmdModifier()},
 		ExecuteCallback: func(_ *unison.Action, _ any) {
-			if _ := mylog.Check2(NewDemoColorsWindow(initialWindowLocation())); err != nil {
+			 mylog.Check2(NewDemoColorsWindow(initialWindowLocation())); err != nil {
 				errs.Log(err)
 			}
 		},

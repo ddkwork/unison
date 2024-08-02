@@ -32,14 +32,14 @@ var glfwMouseButtonToMouseButton = map[glfw.MouseButton]MouseButton{
 }
 
 func (u *UserInterface) registerInputCallbacks() error {
-	if _ := mylog.Check2(u.window.SetCharModsCallback(func(w *glfw.Window, char rune, mods glfw.ModifierKey) {
+	 mylog.Check2(u.window.SetCharModsCallback(func(w *glfw.Window, char rune, mods glfw.ModifierKey) {
 		// As this function is called from GLFW callbacks, the current thread is main.
 		u.m.Lock()
 		defer u.m.Unlock()
 		u.inputState.appendRune(char)
 	})); 
 
-	if _ := mylog.Check2(u.window.SetScrollCallback(func(w *glfw.Window, xoff float64, yoff float64) {
+	 mylog.Check2(u.window.SetScrollCallback(func(w *glfw.Window, xoff float64, yoff float64) {
 		// As this function is called from GLFW callbacks, the current thread is main.
 		u.m.Lock()
 		defer u.m.Unlock()

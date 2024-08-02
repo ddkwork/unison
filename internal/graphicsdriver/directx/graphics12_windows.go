@@ -179,7 +179,7 @@ func (g *graphics12) initializeDesktop(useWARP bool, useDebugLayer bool, feature
 			}
 
 			// Test D3D12CreateDevice without creating an actual device.
-			if _ := mylog.Check2(_D3D12CreateDevice(unsafe.Pointer(a), featureLevel, &_IID_ID3D12Device, false)); err != nil {
+			 mylog.Check2(_D3D12CreateDevice(unsafe.Pointer(a), featureLevel, &_IID_ID3D12Device, false)); err != nil {
 				continue
 			}
 			adapter = a
@@ -231,7 +231,7 @@ func (g *graphics12) initializeXbox(useWARP bool, useDebugLayer bool) (ferr erro
 	g.suspendingCh = make(chan struct{})
 	g.suspendedCh = make(chan struct{})
 	g.resumeCh = make(chan struct{})
-	if _ := mylog.Check2(_RegisterAppStateChangeNotification(func(quiesced bool, context unsafe.Pointer) uintptr {
+	 mylog.Check2(_RegisterAppStateChangeNotification(func(quiesced bool, context unsafe.Pointer) uintptr {
 		if quiesced {
 			g.suspendingCh <- struct{}{}
 			// Confirm the suspension completed before the callback ends.
@@ -641,7 +641,7 @@ func (g *graphics12) moveToNextFrame() error {
 
 	if g.fence.GetCompletedValue() < g.fenceValues[g.frameIndex] {
 		 mylog.Check(g.fence.SetEventOnCompletion(g.fenceValues[g.frameIndex], g.fenceWaitEvent)); 
-		if _ := mylog.Check2(windows.WaitForSingleObject(g.fenceWaitEvent, windows.INFINITE)); 
+		 mylog.Check2(windows.WaitForSingleObject(g.fenceWaitEvent, windows.INFINITE)); 
 	}
 	g.fenceValues[g.frameIndex] = fv + 1
 	return nil
@@ -722,7 +722,7 @@ func (g *graphics12) waitForCommandQueue() error {
 	fv := g.fenceValues[g.frameIndex]
 	 mylog.Check(g.commandQueue.Signal(g.fence, fv)); 
 	 mylog.Check(g.fence.SetEventOnCompletion(fv, g.fenceWaitEvent)); 
-	if _ := mylog.Check2(windows.WaitForSingleObject(g.fenceWaitEvent, windows.INFINITE)); 
+	 mylog.Check2(windows.WaitForSingleObject(g.fenceWaitEvent, windows.INFINITE)); 
 	g.fenceValues[g.frameIndex]++
 	return nil
 }

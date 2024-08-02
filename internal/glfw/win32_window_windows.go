@@ -282,7 +282,7 @@ func (w *Window) updateWindowStyles() error {
 
 	rect = mylog.Check2(w.clientToScreen(rect))
 
-	if _ := mylog.Check2(_SetWindowLongW(w.platform.handle, _GWL_STYLE, int32(style))); 
+	 mylog.Check2(_SetWindowLongW(w.platform.handle, _GWL_STYLE, int32(style))); 
 	 mylog.Check(_SetWindowPos(w.platform.handle, _HWND_TOP, rect.left, rect.top, rect.right-rect.left, rect.bottom-rect.top, _SWP_FRAMECHANGED|_SWP_NOACTIVATE|_SWP_NOZORDER)); 
 
 	return nil
@@ -440,7 +440,7 @@ func (w *Window) maximizeWindowManually() error {
 
 	style := uint32(s)
 	style |= _WS_MAXIMIZE
-	if _ := mylog.Check2(_SetWindowLongW(w.platform.handle, _GWL_STYLE, int32(style))); 
+	 mylog.Check2(_SetWindowLongW(w.platform.handle, _GWL_STYLE, int32(style))); 
 
 	if w.decorated {
 		s := mylog.Check2(_GetWindowLongW(w.platform.handle, _GWL_EXSTYLE))
@@ -796,7 +796,7 @@ func windowProc(hWnd windows.HWND, uMsg uint32, wParam _WPARAM, lParam _LPARAM) 
 
 		ri := _HRAWINPUT(lParam)
 		var size uint32
-		if _ := mylog.Check2(_GetRawInputData(ri, _RID_INPUT, nil, &size)); err != nil {
+		 mylog.Check2(_GetRawInputData(ri, _RID_INPUT, nil, &size)); err != nil {
 			_glfw.errors = append(_glfw.errors, err)
 			return 0
 		}
@@ -805,7 +805,7 @@ func windowProc(hWnd windows.HWND, uMsg uint32, wParam _WPARAM, lParam _LPARAM) 
 		}
 
 		size = uint32(len(_glfw.platformWindow.rawInput))
-		if _ := mylog.Check2(_GetRawInputData(ri, _RID_INPUT, unsafe.Pointer(&_glfw.platformWindow.rawInput[0]), &size)); err != nil {
+		 mylog.Check2(_GetRawInputData(ri, _RID_INPUT, unsafe.Pointer(&_glfw.platformWindow.rawInput[0]), &size)); err != nil {
 			_glfw.errors = append(_glfw.errors, err)
 			return 0
 			// TODO: break?
@@ -1266,7 +1266,7 @@ func registerWindowClassWin32() error {
 		wc.hIcon = _HICON(icon)
 	}
 
-	if _ := mylog.Check2(_RegisterClassExW(&wc)); 
+	 mylog.Check2(_RegisterClassExW(&wc)); 
 	return nil
 }
 
@@ -1567,7 +1567,7 @@ func (w *Window) platformFocusWindow() error {
 
 	 mylog.Check(_BringWindowToTop(w.platform.handle)); 
 	_SetForegroundWindow(w.platform.handle)
-	if _ := mylog.Check2(_SetFocus(w.platform.handle)); 
+	 mylog.Check2(_SetFocus(w.platform.handle)); 
 	return nil
 }
 
@@ -1621,7 +1621,7 @@ func (w *Window) platformSetWindowMonitor(monitor *Monitor, xpos, ypos, width, h
 			style := uint32(s)
 			style &^= _WS_OVERLAPPEDWINDOW
 			style |= w.getWindowStyle()
-			if _ := mylog.Check2(_SetWindowLongW(w.platform.handle, _GWL_STYLE, int32(style))); 
+			 mylog.Check2(_SetWindowLongW(w.platform.handle, _GWL_STYLE, int32(style))); 
 			flags |= _SWP_FRAMECHANGED
 		}
 
@@ -1646,7 +1646,7 @@ func (w *Window) platformSetWindowMonitor(monitor *Monitor, xpos, ypos, width, h
 			style := uint32(s)
 			style &^= _WS_POPUP
 			style |= w.getWindowStyle()
-			if _ := mylog.Check2(_SetWindowLongW(w.platform.handle, _GWL_STYLE, int32(style))); 
+			 mylog.Check2(_SetWindowLongW(w.platform.handle, _GWL_STYLE, int32(style))); 
 			flags |= _SWP_FRAMECHANGED
 		}
 
@@ -1785,7 +1785,7 @@ func (w *Window) platformSetWindowMousePassthrough(enabled bool) error {
 		}
 	}
 
-	if _ := mylog.Check2(_SetWindowLongW(w.platform.handle, _GWL_EXSTYLE, exStyle)); 
+	 mylog.Check2(_SetWindowLongW(w.platform.handle, _GWL_EXSTYLE, exStyle)); 
 
 	if enabled {
 		 mylog.Check(_SetLayeredWindowAttributes(w.platform.handle, key, alpha, flags)); 
@@ -1814,13 +1814,13 @@ func (w *Window) platformSetWindowOpacity(opacity float32) error {
 		style := mylog.Check2(_GetWindowLongW(w.platform.handle, _GWL_EXSTYLE))
 
 		style |= _WS_EX_LAYERED
-		if _ := mylog.Check2(_SetWindowLongW(w.platform.handle, _GWL_EXSTYLE, style)); 
+		 mylog.Check2(_SetWindowLongW(w.platform.handle, _GWL_EXSTYLE, style)); 
 		 mylog.Check(_SetLayeredWindowAttributes(w.platform.handle, 0, alpha, _LWA_ALPHA)); 
 	} else {
 		style := mylog.Check2(_GetWindowLongW(w.platform.handle, _GWL_EXSTYLE))
 
 		style &^= _WS_EX_LAYERED
-		if _ := mylog.Check2(_SetWindowLongW(w.platform.handle, _GWL_EXSTYLE, style)); 
+		 mylog.Check2(_SetWindowLongW(w.platform.handle, _GWL_EXSTYLE, style)); 
 	}
 
 	return nil
@@ -1926,7 +1926,7 @@ func platformWaitEvents() error {
 }
 
 func platformWaitEventsTimeout(timeout float64) error {
-	if _ := mylog.Check2(_MsgWaitForMultipleObjects(0, nil, false, uint32(timeout*1e3), _QS_ALLINPUT)); 
+	 mylog.Check2(_MsgWaitForMultipleObjects(0, nil, false, uint32(timeout*1e3), _QS_ALLINPUT)); 
 	 mylog.Check(platformPollEvents()); 
 	return nil
 }

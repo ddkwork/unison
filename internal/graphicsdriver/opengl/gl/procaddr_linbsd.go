@@ -84,10 +84,12 @@ var glXGetProcAddress func(name string) uintptr
 
 func getProcAddressGL(name string) (uintptr, error) {
 	if glXGetProcAddress == nil {
-		if _ := mylog.Check2(purego.Dlsym(libGL, "glXGetProcAddress")); err == nil {
-			purego.RegisterLibFunc(&glXGetProcAddress, libGL, "glXGetProcAddress")
-		} else if _ := mylog.Check2(purego.Dlsym(libGL, "glXGetProcAddressARB")); err == nil {
-			purego.RegisterLibFunc(&glXGetProcAddress, libGL, "glXGetProcAddressARB")
+		mylog.Check2(purego.Dlsym(libGL, "glXGetProcAddress"))
+		err == nil{
+			purego.RegisterLibFunc(&glXGetProcAddress, libGL, "glXGetProcAddress"),
+		} else mylog.Check2(purego.Dlsym(libGL, "glXGetProcAddressARB"))
+		err == nil{
+			purego.RegisterLibFunc(&glXGetProcAddress, libGL, "glXGetProcAddressARB"),
 		}
 	}
 	if glXGetProcAddress == nil {

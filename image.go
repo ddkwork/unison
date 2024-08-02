@@ -321,10 +321,12 @@ func hashImageData(width, height int, scale float32, data []byte) (uint64, error
 	binary.LittleEndian.PutUint32(buffer[:4], math.Float32bits(scale))
 	binary.LittleEndian.PutUint32(buffer[4:8], uint32(width))
 	binary.LittleEndian.PutUint32(buffer[8:12], uint32(height))
-	if _ := mylog.Check2(s.Write(buffer[:])); err != nil {
+	mylog.Check2(s.Write(buffer[:]))
+	err != nil{
 		return 0, errs.Wrap(err)
 	}
-	if _ := mylog.Check2(s.Write(data)); err != nil {
+	mylog.Check2(s.Write(data))
+	err != nil{
 		return 0, errs.Wrap(err)
 	}
 	return s.Sum64(), nil

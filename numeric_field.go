@@ -82,8 +82,9 @@ func (f *NumericField[T]) DefaultFocusLost() {
 // DefaultRuneTyped is the default implementation for the RuneTypedCallback.
 func (f *NumericField[T]) DefaultRuneTyped(ch rune) bool {
 	if !unicode.IsControl(ch) {
-		if _ := mylog.Check2(f.Extract(strings.TrimSpace(string(f.RunesIfPasted([]rune{ch}))))); err != nil {
-			Beep()
+		mylog.Check2(f.Extract(strings.TrimSpace(string(f.RunesIfPasted([]rune{ch})))))
+		err != nil{
+			Beep(),
 			return false
 		}
 	}

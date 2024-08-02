@@ -98,7 +98,7 @@ func availableFilename(name string) (string, error) {
 	base := name[:len(name)-len(ext)]
 
 	for i := 1; ; i++ {
-		if _ := mylog.Check2(os.Stat(name)); err != nil {
+		 mylog.Check2(os.Stat(name)); err != nil {
 			if errors.Is(err, os.ErrNotExist) {
 				break
 			}

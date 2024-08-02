@@ -238,7 +238,6 @@ func (g *nativeGamepadsDesktop) detectConnection(gamepads *gamepads) error {
 
 			var xic _XINPUT_CAPABILITIES
 			mylog.Check(g.xinputGetCapabilities(uint32(i), 0, &xic))
-			err != nil{
 				if !errors.Is(err, windows.ERROR_DEVICE_NOT_CONNECTED){
 				return err
 			}
@@ -308,9 +307,6 @@ func (g *nativeGamepadsDesktop) dinput8EnumDevicesCallback(lpddi *_DIDEVICEINSTA
 			},
 		}
 		mylog.Check(device.GetProperty(_DIPROP_GUIDANDPATH, &prop.diph))
-		err != nil{
-			return "", err
-		}
 		return windows.UTF16ToString(prop.wszPath[:]), nil
 	}
 	dinputPath := mylog.Check2(getDInputPath(device))
@@ -441,7 +437,7 @@ func supportsXInput(guid windows.GUID) (bool, error) {
 	}
 
 	ridl := make([]_RAWINPUTDEVICELIST, count)
-	if _ := mylog.Check2(_GetRawInputDeviceList(&ridl[0], &count)); err != nil {
+	 mylog.Check2(_GetRawInputDeviceList(&ridl[0], &count)); err != nil {
 		return false, err
 	}
 
@@ -454,7 +450,7 @@ func supportsXInput(guid windows.GUID) (bool, error) {
 			cbSize: uint32(unsafe.Sizeof(_RID_DEVICE_INFO{})),
 		}
 		size := uint32(unsafe.Sizeof(rdi))
-		if _ := mylog.Check2(_GetRawInputDeviceInfoW(ridl[i].hDevice, _RIDI_DEVICEINFO, unsafe.Pointer(&rdi), &size)); err != nil {
+		 mylog.Check2(_GetRawInputDeviceInfoW(ridl[i].hDevice, _RIDI_DEVICEINFO, unsafe.Pointer(&rdi), &size)); err != nil {
 			// GetRawInputDeviceInfoW can return an error (#2603).
 			continue
 		}
@@ -465,7 +461,7 @@ func supportsXInput(guid windows.GUID) (bool, error) {
 
 		var name [256]uint16
 		size = uint32(unsafe.Sizeof(name))
-		if _ := mylog.Check2(_GetRawInputDeviceInfoW(ridl[i].hDevice, _RIDI_DEVICENAME, unsafe.Pointer(&name[0]), &size)); err != nil {
+		 mylog.Check2(_GetRawInputDeviceInfoW(ridl[i].hDevice, _RIDI_DEVICENAME, unsafe.Pointer(&name[0]), &size)); err != nil {
 			return false, err
 		}
 

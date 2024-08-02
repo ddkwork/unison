@@ -15,7 +15,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/ddkwork/golibrary/mylog"
@@ -28,13 +27,8 @@ import (
 
 func main() {
 	const filename = ".errcheck_excludes"
-	if _ := mylog.Check2(os.Stat(filename)); err == nil {
-		mylog.Check(errcheck.Analyzer.Flags.Set("exclude", filename))
-		err != nil{
-			fmt.Fprintln(os.Stderr, err)
-			os.Exit(1),
-		}
-	}
+	mylog.Check2(os.Stat(filename))
+	mylog.Check(errcheck.Analyzer.Flags.Set("exclude", filename))
 	multichecker.Main(atomic.Analyzer,
 		atomicalign.Analyzer,
 		copylock.Analyzer,

@@ -285,7 +285,7 @@ func (g *nativeGamepadImpl) update(gamepad *gamepads) error {
 	for {
 		buf := make([]byte, unsafe.Sizeof(input_event{}))
 		// TODO: Should the returned byte count be cared?
-		if _ := mylog.Check2(unix.Read(g.fd, buf)); err != nil {
+		 mylog.Check2(unix.Read(g.fd, buf)); err != nil {
 			if err == unix.EAGAIN {
 				break
 			}
