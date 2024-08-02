@@ -1,4 +1,4 @@
-// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -12,18 +12,8 @@ package unison
 import (
 	"runtime"
 
+	"github.com/richardwilkes/unison/enums/blur"
 	"github.com/richardwilkes/unison/internal/skia"
-)
-
-// Blur holds the type of blur to apply.
-type Blur byte
-
-// Possible values for Blur.
-const (
-	NormalBlur Blur = iota
-	SolidBlur
-	OuterBlur
-	InnerBlur
 )
 
 // MaskFilter performs a transformation on the mask before drawing it.
@@ -53,7 +43,7 @@ func (f *MaskFilter) filterOrNil() skia.MaskFilter {
 
 // NewBlurMaskFilter returns a new blur mask filter. sigma is the standard deviation of the gaussian blur to apply. Must
 // be greater than 0. If respectMatrix is true, the blur's sigma is modified by the current matrix.
-func NewBlurMaskFilter(style Blur, sigma float32, respectMatrix bool) *MaskFilter {
+func NewBlurMaskFilter(style blur.Enum, sigma float32, respectMatrix bool) *MaskFilter {
 	if sigma <= 0 {
 		sigma = 1
 	}

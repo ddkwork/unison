@@ -1,5 +1,5 @@
 /tools
 /logs
-.idea
-log.log
-*.exe
+/go.work
+/go.work.sum
+/release_notes.md

@@ -1,4 +1,4 @@
-// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -25,22 +25,22 @@ func (m Modifiers) platformString() string {
 		return ""
 	}
 	var buffer bytes.Buffer
-	if m&ControlModifier == ControlModifier {
+	if m.ControlDown() {
 		buffer.WriteRune('⌃')
 	}
-	if m&OptionModifier == OptionModifier {
+	if m.OptionDown() {
 		buffer.WriteRune('⌥')
 	}
-	if m&ShiftModifier == ShiftModifier {
+	if m.ShiftDown() {
 		buffer.WriteRune('⇧')
 	}
-	if m&CapsLockModifier == CapsLockModifier {
+	if m.CapsLockDown() {
 		buffer.WriteRune('⇪')
 	}
-	if m&NumLockModifier == NumLockModifier {
+	if m.NumLockDown() {
 		buffer.WriteRune('⇭')
 	}
-	if m&CommandModifier == CommandModifier {
+	if m.CommandDown() {
 		buffer.WriteRune('⌘')
 	}
 	return buffer.String()

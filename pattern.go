@@ -1,4 +1,4 @@
-// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -9,6 +9,11 @@
 
 package unison
 
+import (
+	"github.com/richardwilkes/unison/enums/paintstyle"
+	"github.com/richardwilkes/unison/enums/tilemode"
+)
+
 var _ Ink = &Pattern{}
 
 // Pattern holds the information necessary to draw an image in a pattern.
@@ -16,13 +21,13 @@ type Pattern struct {
 	Image           *Image
 	Offset          Point
 	Scale           Point
-	TileModeX       TileMode
-	TileModeY       TileMode
+	TileModeX       tilemode.Enum
+	TileModeY       tilemode.Enum
 	SamplingOptions SamplingOptions
 }
 
 // Paint returns a Paint for this Pattern.
-func (p *Pattern) Paint(canvas *Canvas, _ Rect, style PaintStyle) *Paint {
+func (p *Pattern) Paint(canvas *Canvas, _ Rect, style paintstyle.Enum) *Paint {
 	paint := NewPaint()
 	paint.SetStyle(style)
 	scale := p.Scale
@@ -35,7 +40,7 @@ func (p *Pattern) Paint(canvas *Canvas, _ Rect, style PaintStyle) *Paint {
 	imgScale := p.Image.Scale()
 	paint.SetColor(Black)
 	paint.SetShader(NewImageShader(canvas, p.Image, p.TileModeX, p.TileModeY, &p.SamplingOptions,
-		&Matrix{
+		Matrix{
 			ScaleX: scale.X * imgScale,
 			ScaleY: scale.Y * imgScale,
 			TransX: p.Offset.X,

@@ -1,4 +1,4 @@
-// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -10,7 +10,10 @@
 package unison
 
 import (
-	"github.com/richardwilkes/toolbox/collection/slice"
+	"slices"
+
+	"github.com/richardwilkes/unison/enums/align"
+	"github.com/richardwilkes/unison/enums/behavior"
 )
 
 var _ Menu = &menu{}
@@ -56,8 +59,8 @@ type Menu interface {
 // DefaultMenuTheme holds the default MenuTheme values for Menus. Modifying this data will not alter existing Menus,
 // but will alter any Menus created in the future.
 var DefaultMenuTheme = MenuTheme{
-	BarBorder:  NewLineBorder(DividerColor, 0, Insets{Bottom: 1}, false),
-	MenuBorder: NewLineBorder(DividerColor, 0, NewUniformInsets(1), false),
+	BarBorder:  NewLineBorder(ThemeSurfaceEdge, 0, Insets{Bottom: 1}, false),
+	MenuBorder: NewLineBorder(ThemeSurfaceEdge, 0, NewUniformInsets(1), false),
 }
 
 // MenuTheme holds theming data for a Menu.
@@ -67,17 +70,17 @@ type MenuTheme struct {
 }
 
 type menuPanel struct {
+	menu *menu
 	Panel
-	menu      *menu
 	itemIndex int
 }
 
 type menu struct {
 	factory    *inWindowMenuFactory
 	titleItem  *menuItem
-	items      []*menuItem
-	updater    func(Menu)
 	popupPanel *menuPanel
+	updater    func(Menu)
+	items      []*menuItem
 }
 
 func (m *menu) Factory() MenuFactory {
@@ -171,7 +174,7 @@ func (m *menu) insertItem(atIndex int, mi *menuItem) {
 func (m *menu) RemoveItem(index int) {
 	if index >= 0 && index < len(m.items) {
 		m.items[index].menu = nil
-		m.items = slice.ZeroedDelete(m.items, index, index+1)
+		m.items = slices.Delete(m.items, index, index+1)
 	}
 }
 
@@ -271,8 +274,8 @@ func (m *menu) newPanel(forBar bool) *menuPanel {
 		content.AddChild(child)
 		if !forBar {
 			child.SetLayoutData(&FlexLayoutData{
-				HAlign: FillAlignment,
-				VAlign: MiddleAlignment,
+				HAlign: align.Fill,
+				VAlign: align.Middle,
 				HGrab:  true,
 			})
 		}
@@ -321,9 +324,9 @@ func (m *menu) newPanel(forBar bool) *menuPanel {
 			}
 			m.doExitEnter(old)
 			return true
-		case KeyReturn, KeyNumPadEnter:
+		case KeyReturn, KeyNumPadEnter, KeySpace:
 			if m.popupPanel.itemIndex >= 0 && m.popupPanel.itemIndex < len(p.menu.items) {
-				m.items[m.popupPanel.itemIndex].mouseDown(Point{}, 0, 0, 0) // params are unused
+				m.items[m.popupPanel.itemIndex].click()
 				return true
 			}
 		case KeyEscape, KeyLeft:
@@ -343,10 +346,10 @@ func (m *menu) newPanel(forBar bool) *menuPanel {
 	content.SetLayout(lay)
 	content.Pack()
 	s := NewScrollPanel()
-	s.SetContent(content, FollowBehavior, FillBehavior)
+	s.SetContent(content, behavior.Follow, behavior.Fill)
 	s.SetLayoutData(&FlexLayoutData{
-		HAlign: FillAlignment,
-		VAlign: FillAlignment,
+		HAlign: align.Fill,
+		VAlign: align.Fill,
 		HGrab:  true,
 		VGrab:  true,
 	})
@@ -395,7 +398,7 @@ func (m *menu) postLostFocus(w *Window) {
 func (m *menu) preMouseDown(w *Window, where Point) bool {
 	if w.root.menuBar != nil {
 		for _, one := range w.root.openMenuPanels {
-			if one.FrameRect().ContainsPoint(where) {
+			if where.In(one.FrameRect()) {
 				m.closeMenuStackStoppingAt(w, one.menu)
 				return false
 			}

@@ -1,4 +1,4 @@
-// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -11,6 +11,9 @@ package unison
 
 import (
 	"fmt"
+
+	"github.com/richardwilkes/unison/enums/paintstyle"
+	"github.com/richardwilkes/unison/enums/tilemode"
 )
 
 var _ Ink = &Gradient{}
@@ -29,11 +32,11 @@ func (s Stop) String() string {
 // These will be be used to set a relative starting and ending position for the gradient. If StartRadius and EndRadius
 // are both greater than 0, then the gradient will be a radial one instead of a linear one.
 type Gradient struct {
+	Stops       []Stop
 	Start       Point
 	StartRadius float32
 	End         Point
 	EndRadius   float32
-	Stops       []Stop
 }
 
 // NewHorizontalEvenlySpacedGradient creates a new gradient with the specified colors evenly spread across the whole
@@ -83,7 +86,7 @@ func NewEvenlySpacedGradient(start, end Point, startRadius, endRadius float32, c
 }
 
 // Paint returns a Paint for this Gradient.
-func (g *Gradient) Paint(_ *Canvas, rect Rect, style PaintStyle) *Paint {
+func (g *Gradient) Paint(_ *Canvas, rect Rect, style paintstyle.Enum) *Paint {
 	paint := NewPaint()
 	paint.SetStyle(style)
 	paint.SetColor(Black)
@@ -103,11 +106,10 @@ func (g *Gradient) Paint(_ *Canvas, rect Rect, style PaintStyle) *Paint {
 	}
 	var shader *Shader
 	if g.StartRadius > 0 && g.EndRadius > 0 {
-		shader = New2PtConicalGradientShader(start, end, g.StartRadius, g.EndRadius, colors, colorPos, TileModeClamp,
+		shader = New2PtConicalGradientShader(start, end, g.StartRadius, g.EndRadius, colors, colorPos, tilemode.Clamp,
 			NewIdentityMatrix())
 	} else {
-		shader = NewLinearGradientShader(start, end, colors, colorPos, TileModeClamp,
-			NewIdentityMatrix())
+		shader = NewLinearGradientShader(start, end, colors, colorPos, tilemode.Clamp, NewIdentityMatrix())
 	}
 	paint.SetShader(shader)
 	return paint

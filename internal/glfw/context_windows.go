@@ -7,13 +7,13 @@ package glfw
 
 import (
 	"fmt"
+	"github.com/ddkwork/golibrary/mylog"
 	"math"
 	"regexp"
 	"strconv"
 	"strings"
 	"unsafe"
 
-	"github.com/ddkwork/golibrary/mylog"
 	"github.com/ebitengine/purego"
 )
 
@@ -231,31 +231,6 @@ func chooseFBConfig(desired *fbconfig, alternatives []*fbconfig) *fbconfig {
 	return closest
 }
 
-func GetIntegerv(window *Window) uint32 {
-	//const (
-	//	GL_EXTENSIONS     = 0x1F03
-	//	GL_NUM_EXTENSIONS = 0x821D
-	//)
-
-	//if !_glfw.initialized {
-	//	panic("GLFW not initialized")
-	//}
-
-	//ptr, err := _glfw.contextSlot.get()
-	//if err != nil {
-	//	panic(err)
-	//}
-	//window := (*Window)(unsafe.Pointer(ptr))
-	if window.context.major >= 3 {
-		glGetIntegerv := window.context.getProcAddress("glGetIntegerv")
-		var count uint32
-		const FRAMEBUFFER_BINDING = 0x8CA6
-		purego.SyscallN(glGetIntegerv, FRAMEBUFFER_BINDING, uintptr(unsafe.Pointer(&count)))
-		return count
-	}
-	panic("glGetIntegerv not supported")
-}
-
 func (w *Window) refreshContextAttribs(ctxconfig *ctxconfig) (ferr error) {
 	const (
 		GL_COLOR_BUFFER_BIT                    = 0x00004000
@@ -274,15 +249,29 @@ func (w *Window) refreshContextAttribs(ctxconfig *ctxconfig) (ferr error) {
 		GL_RESET_NOTIFICATION_STRATEGY_ARB     = 0x8256
 		GL_VERSION                             = 0x1F02
 	)
+
 	w.context.source = ctxconfig.source
 	w.context.client = OpenGLAPI
-	p1 := mylog.Check2(_glfw.contextSlot.get())
+
+	p1, err := _glfw.contextSlot.get()
+	if err != nil {
+		return err
+	}
 	previous := (*Window)(unsafe.Pointer(p1))
 	defer func() {
-		mylog.Check(previous.MakeContextCurrent())
+		err := previous.MakeContextCurrent()
+		if ferr == nil {
+			ferr = err
+		}
 	}()
-	mylog.Check(w.MakeContextCurrent())
-	p2 := mylog.Check2(_glfw.contextSlot.get())
+	if err := w.MakeContextCurrent(); err != nil {
+		return err
+	}
+
+	p2, err := _glfw.contextSlot.get()
+	if err != nil {
+		return err
+	}
 	if (*Window)(unsafe.Pointer(p2)) != w {
 		return nil
 	}
@@ -306,8 +295,7 @@ func (w *Window) refreshContextAttribs(ctxconfig *ctxconfig) (ferr error) {
 	for _, prefix := range []string{
 		"OpenGL ES-CM ",
 		"OpenGL ES-CL ",
-		"OpenGL ES ",
-	} {
+		"OpenGL ES "} {
 		if strings.HasPrefix(version, prefix) {
 			version = version[len(prefix):]
 			w.context.client = OpenGLESAPI
@@ -341,6 +329,7 @@ func (w *Window) refreshContextAttribs(ctxconfig *ctxconfig) (ferr error) {
 			return fmt.Errorf("glfw: requested OpenGL ES version %d.%d, got version %d.%d: %w", ctxconfig.major, ctxconfig.minor, w.context.major, w.context.minor, VersionUnavailable)
 		}
 	}
+
 	if w.context.major >= 3 {
 		// OpenGL 3.0+ uses a different function for extension string retrieval
 		// We cache it here instead of in glfwExtensionSupported mostly to alert
@@ -351,19 +340,24 @@ func (w *Window) refreshContextAttribs(ctxconfig *ctxconfig) (ferr error) {
 			return fmt.Errorf("glfw: entry point retrieval is broken: %w", PlatformError)
 		}
 	}
+
 	if w.context.client == OpenGLAPI {
 		// Read back context flags (OpenGL 3.0 and above)
 		if w.context.major >= 3 {
 			var flags int32
-			purego.SyscallN(getIntegerv, GL_CONTEXT_FLAGS, uintptr(unsafe.Pointer(&flags)))
+			_, _, _ = purego.SyscallN(getIntegerv, GL_CONTEXT_FLAGS, uintptr(unsafe.Pointer(&flags)))
+
 			if flags&GL_CONTEXT_FLAG_FORWARD_COMPATIBLE_BIT != 0 {
 				w.context.forward = true
 			}
+
 			if flags&GL_CONTEXT_FLAG_DEBUG_BIT != 0 {
 				w.context.debug = true
 			} else {
-				ok := mylog.Check2(ExtensionSupported("GL_ARB_debug_output"))
-
+				ok, err := ExtensionSupported("GL_ARB_debug_output")
+				if err != nil {
+					return err
+				}
 				if ok && ctxconfig.debug {
 					// HACK: This is a workaround for older drivers (pre KHR_debug)
 					//       not setting the debug bit in the context flags for
@@ -371,6 +365,7 @@ func (w *Window) refreshContextAttribs(ctxconfig *ctxconfig) (ferr error) {
 					w.context.debug = true
 				}
 			}
+
 			if flags&GL_CONTEXT_FLAG_NO_ERROR_BIT_KHR != 0 {
 				w.context.noerror = true
 			}
@@ -379,14 +374,17 @@ func (w *Window) refreshContextAttribs(ctxconfig *ctxconfig) (ferr error) {
 		// Read back OpenGL context profile (OpenGL 3.2 and above)
 		if w.context.major >= 4 || (w.context.major == 3 && w.context.minor >= 2) {
 			var mask int32
-			purego.SyscallN(getIntegerv, GL_CONTEXT_PROFILE_MASK, uintptr(unsafe.Pointer(&mask)))
+			_, _, _ = purego.SyscallN(getIntegerv, GL_CONTEXT_PROFILE_MASK, uintptr(unsafe.Pointer(&mask)))
+
 			if mask&GL_CONTEXT_COMPATIBILITY_PROFILE_BIT != 0 {
 				w.context.profile = OpenGLCompatProfile
 			} else if mask&GL_CONTEXT_CORE_PROFILE_BIT != 0 {
 				w.context.profile = OpenGLCoreProfile
 			} else {
-				ok := mylog.Check2(ExtensionSupported("GL_ARB_compatibility"))
-
+				ok, err := ExtensionSupported("GL_ARB_compatibility")
+				if err != nil {
+					return err
+				}
 				if ok {
 					// HACK: This is a workaround for the compatibility profile bit
 					//       not being set in the context flags if an OpenGL 3.2+
@@ -398,11 +396,17 @@ func (w *Window) refreshContextAttribs(ctxconfig *ctxconfig) (ferr error) {
 		}
 
 		// Read back robustness strategy
-		if mylog.Check2(ExtensionSupported("GL_ARB_robustness")) {
+		ok, err := ExtensionSupported("GL_ARB_robustness")
+		if err != nil {
+			return err
+		}
+		if ok {
 			// NOTE: We avoid using the context flags for detection, as they are
 			//       only present from 3.0 while the extension applies from 1.1
+
 			var strategy int32
-			purego.SyscallN(getIntegerv, GL_RESET_NOTIFICATION_STRATEGY_ARB, uintptr(unsafe.Pointer(&strategy)))
+			_, _, _ = purego.SyscallN(getIntegerv, GL_RESET_NOTIFICATION_STRATEGY_ARB, uintptr(unsafe.Pointer(&strategy)))
+
 			if strategy == GL_LOSE_CONTEXT_ON_RESET_ARB {
 				w.context.robustness = LoseContextOnReset
 			} else if strategy == GL_NO_RESET_NOTIFICATION_ARB {
@@ -411,11 +415,17 @@ func (w *Window) refreshContextAttribs(ctxconfig *ctxconfig) (ferr error) {
 		}
 	} else {
 		// Read back robustness strategy
-		if mylog.Check2(ExtensionSupported("GL_EXT_robustness")) {
+		ok, err := ExtensionSupported("GL_EXT_robustness")
+		if err != nil {
+			return err
+		}
+		if ok {
 			// NOTE: The values of these constants match those of the OpenGL ARB
 			//       one, so we can reuse them here
+
 			var strategy int32
 			_, _, _ = purego.SyscallN(getIntegerv, GL_RESET_NOTIFICATION_STRATEGY_ARB, uintptr(unsafe.Pointer(&strategy)))
+
 			if strategy == GL_LOSE_CONTEXT_ON_RESET_ARB {
 				w.context.robustness = LoseContextOnReset
 			} else if strategy == GL_NO_RESET_NOTIFICATION_ARB {
@@ -423,9 +433,15 @@ func (w *Window) refreshContextAttribs(ctxconfig *ctxconfig) (ferr error) {
 			}
 		}
 	}
-	if mylog.Check2(ExtensionSupported("GL_KHR_context_flush_control")) {
+
+	ok, err := ExtensionSupported("GL_KHR_context_flush_control")
+	if err != nil {
+		return err
+	}
+	if ok {
 		var behavior int32
 		_, _, _ = purego.SyscallN(getIntegerv, GL_CONTEXT_RELEASE_BEHAVIOR, uintptr(unsafe.Pointer(&behavior)))
+
 		if behavior == GL_NONE {
 			w.context.release = ReleaseBehaviorNone
 		} else if behavior == GL_CONTEXT_RELEASE_BEHAVIOR_FLUSH {
@@ -436,10 +452,14 @@ func (w *Window) refreshContextAttribs(ctxconfig *ctxconfig) (ferr error) {
 	// Clearing the front buffer to black to avoid garbage pixels left over from
 	// previous uses of our bit of VRAM
 	glClear := w.context.getProcAddress("glClear")
-	purego.SyscallN(glClear, GL_COLOR_BUFFER_BIT)
+	_, _, _ = purego.SyscallN(glClear, GL_COLOR_BUFFER_BIT)
+
 	if w.doublebuffer {
-		mylog.Check(w.context.swapBuffers(w))
+		if err := w.context.swapBuffers(w); err != nil {
+			return err
+		}
 	}
+
 	return nil
 }
 
@@ -447,27 +467,41 @@ func (w *Window) MakeContextCurrent() error {
 	if !_glfw.initialized {
 		return NotInitialized
 	}
-	ptr := mylog.Check2(_glfw.contextSlot.get())
+
+	ptr, err := _glfw.contextSlot.get()
+	if err != nil {
+		return err
+	}
 	previous := (*Window)(unsafe.Pointer(ptr))
+
 	if w != nil && w.context.client == NoAPI {
 		return fmt.Errorf("glfw: cannot make current with a window that has no OpenGL or OpenGL ES context: %w", NoWindowContext)
 	}
+
 	if previous != nil {
 		if w == nil || w.context.source != previous.context.source {
-			mylog.Check(previous.context.makeCurrent(nil))
+			if err := previous.context.makeCurrent(nil); err != nil {
+				return err
+			}
 		}
 	}
+
 	if w != nil {
-		mylog.Check(w.context.makeCurrent(w))
+		if err := w.context.makeCurrent(w); err != nil {
+			return err
+		}
 	}
 	return nil
 }
 
 func GetCurrentContext() (*Window, error) {
 	if !_glfw.initialized {
-		return nil, NotInitialized
+		mylog.Check(NotInitialized.Error())
 	}
-	ptr := mylog.Check2(_glfw.contextSlot.get())
+	ptr, err := _glfw.contextSlot.get()
+	if err != nil {
+		return nil, err
+	}
 	return (*Window)(unsafe.Pointer(ptr)), nil
 }
 
@@ -475,10 +509,14 @@ func (w *Window) SwapBuffers() error {
 	if !_glfw.initialized {
 		return NotInitialized
 	}
+
 	if w.context.client == NoAPI {
 		return fmt.Errorf("glfw: cannot swap buffers of a window that has no OpenGL or OpenGL ES context: %w", NoWindowContext)
 	}
-	mylog.Check(w.context.swapBuffers(w))
+
+	if err := w.context.swapBuffers(w); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -486,12 +524,19 @@ func SwapInterval(interval int) error {
 	if !_glfw.initialized {
 		return NotInitialized
 	}
-	ptr := mylog.Check2(_glfw.contextSlot.get())
+
+	ptr, err := _glfw.contextSlot.get()
+	if err != nil {
+		return err
+	}
 	window := (*Window)(unsafe.Pointer(ptr))
 	if window == nil {
 		return fmt.Errorf("glfw: cannot set swap interval without a current OpenGL or OpenGL ES context %w", NoCurrentContext)
 	}
-	mylog.Check(window.context.swapInterval(interval))
+
+	if err := window.context.swapInterval(interval); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -500,16 +545,23 @@ func ExtensionSupported(extension string) (bool, error) {
 		GL_EXTENSIONS     = 0x1F03
 		GL_NUM_EXTENSIONS = 0x821D
 	)
+
 	if !_glfw.initialized {
 		return false, NotInitialized
 	}
-	ptr := mylog.Check2(_glfw.contextSlot.get())
+
+	ptr, err := _glfw.contextSlot.get()
+	if err != nil {
+		return false, err
+	}
 	window := (*Window)(unsafe.Pointer(ptr))
 	if window == nil {
 		return false, fmt.Errorf("glfw: cannot query extension without a current OpenGL or OpenGL ES context %w", NoCurrentContext)
 	}
+
 	if window.context.major >= 3 {
 		// Check if extension is in the modern OpenGL extensions string list
+
 		glGetIntegerv := window.context.getProcAddress("glGetIntegerv")
 		var count int32
 		_, _, _ = purego.SyscallN(glGetIntegerv, GL_NUM_EXTENSIONS, uintptr(unsafe.Pointer(&count)))
@@ -528,6 +580,7 @@ func ExtensionSupported(extension string) (bool, error) {
 		}
 	} else {
 		// Check if extension is in the old style OpenGL extensions string
+
 		glGetString := window.context.getProcAddress("glGetString")
 		r, _, _ := purego.SyscallN(glGetString, GL_EXTENSIONS)
 		if r == 0 {
@@ -541,6 +594,7 @@ func ExtensionSupported(extension string) (bool, error) {
 			}
 		}
 	}
+
 	// Check if extension is in the platform-specific string
 	return window.context.extensionSupported(extension), nil
 }
@@ -556,11 +610,13 @@ func bytePtrToString(p *byte) string {
 	if *p == 0 {
 		return ""
 	}
+
 	// Find NUL terminator.
 	n := 0
 	for ptr := unsafe.Pointer(p); *(*byte)(ptr) != 0; n++ {
 		ptr = unsafe.Add(ptr, 1)
 	}
+
 	// unsafe.String(p, n) is available as of Go 1.20.
 	return string(unsafe.Slice(p, n))
 }

@@ -1,4 +1,4 @@
-// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -11,6 +11,7 @@ package unison
 
 import (
 	"github.com/richardwilkes/toolbox/xmath"
+	"github.com/richardwilkes/unison/enums/align"
 )
 
 var _ Layout = &FlexLayout{}
@@ -22,8 +23,8 @@ type FlexLayout struct {
 	Columns      int
 	HSpacing     float32
 	VSpacing     float32
-	HAlign       Alignment
-	VAlign       Alignment
+	HAlign       align.Enum
+	VAlign       align.Enum
 	EqualColumns bool
 }
 
@@ -41,8 +42,8 @@ type FlexLayoutData struct {
 	MinSize      Size
 	HSpan        int
 	VSpan        int
-	HAlign       Alignment
-	VAlign       Alignment
+	HAlign       align.Enum
+	VAlign       align.Enum
 	HGrab        bool
 	VGrab        bool
 }
@@ -50,16 +51,13 @@ type FlexLayoutData struct {
 // LayoutSizes implements the Layout interface.
 func (f *FlexLayout) LayoutSizes(target *Panel, hint Size) (minSize, prefSize, maxSize Size) {
 	f.sizingCache = make(map[*Panel]map[Size]*flexSizingCacheData)
-	var insets Insets
+	var insets Size
 	if b := target.Border(); b != nil {
-		insets = b.Insets()
-		hint.SubtractInsets(insets).Max(Size{})
+		insets = b.Insets().Size()
+		hint = hint.Sub(insets).Max(Size{})
 	}
-	minSize = f.layout(target, Point{}, hint, false, true)
-	prefSize = f.layout(target, Point{}, hint, false, false)
-	minSize.AddInsets(insets)
-	prefSize.AddInsets(insets)
-	return minSize, prefSize, MaxSize(prefSize)
+	prefSize = f.layout(target, Point{}, hint, false, false).Add(insets)
+	return f.layout(target, Point{}, hint, false, true).Add(insets), prefSize, MaxSize(prefSize)
 }
 
 // PerformLayout implements the Layout interface.
@@ -69,9 +67,7 @@ func (f *FlexLayout) PerformLayout(target *Panel) {
 	if b := target.Border(); b != nil {
 		insets = b.Insets()
 	}
-	hint := target.ContentRect(true).Size
-	hint.SubtractInsets(insets)
-	f.layout(target, Point{X: insets.Left, Y: insets.Top}, hint, true, false)
+	f.layout(target, Point{X: insets.Left, Y: insets.Top}, target.ContentRect(true).Size.Sub(insets.Size()), true, false)
 }
 
 func (f *FlexLayout) layout(target *Panel, location Point, hint Size, move, useMinimumSize bool) Size {
@@ -99,16 +95,16 @@ func (f *FlexLayout) layout(target *Panel, location Point, hint Size, move, useM
 			}
 			if move {
 				if totalSize.Width < hint.Width {
-					if f.HAlign == MiddleAlignment {
+					if f.HAlign == align.Middle {
 						location.X += xmath.Round((hint.Width - totalSize.Width) / 2)
-					} else if f.HAlign == EndAlignment {
+					} else if f.HAlign == align.End {
 						location.X += hint.Width - totalSize.Width
 					}
 				}
 				if totalSize.Height < hint.Height {
-					if f.VAlign == MiddleAlignment {
+					if f.VAlign == align.Middle {
 						location.Y += xmath.Round((hint.Height - totalSize.Height) / 2)
-					} else if f.VAlign == EndAlignment {
+					} else if f.VAlign == align.End {
 						location.Y += hint.Height - totalSize.Height
 					}
 				}
@@ -151,7 +147,7 @@ func getDataFromTarget(target *Panel) *FlexLayoutData {
 	data := &FlexLayoutData{
 		HSpan:  1,
 		VSpan:  1,
-		VAlign: MiddleAlignment,
+		VAlign: align.Middle,
 	}
 	target.layoutData = data
 	return data
@@ -440,7 +436,7 @@ func (f *FlexLayout) wrap(width float32, grid [][]*Panel, widths []float32, useM
 							currentWidth += widths[j-k]
 						}
 						currentWidth += float32(hSpan-1) * f.HSpacing
-						if currentWidth != data.cacheSize.Width && data.HAlign == FillAlignment || data.cacheSize.Width > currentWidth {
+						if currentWidth != data.cacheSize.Width && data.HAlign == align.Fill || data.cacheSize.Width > currentWidth {
 							hint := Size{Width: max(data.minCacheSize.Width, currentWidth)}
 							data.computeCacheSize(f.sizingCacheData(grid[i][j], hint), hint, useMinimumSize)
 							minimumHeight := data.MinSize.Height
@@ -621,11 +617,11 @@ func (f *FlexLayout) positionChildren(location Point, grid [][]*Panel, widths, h
 				childX := gridX
 				childWidth := min(data.cacheSize.Width, cellWidth)
 				switch data.HAlign {
-				case MiddleAlignment:
+				case align.Middle:
 					childX += max(0, (cellWidth-childWidth)/2)
-				case EndAlignment:
+				case align.End:
 					childX += max(0, cellWidth-childWidth)
-				case FillAlignment:
+				case align.Fill:
 					childWidth = cellWidth
 				default:
 				}
@@ -633,11 +629,11 @@ func (f *FlexLayout) positionChildren(location Point, grid [][]*Panel, widths, h
 				childY := gridY
 				childHeight := min(data.cacheSize.Height, cellHeight)
 				switch data.VAlign {
-				case MiddleAlignment:
+				case align.Middle:
 					childY += max(0, (cellHeight-childHeight)/2)
-				case EndAlignment:
+				case align.End:
 					childY += max(0, cellHeight-childHeight)
-				case FillAlignment:
+				case align.Fill:
 					childHeight = cellHeight
 				default:
 				}

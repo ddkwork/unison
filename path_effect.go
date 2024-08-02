@@ -1,4 +1,4 @@
-// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -12,26 +12,9 @@ package unison
 import (
 	"runtime"
 
+	"github.com/richardwilkes/unison/enums/patheffect"
+	"github.com/richardwilkes/unison/enums/trimmode"
 	"github.com/richardwilkes/unison/internal/skia"
-)
-
-// PathEffect1DStyle holds the 1D path effect.
-type PathEffect1DStyle byte
-
-// Possible values for PathEffect1DStyle.
-const (
-	TranslatePathEffect PathEffect1DStyle = iota
-	RotatePathEffect
-	MorphPathEffect
-)
-
-// TrimMode holds the type of trim.
-type TrimMode byte
-
-// Possible values for TrimMode.
-const (
-	NormalTrim TrimMode = iota
-	InvertedTrim
 )
 
 // PathEffect affects the geometry of a drawing primitive before it is transformed by the canvas' matrix and drawn.
@@ -80,18 +63,18 @@ func NewCornerPathEffect(radius float32) *PathEffect {
 }
 
 // New1dPathPathEffect creates a new 1D path PathEffect.
-func New1dPathPathEffect(path *Path, advance, phase float32, style PathEffect1DStyle) *PathEffect {
+func New1dPathPathEffect(path *Path, advance, phase float32, style patheffect.Enum) *PathEffect {
 	return newPathEffect(skia.PathEffectCreate1dPath(path.path, advance, phase, skia.PathEffect1DStyle(style)))
 }
 
 // New2dLinePathEffect creates a new 2D line PathEffect.
-func New2dLinePathEffect(width float32, matrix *Matrix) *PathEffect {
-	return newPathEffect(skia.PathEffectCreate2dLine(width, skia.Matrix2DtoMatrix(matrix)))
+func New2dLinePathEffect(width float32, matrix Matrix) *PathEffect {
+	return newPathEffect(skia.PathEffectCreate2dLine(width, matrix))
 }
 
 // New2dPathEffect creates a new 2D PathEffect.
-func New2dPathEffect(matrix *Matrix, path *Path) *PathEffect {
-	return newPathEffect(skia.PathEffectCreate2dPath(skia.Matrix2DtoMatrix(matrix), path.path))
+func New2dPathEffect(matrix Matrix, path *Path) *PathEffect {
+	return newPathEffect(skia.PathEffectCreate2dPath(matrix, path.path))
 }
 
 // NewDashPathEffect creates a new dash PathEffect.
@@ -100,7 +83,7 @@ func NewDashPathEffect(intervals []float32, phase float32) *PathEffect {
 }
 
 // NewTrimPathEffect creates a new trim PathEffect.
-func NewTrimPathEffect(start, stop float32, mode TrimMode) *PathEffect {
+func NewTrimPathEffect(start, stop float32, mode trimmode.Enum) *PathEffect {
 	return newPathEffect(skia.PathEffectCreateTrim(start, stop, skia.TrimMode(mode)))
 }
 

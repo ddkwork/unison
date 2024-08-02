@@ -1,4 +1,4 @@
-// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -9,10 +9,12 @@
 
 package unison
 
+import "github.com/richardwilkes/unison/enums/paintstyle"
+
 // DefaultSeparatorTheme holds the default SeparatorTheme values for Separators. Modifying this data will not alter
 // existing Separators, but will alter any Separators created in the future.
 var DefaultSeparatorTheme = SeparatorTheme{
-	LineInk:  DividerColor,
+	LineInk:  ThemeSurfaceEdge,
 	Vertical: false,
 }
 
@@ -24,8 +26,8 @@ type SeparatorTheme struct {
 
 // Separator provides a simple vertical or horizontal separator line.
 type Separator struct {
-	Panel
 	SeparatorTheme
+	Panel
 }
 
 // NewSeparator creates a new separator line.
@@ -63,10 +65,10 @@ func (s *Separator) DefaultSizes(hint Size) (minSize, prefSize, maxSize Size) {
 		maxSize.Height = 1
 	}
 	if border := s.Border(); border != nil {
-		insets := border.Insets()
-		minSize.AddInsets(insets)
-		prefSize.AddInsets(insets)
-		maxSize.AddInsets(insets)
+		insets := border.Insets().Size()
+		minSize = minSize.Add(insets)
+		prefSize = prefSize.Add(insets)
+		maxSize = maxSize.Add(insets)
 	}
 	return minSize, prefSize, maxSize
 }
@@ -83,5 +85,5 @@ func (s *Separator) DefaultDraw(canvas *Canvas, _ Rect) {
 		rect.Y += (rect.Height - 1) / 2
 		rect.Height = 1
 	}
-	canvas.DrawRect(rect, s.LineInk.Paint(canvas, rect, Fill))
+	canvas.DrawRect(rect, s.LineInk.Paint(canvas, rect, paintstyle.Fill))
 }

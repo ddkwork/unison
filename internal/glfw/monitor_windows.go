@@ -6,9 +6,8 @@
 package glfw
 
 import (
-	"sort"
-
 	"github.com/ddkwork/golibrary/mylog"
+	"sort"
 )
 
 func abs(x int) uint {
@@ -40,8 +39,10 @@ func (v *VidMode) equals(other *VidMode) bool {
 
 func (m *Monitor) refreshVideoModes() error {
 	m.modes = m.modes[:0]
-	modes := mylog.Check2(m.platformAppendVideoModes(m.modes))
-
+	modes, err := m.platformAppendVideoModes(m.modes)
+	if err != nil {
+		return err
+	}
 	sort.Slice(modes, func(i, j int) bool {
 		a := modes[i]
 		b := modes[j]
@@ -78,10 +79,14 @@ func inputMonitor(monitor *Monitor, action PeripheralEvent, placement int) error
 	case Disconnected:
 		for _, window := range _glfw.windows {
 			if window.monitor == monitor {
-				width, height := (window.platformGetWindowSize())
-				mylog.Check(window.platformSetWindowMonitor(nil, 0, 0, width, height, 0))
-				xoff, yoff, _, _ := (window.platformGetWindowFrameSize())
-				mylog.Check(window.platformSetWindowPos(xoff, yoff))
+				width, height := window.platformGetWindowSize()
+				if err := window.platformSetWindowMonitor(nil, 0, 0, width, height, 0); err != nil {
+					return err
+				}
+				xoff, yoff, _, _ := window.platformGetWindowFrameSize()
+				if err := window.platformSetWindowPos(xoff, yoff); err != nil {
+					return err
+				}
 			}
 		}
 		for i, m := range _glfw.monitors {
@@ -106,7 +111,10 @@ func (m *Monitor) inputMonitorWindow(window *Window) {
 }
 
 func (m *Monitor) chooseVideoMode(desired *VidMode) (*VidMode, error) {
-	mylog.Check(m.refreshVideoModes())
+	if err := m.refreshVideoModes(); err != nil {
+		return nil, err
+	}
+
 	// math.MaxUint was added at Go 1.17. See https://github.com/golang/go/issues/28538
 	const (
 		intSize = 32 << (^uint(0) >> 63)
@@ -179,35 +187,35 @@ func splitBPP(bpp int) (red, green, blue int) {
 
 func GetMonitors() []*Monitor {
 	if !_glfw.initialized {
-		mylog.Check("GLFW not initialized")
+		mylog.Check(NotInitialized.Error())
 	}
 	return _glfw.monitors
 }
 
 func GetPrimaryMonitor() *Monitor {
 	if !_glfw.initialized {
-		mylog.Check("GLFW not initialized")
+		mylog.Check(NotInitialized.Error())
 	}
 	if len(_glfw.monitors) == 0 {
-		mylog.Check(len(_glfw.monitors) == 0)
+		return nil
 	}
 	return _glfw.monitors[0]
 }
 
 func (m *Monitor) GetPos() (xpos, ypos int) {
 	if !_glfw.initialized {
-		mylog.Check("GLFW not initialized")
+		mylog.Check(NotInitialized.Error())
 	}
 	xpos, ypos, ok := m.platformGetMonitorPos()
 	if !ok {
-		mylog.Check("GLFW not initialized")
+		return 0, 0
 	}
 	return xpos, ypos
 }
 
 func (m *Monitor) GetWorkarea() (xpos, ypos, width, height int) {
 	if !_glfw.initialized {
-		mylog.Check("GLFW not initialized")
+		mylog.Check(NotInitialized.Error())
 	}
 	xpos, ypos, width, height = m.platformGetMonitorWorkarea()
 	return
@@ -217,15 +225,15 @@ func (m *Monitor) GetWorkarea() (xpos, ypos, width, height int) {
 
 func (m *Monitor) GetContentScale() (xscale, yscale float32) {
 	if !_glfw.initialized {
-		mylog.Check("GLFW not initialized")
+		mylog.Check(NotInitialized.Error())
 	}
-	xscale, yscale = (m.platformGetMonitorContentScale())
+	xscale, yscale = m.platformGetMonitorContentScale()
 	return
 }
 
 func (m *Monitor) GetName() string {
 	if !_glfw.initialized {
-		mylog.Check("GLFW not initialized")
+		mylog.Check(NotInitialized.Error())
 	}
 	return m.name
 }
@@ -235,7 +243,7 @@ func (m *Monitor) GetName() string {
 
 func SetMonitorCallback(cbfun MonitorCallback) (MonitorCallback, error) {
 	if !_glfw.initialized {
-		return nil, NotInitialized
+		mylog.Check(NotInitialized.Error())
 	}
 	old := _glfw.callbacks.monitor
 	_glfw.callbacks.monitor = cbfun
@@ -244,14 +252,14 @@ func SetMonitorCallback(cbfun MonitorCallback) (MonitorCallback, error) {
 
 func (m *Monitor) GetVideoModes() ([]*VidMode, error) {
 	if !_glfw.initialized {
-		return nil, NotInitialized
+		mylog.Check(NotInitialized.Error())
 	}
 	return m.modes, nil
 }
 
 func (m *Monitor) GetVideoMode() *VidMode {
 	if !_glfw.initialized {
-		mylog.Check("GLFW not initialized")
+		mylog.Check(NotInitialized.Error())
 	}
 	return m.platformGetVideoMode()
 }

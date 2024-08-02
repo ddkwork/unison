@@ -1,4 +1,4 @@
-// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -11,6 +11,8 @@ package unison
 
 import (
 	"math"
+
+	"github.com/richardwilkes/unison/enums/align"
 )
 
 var _ Layout = &FlowLayout{}
@@ -184,20 +186,20 @@ func (f *FlowLayout) PerformLayout(target *Panel) {
 
 func (f *FlowLayout) applyRects(children []*Panel, rects []Rect, maxHeight float32) {
 	for i, child := range children {
-		vAlign, ok := child.LayoutData().(Alignment)
+		vAlign, ok := child.LayoutData().(align.Enum)
 		if !ok {
-			vAlign = StartAlignment
+			vAlign = align.Start
 		}
 		switch vAlign {
-		case MiddleAlignment:
+		case align.Middle:
 			if rects[i].Height < maxHeight {
 				rects[i].Y += (maxHeight - rects[i].Height) / 2
 			}
-		case EndAlignment:
+		case align.End:
 			rects[i].Y += maxHeight - rects[i].Height
-		case FillAlignment:
+		case align.Fill:
 			rects[i].Height = maxHeight
-		default: // same as StartAlignment
+		default: // same as align.Start
 		}
 		child.SetFrameRect(rects[i])
 	}

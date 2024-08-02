@@ -1,4 +1,4 @@
-// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -12,8 +12,11 @@ package unison
 import (
 	"fmt"
 
-	"github.com/ddkwork/golibrary/mylog"
+	"github.com/richardwilkes/toolbox"
 	"github.com/richardwilkes/toolbox/xmath"
+	"github.com/richardwilkes/unison/enums/check"
+	"github.com/richardwilkes/unison/enums/paintstyle"
+	"github.com/richardwilkes/unison/enums/side"
 )
 
 var _ MenuItem = &menuItem{}
@@ -43,9 +46,9 @@ type MenuItem interface {
 	// SubMenu returns the menu item's sub-menu, if any.
 	SubMenu() Menu
 	// CheckState returns the menu item's current check state.
-	CheckState() CheckState
+	CheckState() check.Enum
 	// SetCheckState sets the menu item's check state.
-	SetCheckState(s CheckState)
+	SetCheckState(s check.Enum)
 }
 
 // DefaultMenuItemTheme holds the default MenuItemTheme values for menu items. Modifying this data will not alter
@@ -53,10 +56,10 @@ type MenuItem interface {
 var DefaultMenuItemTheme = MenuItemTheme{
 	TitleFont:         SystemFont,
 	KeyFont:           KeyboardFont,
-	BackgroundColor:   BackgroundColor,
-	OnBackgroundColor: OnBackgroundColor,
-	SelectionColor:    SelectionColor,
-	OnSelectionColor:  OnSelectionColor,
+	BackgroundColor:   ThemeSurface,
+	OnBackgroundColor: ThemeOnSurface,
+	SelectionColor:    ThemeFocus,
+	OnSelectionColor:  ThemeOnFocus,
 	ItemBorder:        NewEmptyBorder(StdInsets()),
 	SeparatorBorder:   NewEmptyBorder(NewVerticalInsets(4)),
 	KeyGap:            16,
@@ -77,17 +80,15 @@ type MenuItemTheme struct {
 
 type menuItem struct {
 	factory     *inWindowMenuFactory
-	id          int
-	title       string
-	titleCache  TextCache
-	keyCache    TextCache
 	menu        *menu
 	subMenu     *menu
 	panel       *Panel
 	validator   func(MenuItem) bool
 	handler     func(MenuItem)
+	title       string
+	id          int
 	keyBinding  KeyBinding
-	state       CheckState
+	state       check.Enum
 	isSeparator bool
 	enabled     bool
 	over        bool
@@ -149,11 +150,11 @@ func (mi *menuItem) SubMenu() Menu {
 	return mi.subMenu
 }
 
-func (mi *menuItem) CheckState() CheckState {
+func (mi *menuItem) CheckState() check.Enum {
 	return mi.state
 }
 
-func (mi *menuItem) SetCheckState(s CheckState) {
+func (mi *menuItem) SetCheckState(s check.Enum) {
 	mi.state = s
 }
 
@@ -183,10 +184,18 @@ func (mi *menuItem) mouseDown(_ Point, _, _ int, _ Modifiers) bool {
 }
 
 func (mi *menuItem) mouseUp(where Point, _ int, _ Modifiers) bool {
-	if mi.subMenu == nil && mi.panel.ContentRect(true).ContainsPoint(where) {
+	if mi.subMenu == nil && where.In(mi.panel.ContentRect(true)) {
 		mi.execute()
 	}
 	return true
+}
+
+func (mi *menuItem) click() {
+	if mi.subMenu != nil {
+		mi.showSubMenu()
+	} else {
+		mi.execute()
+	}
 }
 
 func (mi *menuItem) showSubMenu() {
@@ -249,22 +258,26 @@ func (mi *menuItem) sizer(hint Size) (minSize, prefSize, maxSize Size) {
 	if mi.isSeparator {
 		prefSize.Height = 1
 	} else {
-		prefSize = LabelSize(mi.titleCache.Text(mi.Title(), DefaultMenuItemTheme.TitleFont), nil, LeftSide, 0)
+		prefSize, _ = LabelContentSizes(NewText(mi.Title(), &TextDecoration{
+			Font:            DefaultMenuItemTheme.TitleFont,
+			OnBackgroundInk: DefaultMenuItemTheme.OnBackgroundColor,
+		}), nil, DefaultMenuItemTheme.TitleFont, side.Left, 0)
 		if !mi.isRoot() {
 			prefSize.Width += (DefaultMenuItemTheme.KeyFont.Baseline() + 2) * 2
 		}
 		if !mi.keyBinding.KeyCode.ShouldOmit() {
 			keys := mi.keyBinding.String()
 			if keys != "" {
-				size := mi.keyCache.Text(keys, DefaultMenuItemTheme.KeyFont).Extents()
+				size := NewText(keys, &TextDecoration{
+					Font:            DefaultMenuItemTheme.KeyFont,
+					OnBackgroundInk: DefaultMenuItemTheme.OnBackgroundColor,
+				}).Extents()
 				prefSize.Width += DefaultMenuItemTheme.KeyGap + size.Width
 				prefSize.Height = max(prefSize.Height, size.Height)
 			}
 		}
 	}
-	prefSize.AddInsets(DefaultMenuItemTheme.ItemBorder.Insets())
-	prefSize.GrowToInteger()
-	prefSize.ConstrainForHint(hint)
+	prefSize = prefSize.Add(DefaultMenuItemTheme.ItemBorder.Insets().Size()).Ceil().ConstrainForHint(hint)
 	return prefSize, prefSize, prefSize
 }
 
@@ -277,7 +290,7 @@ func (mi *menuItem) paint(gc *Canvas, rect Rect) {
 		fg = DefaultMenuItemTheme.OnSelectionColor
 		bg = DefaultMenuItemTheme.SelectionColor
 	}
-	gc.DrawRect(rect, bg.Paint(gc, rect, Fill))
+	gc.DrawRect(rect, bg.Paint(gc, rect, paintstyle.Fill))
 
 	if !mi.enabled {
 		fg = &ColorFilteredInk{
@@ -287,10 +300,12 @@ func (mi *menuItem) paint(gc *Canvas, rect Rect) {
 	}
 	rect = mi.panel.ContentRect(false)
 	if mi.isSeparator {
-		gc.DrawLine(rect.X, rect.Y, rect.Right(), rect.Y, fg.Paint(gc, rect, Fill))
+		gc.DrawLine(rect.X, rect.Y, rect.Right(), rect.Y, fg.Paint(gc, rect, paintstyle.Fill))
 	} else {
-		t := mi.titleCache.Text(mi.Title(), DefaultMenuItemTheme.TitleFont)
-		t.AdjustDecorations(func(decoration *TextDecoration) { decoration.Foreground = fg })
+		t := NewText(mi.Title(), &TextDecoration{
+			Font:            DefaultMenuItemTheme.TitleFont,
+			OnBackgroundInk: fg,
+		})
 		size := t.Extents()
 		baseline := DefaultMenuItemTheme.KeyFont.Baseline()
 		var shifted float32
@@ -299,24 +314,26 @@ func (mi *menuItem) paint(gc *Canvas, rect Rect) {
 		}
 		t.Draw(gc, rect.X+shifted, xmath.Floor(rect.Y+(rect.Height-size.Height)/2)+t.Baseline())
 		if mi.subMenu == nil {
-			if !mi.isRoot() && mi.state != OffCheckState {
+			if !mi.isRoot() && mi.state != check.Off {
 				r := rect
 				r.Width = baseline
 				r.Height = baseline
 				r.Y += (rect.Height - baseline) / 2
-				drawable := &DrawableSVG{Size: NewSize(baseline, baseline)}
-				if mi.state == OnCheckState {
+				drawable := &DrawableSVG{Size: Size{Width: baseline, Height: baseline}}
+				if mi.state == check.On {
 					drawable.SVG = CheckmarkSVG
 				} else {
 					drawable.SVG = DashSVG
 				}
-				drawable.DrawInRect(gc, r, nil, fg.Paint(gc, r, Fill))
+				drawable.DrawInRect(gc, r, nil, fg.Paint(gc, r, paintstyle.Fill))
 			}
 			if !mi.keyBinding.KeyCode.ShouldOmit() {
 				keys := mi.keyBinding.String()
 				if keys != "" {
-					t = mi.keyCache.Text(keys, DefaultMenuItemTheme.KeyFont)
-					t.AdjustDecorations(func(decoration *TextDecoration) { decoration.Foreground = fg })
+					t = NewText(keys, &TextDecoration{
+						Font:            DefaultMenuItemTheme.KeyFont,
+						OnBackgroundInk: fg,
+					})
 					size = t.Extents()
 					t.Draw(gc, xmath.Floor(rect.Right()-size.Width),
 						xmath.Floor(rect.Y+(rect.Height-size.Height)/2)+t.Baseline())
@@ -327,9 +344,9 @@ func (mi *menuItem) paint(gc *Canvas, rect Rect) {
 			rect.Width = baseline
 			drawable := &DrawableSVG{
 				SVG:  ChevronRightSVG,
-				Size: NewSize(baseline, baseline),
+				Size: Size{Width: baseline, Height: baseline},
 			}
-			drawable.DrawInRect(gc, rect, nil, fg.Paint(gc, rect, Fill))
+			drawable.DrawInRect(gc, rect, nil, fg.Paint(gc, rect, paintstyle.Fill))
 		}
 	}
 }
@@ -348,7 +365,7 @@ func (mi *menuItem) validate() {
 		mi.enabled = true
 		if mi.validator != nil {
 			mi.enabled = false
-			mylog.Call(func() { mi.enabled = mi.validator(mi) })
+			toolbox.Call(func() { mi.enabled = mi.validator(mi) })
 		}
 	}
 }
@@ -359,6 +376,6 @@ func (mi *menuItem) execute() {
 	}
 	mi.menu.closeMenuStack()
 	if mi.enabled && mi.handler != nil {
-		mylog.Call(func() { mi.handler(mi) })
+		toolbox.Call(func() { mi.handler(mi) })
 	}
 }

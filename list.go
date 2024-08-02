@@ -1,4 +1,4 @@
-// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -10,24 +10,25 @@
 package unison
 
 import (
+	"slices"
 	"time"
 
-	"github.com/ddkwork/golibrary/mylog"
-	"github.com/richardwilkes/toolbox/collection/slice"
+	"github.com/richardwilkes/toolbox"
 	"github.com/richardwilkes/toolbox/xmath"
+	"github.com/richardwilkes/unison/enums/paintstyle"
 )
 
 // DefaultListTheme holds the default ListTheme values for Lists. Modifying this data will not alter existing Lists,
 // but will alter any Lists created in the future.
 var DefaultListTheme = ListTheme{
-	BackgroundInk:          ContentColor,
-	OnBackgroundInk:        OnContentColor,
-	BandingInk:             BandingColor,
-	OnBandingInk:           OnBandingColor,
-	SelectionInk:           SelectionColor,
-	OnSelectionInk:         OnSelectionColor,
-	InactiveSelectionInk:   InactiveSelectionColor,
-	OnInactiveSelectionInk: OnInactiveSelectionColor,
+	BackgroundInk:          ThemeBelowSurface,
+	OnBackgroundInk:        ThemeOnBelowSurface,
+	BandingInk:             ThemeSurface,
+	OnBandingInk:           ThemeOnSurface,
+	SelectionInk:           ThemeFocus,
+	OnSelectionInk:         ThemeOnFocus,
+	InactiveSelectionInk:   ThemeDeepFocus,
+	OnInactiveSelectionInk: ThemeOnDeepFocus,
 	FlashAnimationTime:     100 * time.Millisecond,
 }
 
@@ -46,21 +47,21 @@ type ListTheme struct {
 
 // List provides a control that allows the user to select from a list of items, represented by cells.
 type List[T any] struct {
-	Panel
-	ListTheme
 	DoubleClickCallback  func()
 	NewSelectionCallback func()
 	Factory              CellFactory
-	rows                 []T
 	Selection            *xmath.BitSet
 	savedSelection       *xmath.BitSet
-	anchor               int
-	lastSel              int
-	allowMultiple        bool
-	pressed              bool
-	suppressSelection    bool
-	suppressScroll       bool
-	wasDragged           bool
+	rows                 []T
+	ListTheme
+	Panel
+	anchor            int
+	lastSel           int
+	allowMultiple     bool
+	pressed           bool
+	suppressSelection bool
+	suppressScroll    bool
+	wasDragged        bool
 }
 
 // NewList creates a new List control.
@@ -113,6 +114,17 @@ func (l *List[T]) Insert(index int, values ...T) {
 		index = len(l.rows)
 	}
 	l.rows = append(l.rows[:index], append(values, l.rows[index:]...)...)
+	i := l.Selection.LastSet() + 1
+	if i >= index {
+		delta := len(values)
+		for {
+			if i = l.Selection.PreviousSet(i); i == -1 || i < index {
+				break
+			}
+			l.Selection.Set(i + delta)
+			l.Selection.Clear(i)
+		}
+	}
 	l.MarkForLayoutAndRedraw()
 }
 
@@ -124,10 +136,26 @@ func (l *List[T]) Replace(index int, value T) {
 	}
 }
 
+// Clear the list of items.
+func (l *List[T]) Clear() {
+	l.rows = nil
+	l.Selection.Reset()
+	l.anchor = -1
+	l.MarkForLayoutAndRedraw()
+}
+
 // Remove the item at the specified index.
 func (l *List[T]) Remove(index int) {
 	if index >= 0 && index < len(l.rows) {
-		l.rows = slice.ZeroedDelete(l.rows, index, index+1)
+		l.rows = slices.Delete(l.rows, index, index+1)
+		l.Selection.Clear(index)
+		for {
+			if index = l.Selection.NextSet(index); index == -1 {
+				break
+			}
+			l.Selection.Set(index - 1)
+			l.Selection.Clear(index)
+		}
 		l.MarkForLayoutAndRedraw()
 	}
 }
@@ -135,7 +163,16 @@ func (l *List[T]) Remove(index int) {
 // RemoveRange removes the items at the specified index range, inclusive.
 func (l *List[T]) RemoveRange(from, to int) {
 	if from >= 0 && from < len(l.rows) && to >= from && to < len(l.rows) {
-		l.rows = slice.ZeroedDelete(l.rows, from, to+1)
+		l.rows = slices.Delete(l.rows, from, to+1)
+		l.Selection.ClearRange(from, to)
+		delta := to - from + 1
+		for {
+			if from = l.Selection.NextSet(from); from == -1 {
+				break
+			}
+			l.Selection.Set(from - delta)
+			l.Selection.Clear(from)
+		}
 		l.MarkForLayoutAndRedraw()
 	}
 }
@@ -151,8 +188,8 @@ func (l *List[T]) DefaultSizes(hint Size) (minSize, prefSize, maxSize Size) {
 	for row := range l.rows {
 		cell := l.cell(row)
 		_, cPref, cMax := cell.Sizes(size)
-		cPref.GrowToInteger()
-		cMax.GrowToInteger()
+		cPref = cPref.Ceil()
+		cMax = cMax.Ceil()
 		if prefSize.Width < cPref.Width {
 			prefSize.Width = cPref.Width
 		}
@@ -176,13 +213,12 @@ func (l *List[T]) DefaultSizes(hint Size) (minSize, prefSize, maxSize Size) {
 		}
 	}
 	if border := l.Border(); border != nil {
-		insets := border.Insets()
-		prefSize.AddInsets(insets)
-		maxSize.AddInsets(insets)
+		insets := border.Insets().Size()
+		prefSize = prefSize.Add(insets)
+		maxSize = maxSize.Add(insets)
 	}
-	prefSize.GrowToInteger()
-	maxSize.GrowToInteger()
-	return prefSize, prefSize, maxSize
+	prefSize = prefSize.Ceil()
+	return prefSize, prefSize, maxSize.Ceil()
 }
 
 // DefaultFocusGained provides the default focus gained handling.
@@ -199,7 +235,7 @@ func (l *List[T]) cellParams(row int) (fg, bg Ink, selected, focused bool) {
 		selected = l.Selection.State(row)
 	}
 	switch {
-	case selected && focused:
+	case selected && focused && l.Enabled():
 		fg = l.OnSelectionInk
 		bg = l.SelectionInk
 	case selected:
@@ -220,35 +256,52 @@ func (l *List[T]) cell(row int) *Panel {
 	return l.Factory.CreateCell(l, l.rows[row], row, fg, bg, selected, focused).AsPanel()
 }
 
+// RowRect returns the rectangle for the specified row.
+func (l *List[T]) RowRect(row int) Rect {
+	if row < 0 || row >= len(l.rows) {
+		return Rect{}
+	}
+	rect := l.ContentRect(false)
+	cellHeight := xmath.Ceil(l.Factory.CellHeight())
+	if cellHeight < 1 {
+		_, pref, _ := l.cell(row).Sizes(Size{})
+		cellHeight = pref.Ceil().Height
+	}
+	rect.Y += cellHeight * float32(row)
+	rect.Height = cellHeight
+	return rect
+}
+
 // DefaultDraw provides the default drawing.
 func (l *List[T]) DefaultDraw(canvas *Canvas, dirty Rect) {
+	rect := l.ContentRect(false)
+	intersect := rect.Intersect(dirty)
+	canvas.DrawRect(intersect, l.BackgroundInk.Paint(canvas, intersect, paintstyle.Fill))
 	row, y := l.rowAt(dirty.Y)
 	if row >= 0 {
 		cellHeight := xmath.Ceil(l.Factory.CellHeight())
 		count := len(l.rows)
 		yMax := dirty.Y + dirty.Height
-		rect := l.ContentRect(false)
 		for row < count && y < yMax {
 			fg, bg, selected, focused := l.cellParams(row)
 			cell := l.Factory.CreateCell(l, l.rows[row], row, fg, bg, selected, focused).AsPanel()
 			cellRect := Rect{Point: Point{X: rect.X, Y: y}, Size: Size{Width: rect.Width, Height: cellHeight}}
 			if cellHeight < 1 {
 				_, pref, _ := cell.Sizes(Size{})
-				pref.GrowToInteger()
-				cellRect.Height = pref.Height
+				cellRect.Height = pref.Ceil().Height
 			}
 			cell.SetFrameRect(cellRect)
 			y += cellRect.Height
-			r := NewRect(rect.X, cellRect.Y, rect.Width, cellRect.Height)
-			canvas.DrawRect(r, bg.Paint(canvas, r, Fill))
+			r := Rect{Point: Point{X: rect.X, Y: cellRect.Y}, Size: Size{Width: rect.Width, Height: cellRect.Height}}
+			canvas.DrawRect(r, bg.Paint(canvas, r, paintstyle.Fill))
 			canvas.Save()
 			tl := cellRect.Point
-			dirty.Point.Subtract(tl)
+			dirty.Point = dirty.Point.Sub(tl)
 			canvas.Translate(cellRect.X, cellRect.Y)
 			cellRect.X = 0
 			cellRect.Y = 0
 			cell.Draw(canvas, dirty)
-			dirty.Point.Add(tl)
+			dirty.Point = dirty.Point.Add(tl)
 			canvas.Restore()
 			row++
 		}
@@ -292,7 +345,7 @@ func (l *List[T]) DefaultMouseDown(where Point, _, clickCount int, mod Modifiers
 			l.lastSel = index
 			l.anchor = index
 			if clickCount == 2 && l.DoubleClickCallback != nil {
-				mylog.Call(l.DoubleClickCallback)
+				toolbox.Call(l.DoubleClickCallback)
 				return true
 			}
 		default:
@@ -351,7 +404,7 @@ func (l *List[T]) DefaultMouseUp(_ Point, _ int, _ Modifiers) bool {
 			l.MarkForRedraw()
 		}
 		if l.NewSelectionCallback != nil && !l.Selection.Equal(l.savedSelection) {
-			mylog.Call(l.NewSelectionCallback)
+			toolbox.Call(l.NewSelectionCallback)
 		}
 	}
 	l.savedSelection = nil
@@ -362,7 +415,7 @@ func (l *List[T]) DefaultMouseUp(_ Point, _ int, _ Modifiers) bool {
 func (l *List[T]) DefaultKeyDown(keyCode KeyCode, mod Modifiers, _ bool) bool {
 	if IsControlAction(keyCode, mod) {
 		if l.DoubleClickCallback != nil && l.Selection.Count() > 0 {
-			mylog.Call(l.DoubleClickCallback)
+			toolbox.Call(l.DoubleClickCallback)
 		}
 		return true
 	}
@@ -379,7 +432,7 @@ func (l *List[T]) DefaultKeyDown(keyCode KeyCode, mod Modifiers, _ bool) bool {
 		}
 		l.Select(mod.ShiftDown(), first)
 		if l.NewSelectionCallback != nil {
-			mylog.Call(l.NewSelectionCallback)
+			toolbox.Call(l.NewSelectionCallback)
 		}
 	case KeyDown:
 		last := l.Selection.LastSet() + 1
@@ -388,17 +441,17 @@ func (l *List[T]) DefaultKeyDown(keyCode KeyCode, mod Modifiers, _ bool) bool {
 		}
 		l.Select(mod.ShiftDown(), last)
 		if l.NewSelectionCallback != nil {
-			mylog.Call(l.NewSelectionCallback)
+			toolbox.Call(l.NewSelectionCallback)
 		}
 	case KeyHome:
 		l.Select(mod.ShiftDown(), 0)
 		if l.NewSelectionCallback != nil {
-			mylog.Call(l.NewSelectionCallback)
+			toolbox.Call(l.NewSelectionCallback)
 		}
 	case KeyEnd:
 		l.Select(mod.ShiftDown(), len(l.rows)-1)
 		if l.NewSelectionCallback != nil {
-			mylog.Call(l.NewSelectionCallback)
+			toolbox.Call(l.NewSelectionCallback)
 		}
 	default:
 		return false
@@ -492,7 +545,7 @@ func (l *List[T]) rowAt(y float32) (row int, top float32) {
 	if cellHeight < 1 {
 		for row < count {
 			_, pref, _ := l.cell(row).Sizes(Size{})
-			pref.GrowToInteger()
+			pref = pref.Ceil()
 			if top+pref.Height >= y {
 				break
 			}

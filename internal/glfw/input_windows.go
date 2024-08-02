@@ -7,9 +7,8 @@ package glfw
 
 import (
 	"fmt"
-	"math"
-
 	"github.com/ddkwork/golibrary/mylog"
+	"math"
 )
 
 const stick = 3
@@ -118,14 +117,16 @@ func (w *Window) inputDrop(paths []string) {
 }
 
 func (w *Window) centerCursorInContentArea() error {
-	width, height := (w.platformGetWindowSize())
-	mylog.Check(w.platformSetCursorPos(float64(width/2), float64(height/2)))
+	width, height := w.platformGetWindowSize()
+	if err := w.platformSetCursorPos(float64(width/2), float64(height/2)); err != nil {
+		return err
+	}
 	return nil
 }
 
 func (w *Window) GetInputMode(mode InputMode) (int, error) {
 	if !_glfw.initialized {
-		return 0, NotInitialized
+		mylog.Check(NotInitialized.Error())
 	}
 	switch mode {
 	case CursorMode:
@@ -153,15 +154,20 @@ func (w *Window) SetInputMode(mode InputMode, value int) error {
 		if value != CursorNormal && value != CursorHidden && value != CursorDisabled {
 			return fmt.Errorf("glfw: invalid cursor mode 0x%08X: %w", value, InvalidEnum)
 		}
+
 		if w.cursorMode == value {
 			return nil
 		}
 		w.cursorMode = value
-		x, y := (w.platformGetCursorPos())
+		x, y := w.platformGetCursorPos()
 		w.virtualCursorPosX = x
 		w.virtualCursorPosY = y
-		mylog.Check(w.platformSetCursorMode(value))
+
+		if err := w.platformSetCursorMode(value); err != nil {
+			return err
+		}
 		return nil
+
 	case StickyKeysMode:
 		if w.stickyKeys == intToBool(value) {
 			return nil
@@ -204,11 +210,15 @@ func (w *Window) SetInputMode(mode InputMode, value int) error {
 		if !platformRawMouseMotionSupported() {
 			return fmt.Errorf("glfw: raw mouse motion is not supported on this system: %w", PlatformError)
 		}
+
 		if w.rawMouseMotion == intToBool(value) {
 			return nil
 		}
+
 		w.rawMouseMotion = intToBool(value)
-		mylog.Check(w.platformSetRawMouseMotion(intToBool(value)))
+		if err := w.platformSetRawMouseMotion(intToBool(value)); err != nil {
+			return err
+		}
 		return nil
 
 	default:
@@ -225,7 +235,7 @@ func RawMouseMotionSupported() (bool, error) {
 
 func GetKeyName(key Key, scancode int) (string, error) {
 	if !_glfw.initialized {
-		return "", NotInitialized
+		mylog.Check(NotInitialized.Error())
 	}
 
 	if key != KeyUnknown {
@@ -243,7 +253,7 @@ func GetKeyName(key Key, scancode int) (string, error) {
 
 func GetKeyScancode(key Key) (int, error) {
 	if !_glfw.initialized {
-		return 0, NotInitialized
+		mylog.Check(NotInitialized.Error())
 	}
 
 	if key < KeySpace || key > KeyLast {
@@ -255,7 +265,7 @@ func GetKeyScancode(key Key) (int, error) {
 
 func (w *Window) GetKey(key Key) (Action, error) {
 	if !_glfw.initialized {
-		return 0, NotInitialized
+		mylog.Check(NotInitialized.Error())
 	}
 
 	if key < KeySpace || key > KeyLast {
@@ -273,7 +283,7 @@ func (w *Window) GetKey(key Key) (Action, error) {
 
 func (w *Window) GetMouseButton(button MouseButton) (Action, error) {
 	if !_glfw.initialized {
-		return 0, NotInitialized
+		mylog.Check(NotInitialized.Error())
 	}
 
 	if button < MouseButton1 || button > MouseButtonLast {
@@ -291,7 +301,7 @@ func (w *Window) GetMouseButton(button MouseButton) (Action, error) {
 
 func (w *Window) GetCursorPos() (xpos, ypos float64) {
 	if !_glfw.initialized {
-		mylog.Check("NotInitialized")
+		mylog.Check(NotInitialized.Error())
 	}
 
 	if w.cursorMode == CursorDisabled {
@@ -327,8 +337,9 @@ func (w *Window) SetCursorPos(xpos, ypos float64) error {
 
 func CreateStandardCursor(shape StandardCursor) *Cursor {
 	if !_glfw.initialized {
-		mylog.Check("NotInitialized")
+		mylog.Check(NotInitialized.Error())
 	}
+
 	if shape != ArrowCursor &&
 		shape != IBeamCursor &&
 		shape != CrosshairCursor &&
@@ -339,11 +350,17 @@ func CreateStandardCursor(shape StandardCursor) *Cursor {
 		shape != ResizeNESWCursor &&
 		shape != ResizeAllCursor &&
 		shape != NotAllowedCursor {
-		return nil // , fmt.Errorf("glfw: invalid standard cursor 0x%08X: %w", shape, InvalidEnum)
+		return nil //, fmt.Errorf("glfw: invalid standard cursor 0x%08X: %w", shape, InvalidEnum)
 	}
+
 	cursor := &Cursor{}
 	_glfw.cursors = append(_glfw.cursors, cursor)
-	mylog.Check(cursor.platformCreateStandardCursor(shape))
+
+	if err := cursor.platformCreateStandardCursor(shape); err != nil {
+		_ = cursor.Destroy()
+		return nil
+	}
+
 	return cursor
 }
 
@@ -359,10 +376,16 @@ func (c *Cursor) Destroy() error {
 	// Make sure the cursor is not being used by any window
 	for _, window := range _glfw.windows {
 		if window.cursor == c {
-			mylog.Check(window.SetCursor(nil))
+			if err := window.SetCursor(nil); err != nil {
+				return err
+			}
 		}
 	}
-	mylog.Check(c.platformDestroyCursor())
+
+	if err := c.platformDestroyCursor(); err != nil {
+		return err
+	}
+
 	// Unlink cursor from global linked list
 	for i, cursor := range _glfw.cursors {
 		if cursor == c {
@@ -379,14 +402,18 @@ func (w *Window) SetCursor(cursor *Cursor) error {
 	if !_glfw.initialized {
 		return NotInitialized
 	}
+
 	w.cursor = cursor
-	mylog.Check(w.platformSetCursor(cursor))
+
+	if err := w.platformSetCursor(cursor); err != nil {
+		return err
+	}
 	return nil
 }
 
 func (w *Window) SetKeyCallback(cbfun KeyCallback) (KeyCallback, error) {
 	if !_glfw.initialized {
-		return nil, NotInitialized
+		mylog.Check(NotInitialized.Error())
 	}
 	old := w.callbacks.key
 	w.callbacks.key = cbfun
@@ -395,7 +422,7 @@ func (w *Window) SetKeyCallback(cbfun KeyCallback) (KeyCallback, error) {
 
 func (w *Window) SetCharCallback(cbfun CharCallback) (CharCallback, error) {
 	if !_glfw.initialized {
-		return nil, NotInitialized
+		mylog.Check(NotInitialized.Error())
 	}
 	old := w.callbacks.character
 	w.callbacks.character = cbfun
@@ -404,7 +431,7 @@ func (w *Window) SetCharCallback(cbfun CharCallback) (CharCallback, error) {
 
 func (w *Window) SetCharModsCallback(cbfun CharModsCallback) (CharModsCallback, error) {
 	if !_glfw.initialized {
-		return nil, NotInitialized
+		mylog.Check(NotInitialized.Error())
 	}
 	old := w.callbacks.charmods
 	w.callbacks.charmods = cbfun
@@ -413,7 +440,7 @@ func (w *Window) SetCharModsCallback(cbfun CharModsCallback) (CharModsCallback, 
 
 func (w *Window) SetMouseButtonCallback(cbfun MouseButtonCallback) (MouseButtonCallback, error) {
 	if !_glfw.initialized {
-		return nil, NotInitialized
+		mylog.Check(NotInitialized.Error())
 	}
 	old := w.callbacks.mouseButton
 	w.callbacks.mouseButton = cbfun
@@ -422,7 +449,7 @@ func (w *Window) SetMouseButtonCallback(cbfun MouseButtonCallback) (MouseButtonC
 
 func (w *Window) SetCursorPosCallback(cbfun CursorPosCallback) (CursorPosCallback, error) {
 	if !_glfw.initialized {
-		return nil, NotInitialized
+		mylog.Check(NotInitialized.Error())
 	}
 	old := w.callbacks.cursorPos
 	w.callbacks.cursorPos = cbfun
@@ -431,7 +458,7 @@ func (w *Window) SetCursorPosCallback(cbfun CursorPosCallback) (CursorPosCallbac
 
 func (w *Window) SetCursorEnterCallback(cbfun CursorEnterCallback) (CursorEnterCallback, error) {
 	if !_glfw.initialized {
-		return nil, NotInitialized
+		mylog.Check(NotInitialized.Error())
 	}
 	old := w.callbacks.cursorEnter
 	w.callbacks.cursorEnter = cbfun
@@ -440,7 +467,7 @@ func (w *Window) SetCursorEnterCallback(cbfun CursorEnterCallback) (CursorEnterC
 
 func (w *Window) SetScrollCallback(cbfun ScrollCallback) (ScrollCallback, error) {
 	if !_glfw.initialized {
-		return nil, NotInitialized
+		mylog.Check(NotInitialized.Error())
 	}
 	old := w.callbacks.scroll
 	w.callbacks.scroll = cbfun
@@ -449,7 +476,7 @@ func (w *Window) SetScrollCallback(cbfun ScrollCallback) (ScrollCallback, error)
 
 func (w *Window) SetDropCallback(cbfun DropCallback) (DropCallback, error) {
 	if !_glfw.initialized {
-		return nil, NotInitialized
+		mylog.Check(NotInitialized.Error())
 	}
 	old := w.callbacks.drop
 	w.callbacks.drop = cbfun
@@ -465,14 +492,7 @@ func (w *Window) SetClipboardString(str string) error {
 
 func GetClipboardString() string {
 	if !_glfw.initialized {
-		mylog.Check("NotInitialized")
+		mylog.Check(NotInitialized.Error())
 	}
 	return platformGetClipboardString()
-}
-
-func SetClipboardString(str string) error {
-	if !_glfw.initialized {
-		return NotInitialized
-	}
-	return platformSetClipboardString(str)
 }

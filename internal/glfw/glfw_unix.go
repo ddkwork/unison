@@ -14,8 +14,6 @@ import "C"
 import (
 	"errors"
 	"unsafe"
-
-	"github.com/ddkwork/golibrary/mylog"
 )
 
 // Version constants.
@@ -46,7 +44,7 @@ const (
 // This function may only be called from the main thread.
 func Init() error {
 	C.glfwInit()
-	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
+	if err := fetchErrorIgnoringPlatformError(); err != nil {
 		return err
 	}
 	return nil
@@ -64,7 +62,7 @@ func Init() error {
 // This function may only be called from the main thread.
 func Terminate() error {
 	C.glfwTerminate()
-	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
+	if err := fetchErrorIgnoringPlatformError(); err != nil {
 		return err
 	}
 	return nil
@@ -118,7 +116,7 @@ func GetVersionString() string {
 func GetClipboardString() (string, error) {
 	cs := C.glfwGetClipboardString(nil)
 	if cs == nil {
-		if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
+		if err := fetchErrorIgnoringPlatformError(); err != nil {
 			if errors.Is(err, FormatUnavailable) {
 				return "", nil
 			}

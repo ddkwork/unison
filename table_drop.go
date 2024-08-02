@@ -1,4 +1,4 @@
-// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -12,22 +12,23 @@ package unison
 import (
 	"slices"
 
-	"github.com/google/uuid"
+	"github.com/richardwilkes/toolbox/tid"
+	"github.com/richardwilkes/unison/enums/paintstyle"
 )
 
 // TableDrop provides default support for dropping data into a table. This should only be instantiated by a call to
 // Table.InstallDropSupport().
 type TableDrop[T TableRowConstraint[T], U any] struct {
 	Table                  *Table[T]
-	DragKey                string
-	TargetParent           T
-	TargetIndex            int
-	AllDragData            map[string]any
 	TableDragData          *TableDragData[T]
+	AllDragData            map[string]any
 	originalDrawOver       func(*Canvas, Rect)
 	shouldMoveDataCallback func(from, to *Table[T]) bool
 	willDropCallback       func(from, to *Table[T], move bool) *UndoEdit[U]
 	didDropCallback        func(undo *UndoEdit[U], from, to *Table[T], move bool)
+	TargetParent           T
+	DragKey                string
+	TargetIndex            int
 	top                    float32
 	left                   float32
 	inDragOver             bool
@@ -39,9 +40,8 @@ func (d *TableDrop[T, U]) DrawOverCallback(gc *Canvas, rect Rect) {
 		d.originalDrawOver(gc, rect)
 	}
 	if d.inDragOver {
-		r := d.Table.ContentRect(false)
-		r.Inset(NewUniformInsets(1))
-		paint := DropAreaColor.Paint(gc, r, Stroke)
+		r := d.Table.ContentRect(false).Inset(NewUniformInsets(1))
+		paint := ThemeWarning.Paint(gc, r, paintstyle.Stroke)
 		paint.SetStrokeWidth(2)
 		paint.SetColorFilter(Alpha30Filter())
 		gc.DrawRect(r, paint)
@@ -115,7 +115,7 @@ func (d *TableDrop[T, U]) DataDragOverCallback(where Point, data map[string]any)
 						children = d.TargetParent.Children()
 					}
 					for i, child := range children {
-						if child.UUID() == row.UUID() {
+						if child.ID() == row.ID() {
 							d.TargetIndex = i
 							break
 						}
@@ -234,9 +234,9 @@ func (d *TableDrop[T, U]) DataDragDropCallback(_ Point, data map[string]any) {
 		}
 
 		// Restore selection
-		selMap := make(map[uuid.UUID]bool, len(rows))
+		selMap := make(map[tid.TID]bool, len(rows))
 		for _, row := range rows {
-			selMap[row.UUID()] = true
+			selMap[row.ID()] = true
 		}
 		d.Table.SetSelectionMap(selMap)
 
@@ -255,11 +255,11 @@ func (d *TableDrop[T, U]) DataDragDropCallback(_ Point, data map[string]any) {
 	d.TableDragData = nil
 }
 
-func (d *TableDrop[T, U]) pruneRows(parent T, rows []T, movingSet map[uuid.UUID]bool) []T {
+func (d *TableDrop[T, U]) pruneRows(parent T, rows []T, movingSet map[tid.TID]bool) []T {
 	movingToThisParent := d.TargetParent == parent
 	list := make([]T, 0, len(rows))
 	for i, row := range rows {
-		if movingSet[row.UUID()] {
+		if movingSet[row.ID()] {
 			if movingToThisParent && d.TargetIndex >= i {
 				d.TargetIndex--
 			}
@@ -270,10 +270,10 @@ func (d *TableDrop[T, U]) pruneRows(parent T, rows []T, movingSet map[uuid.UUID]
 	return list
 }
 
-func makeRowSet[T TableRowConstraint[T]](rows []T) map[uuid.UUID]bool {
-	set := make(map[uuid.UUID]bool, len(rows))
+func makeRowSet[T TableRowConstraint[T]](rows []T) map[tid.TID]bool {
+	set := make(map[tid.TID]bool, len(rows))
 	for _, row := range rows {
-		set[row.UUID()] = true
+		set[row.ID()] = true
 	}
 	return set
 }

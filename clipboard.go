@@ -1,4 +1,4 @@
-// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -20,8 +20,8 @@ var GlobalClipboard = &Clipboard{}
 
 // ClipboardData holds a type and data pair.
 type ClipboardData struct {
-	Type string
 	Data any
+	Type string
 }
 
 // Clipboard provides access to the system clipboard as well as an internal, application-only, clipboard. Currently, due
@@ -30,8 +30,8 @@ type ClipboardData struct {
 // want to consider serializing and unserializing your data into bytes to pass it through the clipboard, to avoid
 // accidental mutations.
 type Clipboard struct {
-	lock sync.RWMutex
 	data map[string]any
+	lock sync.RWMutex
 }
 
 // GetText returns text from the current clipboard data. This reads from the system clipboard.

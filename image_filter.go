@@ -1,4 +1,4 @@
-// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -12,18 +12,9 @@ package unison
 import (
 	"runtime"
 
+	"github.com/richardwilkes/unison/enums/colorchannel"
+	"github.com/richardwilkes/unison/enums/tilemode"
 	"github.com/richardwilkes/unison/internal/skia"
-)
-
-// ColorChannel specifies a specific channel within an RGBA color.
-type ColorChannel byte
-
-// Possible values for ColorChannel.
-const (
-	RedChannel ColorChannel = iota
-	GreenChannel
-	BlueChannel
-	AlphaChannel
 )
 
 // ImageFilter performs a transformation on the image before drawing it.
@@ -70,7 +61,7 @@ func NewArithmeticImageFilter(k1, k2, k3, k4 float32, background, foreground *Im
 
 // NewBlurImageFilter returns a new blur image filter. input may be nil, in which case the source bitmap is used.
 // cropRect may be nil.
-func NewBlurImageFilter(sigmaX, sigmaY float32, tileMode TileMode, input *ImageFilter, cropRect *Rect) *ImageFilter {
+func NewBlurImageFilter(sigmaX, sigmaY float32, tileMode tilemode.Enum, input *ImageFilter, cropRect *Rect) *ImageFilter {
 	var in skia.ImageFilter
 	if input != nil {
 		in = input.filter
@@ -95,7 +86,7 @@ func NewComposeImageFilter(outer, inner *ImageFilter) *ImageFilter {
 
 // NewDisplacementImageFilter returns a new displacement image filter. displayment may be nil, in which case the source
 // bitmap will be used. cropRect may be nil.
-func NewDisplacementImageFilter(xChannelSelector, yChannelSelector ColorChannel, scale float32, displacement, color *ImageFilter, cropRect *Rect) *ImageFilter {
+func NewDisplacementImageFilter(xChannelSelector, yChannelSelector colorchannel.Enum, scale float32, displacement, color *ImageFilter, cropRect *Rect) *ImageFilter {
 	var dis skia.ImageFilter
 	if displacement != nil {
 		dis = displacement.filter
@@ -134,12 +125,13 @@ func NewImageSourceImageFilter(canvas *Canvas, img *Image, srcRect, dstRect Rect
 	} else {
 		image = ref.contextImg(canvas.surface)
 	}
-	return newImageFilter(skia.ImageFilterNewImageSource(image, &srcRect, &dstRect, sampling.skSamplingOptions()))
+	return newImageFilter(skia.ImageFilterNewImageSource(image, srcRect, dstRect,
+		sampling.skSamplingOptions()))
 }
 
 // NewImageSourceDefaultImageFilter returns a new image source image filter that uses the default quality and the full
 // image size. If canvas is not nil, a hardware-accellerated image will be used if possible.
-func NewImageSourceDefaultImageFilter(canvas *Canvas, img *Image) *ImageFilter {
+func NewImageSourceDefaultImageFilter(canvas *Canvas, img *Image, sampling *SamplingOptions) *ImageFilter {
 	var image skia.Image
 	ref := img.ref()
 	if canvas == nil {
@@ -147,17 +139,17 @@ func NewImageSourceDefaultImageFilter(canvas *Canvas, img *Image) *ImageFilter {
 	} else {
 		image = ref.contextImg(canvas.surface)
 	}
-	return newImageFilter(skia.ImageFilterNewImageSourceDefault(image))
+	return newImageFilter(skia.ImageFilterNewImageSourceDefault(image, sampling.skSamplingOptions()))
 }
 
 // NewMagnifierImageFilter returns a new magnifier image filter. input may be nil, in which case the source bitmap will
 // be used. cropRect may be nil.
-func NewMagnifierImageFilter(src Rect, inset float32, input *ImageFilter, cropRect *Rect) *ImageFilter {
+func NewMagnifierImageFilter(lensBounds Rect, zoomAmount, inset float32, sampling *SamplingOptions, input *ImageFilter, cropRect *Rect) *ImageFilter {
 	var in skia.ImageFilter
 	if input != nil {
 		in = input.filter
 	}
-	return newImageFilter(skia.ImageFilterNewMagnifier(&src, inset, in, cropRect))
+	return newImageFilter(skia.ImageFilterNewMagnifier(lensBounds, zoomAmount, inset, sampling.skSamplingOptions(), in, cropRect))
 }
 
 // NewMatrixConvolutionImageFilter returns a new matrix convolution image filter.
@@ -175,7 +167,7 @@ func NewMagnifierImageFilter(src Rect, inset float32, input *ImageFilter, cropRe
 // copied from the source image.
 // input: The input image filter, if nil the source bitmap is used instead.
 // cropRect: Rectangle to which the output processing will be limited. May be nil.
-func NewMatrixConvolutionImageFilter(width, height int, kernel []float32, gain, bias float32, offsetX, offsetY int, tileMode TileMode, convolveAlpha bool, input *ImageFilter, cropRect *Rect) *ImageFilter {
+func NewMatrixConvolutionImageFilter(width, height int, kernel []float32, gain, bias float32, offsetX, offsetY int, tileMode tilemode.Enum, convolveAlpha bool, input *ImageFilter, cropRect *Rect) *ImageFilter {
 	var in skia.ImageFilter
 	if input != nil {
 		in = input.filter
@@ -196,13 +188,12 @@ func NewMatrixConvolutionImageFilter(width, height int, kernel []float32, gain, 
 
 // NewMatrixTransformImageFilter returns a new matrix transform image filter. input may be nil, in which case the source
 // bitmap will be used.
-func NewMatrixTransformImageFilter(matrix *Matrix, sampling *SamplingOptions, input *ImageFilter) *ImageFilter {
+func NewMatrixTransformImageFilter(matrix Matrix, sampling *SamplingOptions, input *ImageFilter) *ImageFilter {
 	var in skia.ImageFilter
 	if input != nil {
 		in = input.filter
 	}
-	return newImageFilter(skia.ImageFilterNewMatrixTransform(skia.Matrix2DtoMatrix(matrix),
-		sampling.skSamplingOptions(), in))
+	return newImageFilter(skia.ImageFilterNewMatrixTransform(matrix, sampling.skSamplingOptions(), in))
 }
 
 // NewMergeImageFilter returns a new merge image filter. Each filter will draw their results in order with src-over
@@ -233,7 +224,7 @@ func NewTileImageFilter(src, dst Rect, input *ImageFilter) *ImageFilter {
 	if input != nil {
 		in = input.filter
 	}
-	return newImageFilter(skia.ImageFilterNewTile(&src, &dst, in))
+	return newImageFilter(skia.ImageFilterNewTile(src, dst, in))
 }
 
 // NewDilateImageFilter returns a new dilate image filter. input may be nil, in which case the source bitmap will be

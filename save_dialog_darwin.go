@@ -1,4 +1,4 @@
-// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -12,7 +12,6 @@ package unison
 import (
 	"net/url"
 
-	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/unison/internal/ns"
 )
@@ -27,8 +26,11 @@ func platformNewSaveDialog() SaveDialog {
 
 func (d *macSaveDialog) InitialDirectory() string {
 	urlStr := d.dialog.DirectoryURL().AbsoluteString()
-	u := mylog.Check2(url.Parse(urlStr))
-
+	u, err := url.Parse(urlStr)
+	if err != nil {
+		errs.Log(errs.NewWithCause("unable to parse directory URL", err), "url", urlStr)
+		return ""
+	}
 	return u.Path
 }
 
@@ -63,8 +65,11 @@ func (d *macSaveDialog) SetAllowedExtensions(types ...string) {
 
 func (d *macSaveDialog) Path() string {
 	urlStr := d.dialog.URL().AbsoluteString()
-	u := mylog.Check2(url.Parse(urlStr))
-
+	u, err := url.Parse(urlStr)
+	if err != nil {
+		errs.Log(errs.NewWithCause("unable to convert url to path", err), "url", urlStr)
+		return ""
+	}
 	return u.Path
 }
 

@@ -1,4 +1,4 @@
-// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -15,13 +15,17 @@ import (
 	"time"
 	"unicode"
 
+	"github.com/richardwilkes/toolbox"
 	"github.com/richardwilkes/toolbox/txt"
+	"github.com/richardwilkes/unison/enums/align"
+	"github.com/richardwilkes/unison/enums/paintstyle"
+	"github.com/richardwilkes/unison/enums/pathop"
 )
 
 type lineEndingType byte
 
 const (
-	noLineEnding = lineEndingType(iota)
+	noLineEnding lineEndingType = iota
 	hardLineEnding
 	softLineEnding
 )
@@ -30,64 +34,51 @@ const (
 // but will alter any Fields created in the future.
 var DefaultFieldTheme = FieldTheme{
 	Font:             FieldFont,
-	BackgroundInk:    ContentColor,
-	OnBackgroundInk:  OnContentColor,
-	EditableInk:      EditableColor,
-	OnEditableInk:    OnEditableColor,
-	SelectionInk:     SelectionColor,
-	OnSelectionInk:   OnSelectionColor,
-	ErrorInk:         ErrorColor,
-	OnErrorInk:       OnErrorColor,
-	FocusedBorder:    NewDefaultFieldBorder(true),
-	UnfocusedBorder:  NewDefaultFieldBorder(false),
+	BackgroundInk:    ThemeSurface,
+	OnBackgroundInk:  ThemeOnSurface,
+	EditableInk:      ThemeDeepBelowSurface,
+	OnEditableInk:    ThemeOnDeepBelowSurface,
+	SelectionInk:     ThemeFocus,
+	OnSelectionInk:   ThemeOnFocus,
+	ErrorInk:         ThemeError,
+	OnErrorInk:       ThemeOnError,
 	BlinkRate:        560 * time.Millisecond,
 	MinimumTextWidth: 10,
-	HAlign:           StartAlignment,
-}
-
-// NewDefaultFieldBorder creates the default border for a field.
-func NewDefaultFieldBorder(focused bool) Border {
-	adj := float32(1)
-	if focused {
-		adj = 0
-	}
-	return NewCompoundBorder(NewLineBorder(ControlEdgeColor, 0, NewUniformInsets(2-adj), false),
-		NewEmptyBorder(Insets{Top: 2 + adj, Left: 2 + adj, Bottom: 1 + adj, Right: 2 + adj}))
+	HAlign:           align.Start,
 }
 
 // FieldTheme holds theming data for a Field.
 type FieldTheme struct {
-	Font             Font
-	BackgroundInk    Ink
-	OnBackgroundInk  Ink
-	EditableInk      Ink
-	OnEditableInk    Ink
-	SelectionInk     Ink
-	OnSelectionInk   Ink
-	ErrorInk         Ink
-	OnErrorInk       Ink
-	FocusedBorder    Border
-	UnfocusedBorder  Border
-	BlinkRate        time.Duration
-	MinimumTextWidth float32
-	HAlign           Alignment
+	InitialClickSelectsAll func(*Field) bool
+	Font                   Font
+	BackgroundInk          Ink
+	OnBackgroundInk        Ink
+	EditableInk            Ink
+	OnEditableInk          Ink
+	SelectionInk           Ink
+	OnSelectionInk         Ink
+	ErrorInk               Ink
+	OnErrorInk             Ink
+	BlinkRate              time.Duration
+	MinimumTextWidth       float32
+	HAlign                 align.Enum
 }
 
 // Field provides a text input control.
 type Field struct {
-	Panel
+	ModifiedCallback func(before, after *FieldState)
+	ValidateCallback func() bool
+	runes            []rune
+	lines            []*Text
+	endsWithLineFeed []lineEndingType
+	Watermark        string
+	forceShowUntil   time.Time
 	FieldTheme
-	ModifiedCallback   func(before, after *FieldState)
-	ValidateCallback   func() bool
-	Watermark          string
+	Panel
 	undoID             int64
-	runes              []rune
-	lines              []*Text
-	endsWithLineFeed   []lineEndingType
 	selectionStart     int
 	selectionEnd       int
 	selectionAnchor    int
-	forceShowUntil     time.Time
 	scrollOffset       Point
 	linesBuiltFor      float32
 	ObscurementRune    rune
@@ -118,7 +109,6 @@ func NewField() *Field {
 		AutoScroll:    true,
 	}
 	f.Self = f
-	f.SetBorder(f.UnfocusedBorder)
 	f.SetFocusable(true)
 	f.SetSizer(f.DefaultSizes)
 	f.DrawCallback = f.DefaultDraw
@@ -134,6 +124,7 @@ func NewField() *Field {
 	f.InstallCmdHandlers(PasteItemID, func(_ any) bool { return f.CanPaste() }, func(_ any) { f.Paste() })
 	f.InstallCmdHandlers(DeleteItemID, func(_ any) bool { return f.CanDelete() }, func(_ any) { f.Delete() })
 	f.InstallCmdHandlers(SelectAllItemID, func(_ any) bool { return f.CanSelectAll() }, func(_ any) { f.SelectAll() })
+	InstallDefaultFieldBorder(f, f)
 	return f
 }
 
@@ -201,12 +192,11 @@ func (f *Field) DefaultSizes(hint Size) (minSize, prefSize, maxSize Size) {
 	}
 	prefSize.Width += 2 // Allow room for the cursor on either side of the text
 	minWidth := f.MinimumTextWidth + 2 + insets.Width()
-	prefSize.AddInsets(insets)
-	prefSize.GrowToInteger()
+	prefSize = prefSize.Add(insets.Size()).Ceil()
 	if hint.Width >= 1 && hint.Width < minWidth {
 		hint.Width = minWidth
 	}
-	prefSize.ConstrainForHint(hint)
+	prefSize = prefSize.ConstrainForHint(hint)
 	if hint.Width > 0 && prefSize.Width < hint.Width {
 		prefSize.Width = hint.Width
 	}
@@ -305,9 +295,9 @@ func (f *Field) DefaultDraw(canvas *Canvas, _ Rect) {
 		fg = f.OnBackgroundInk
 	}
 	rect := f.ContentRect(true)
-	canvas.DrawRect(rect, bg.Paint(canvas, rect, Fill))
+	canvas.DrawRect(rect, bg.Paint(canvas, rect, paintstyle.Fill))
 	rect = f.ContentRect(false)
-	canvas.ClipRect(rect, IntersectClipOp, false)
+	canvas.ClipRect(rect, pathop.Intersect, false)
 	f.prepareLines(rect.Width - 2)
 	ink := fg
 	if !enabled {
@@ -324,7 +314,7 @@ func (f *Field) DefaultDraw(canvas *Canvas, _ Rect) {
 		if f.Watermark != "" {
 			text := NewText(f.Watermark, &TextDecoration{
 				Font: f.Font,
-				Foreground: &ColorFilteredInk{
+				OnBackgroundInk: &ColorFilteredInk{
 					OriginalInk: ink,
 					ColorFilter: Alpha30Filter(),
 				},
@@ -336,7 +326,7 @@ func (f *Field) DefaultDraw(canvas *Canvas, _ Rect) {
 				rect.X = f.textLeftForWidth(0, rect) + f.scrollOffset.X - 0.5
 				rect.Width = 1
 				rect.Height = f.Font.LineHeight()
-				canvas.DrawRect(rect, fg.Paint(canvas, rect, Fill))
+				canvas.DrawRect(rect, fg.Paint(canvas, rect, paintstyle.Fill))
 			}
 			f.scheduleBlink()
 		}
@@ -355,8 +345,8 @@ func (f *Field) DefaultDraw(canvas *Canvas, _ Rect) {
 				selEnd := min(f.selectionEnd, end)
 				if selStart > start {
 					t := NewTextFromRunes(f.obscureIfNeeded(f.runes[start:selStart]), &TextDecoration{
-						Font:       f.Font,
-						Foreground: ink,
+						Font:            f.Font,
+						OnBackgroundInk: ink,
 					})
 					t.Draw(canvas, left, textBaseLine)
 					left += t.Width()
@@ -366,15 +356,15 @@ func (f *Field) DefaultDraw(canvas *Canvas, _ Rect) {
 					e--
 				}
 				t := NewTextFromRunes(f.obscureIfNeeded(f.runes[selStart:e]), &TextDecoration{
-					Font:       f.Font,
-					Foreground: f.OnSelectionInk,
+					Font:            f.Font,
+					OnBackgroundInk: f.OnSelectionInk,
 				})
 				right := left + t.Width()
 				selRect := Rect{
 					Point: Point{X: left, Y: textTop},
 					Size:  Size{Width: right - left, Height: textHeight},
 				}
-				canvas.DrawRect(selRect, f.SelectionInk.Paint(canvas, selRect, Fill))
+				canvas.DrawRect(selRect, f.SelectionInk.Paint(canvas, selRect, paintstyle.Fill))
 				t.Draw(canvas, left, textBaseLine)
 				if selEnd < end {
 					e = end
@@ -382,19 +372,21 @@ func (f *Field) DefaultDraw(canvas *Canvas, _ Rect) {
 						e--
 					}
 					NewTextFromRunes(f.obscureIfNeeded(f.runes[selEnd:e]), &TextDecoration{
-						Font:       f.Font,
-						Foreground: ink,
+						Font:            f.Font,
+						OnBackgroundInk: ink,
 					}).Draw(canvas, right, textBaseLine)
 				}
 			} else {
-				line.AdjustDecorations(func(decoration *TextDecoration) { decoration.Foreground = ink })
+				line.AdjustDecorations(func(decoration *TextDecoration) { decoration.OnBackgroundInk = ink })
 				line.Draw(canvas, textLeft+f.scrollOffset.X, textBaseLine)
 			}
 			if !hasSelectionRange && enabled && focused && f.selectionEnd >= start && (f.selectionEnd < end || (!f.multiLine && f.selectionEnd <= end)) {
 				if f.showCursor {
 					t := NewTextFromRunes(f.obscureIfNeeded(f.runes[start:f.selectionEnd]), &TextDecoration{Font: f.Font})
-					canvas.DrawRect(NewRect(textLeft+t.Width()+f.scrollOffset.X-0.5, textTop, 1, textHeight),
-						fg.Paint(canvas, rect, Fill))
+					canvas.DrawRect(Rect{
+						Point: Point{X: textLeft + t.Width() + f.scrollOffset.X - 0.5, Y: textTop},
+						Size:  Size{Width: 1, Height: textHeight},
+					}, fg.Paint(canvas, rect, paintstyle.Fill))
 				}
 				f.scheduleBlink()
 			}
@@ -431,7 +423,6 @@ func (f *Field) blink() {
 
 // DefaultFocusGained provides the default focus gained handling.
 func (f *Field) DefaultFocusGained() {
-	f.SetBorder(f.FocusedBorder)
 	if !f.NoSelectAllOnFocus && !f.HasSelectionRange() {
 		f.SelectAll()
 	}
@@ -443,13 +434,13 @@ func (f *Field) DefaultFocusGained() {
 // DefaultFocusLost provides the default focus lost handling.
 func (f *Field) DefaultFocusLost() {
 	f.undoID = NextUndoID()
-	f.SetBorder(f.UnfocusedBorder)
 	f.MarkForRedraw()
 }
 
 // DefaultMouseDown provides the default mouse down handling.
 func (f *Field) DefaultMouseDown(where Point, button, clickCount int, mod Modifiers) bool {
 	f.undoID = NextUndoID()
+	wasFocused := f.Focused()
 	f.RequestFocus()
 	if button == ButtonLeft {
 		f.extendByWord = false
@@ -461,22 +452,32 @@ func (f *Field) DefaultMouseDown(where Point, button, clickCount int, mod Modifi
 		case 3:
 			f.SelectAll()
 		default:
-			oldAnchor := f.selectionAnchor
-			f.selectionAnchor = f.ToSelectionIndex(where)
-			var start, end int
-			if mod.ShiftDown() {
-				if oldAnchor > f.selectionAnchor {
-					start = f.selectionAnchor
-					end = oldAnchor
+			selectAll := false
+			if !wasFocused {
+				if f.InitialClickSelectsAll != nil {
+					toolbox.Call(func() { selectAll = f.InitialClickSelectsAll(f) })
+				}
+			}
+			if selectAll {
+				f.setSelection(0, len(f.runes), f.ToSelectionIndex(where))
+			} else {
+				oldAnchor := f.selectionAnchor
+				f.selectionAnchor = f.ToSelectionIndex(where)
+				var start, end int
+				if mod.ShiftDown() {
+					if oldAnchor > f.selectionAnchor {
+						start = f.selectionAnchor
+						end = oldAnchor
+					} else {
+						start = oldAnchor
+						end = f.selectionAnchor
+					}
 				} else {
-					start = oldAnchor
+					start = f.selectionAnchor
 					end = f.selectionAnchor
 				}
-			} else {
-				start = f.selectionAnchor
-				end = f.selectionAnchor
+				f.setSelection(start, end, f.selectionAnchor)
 			}
-			f.setSelection(start, end, f.selectionAnchor)
 		}
 		return true
 	}
@@ -1038,7 +1039,7 @@ func (f *Field) SetSelectionToStart() {
 
 // SetSelectionToEnd moves the cursor to the end of the text and removes any range that may have been present.
 func (f *Field) SetSelectionToEnd() {
-	f.SetSelection(math.MaxInt64, math.MaxInt64)
+	f.SetSelection(math.MaxInt32, math.MaxInt32)
 }
 
 // SetSelectionTo moves the cursor to the specified index and removes any range that may have been present.
@@ -1091,7 +1092,7 @@ func (f *Field) ScrollSelectionIntoView() {
 		pos = f.selectionStart
 	}
 	pt := f.FromSelectionIndex(pos)
-	f.ScrollRectIntoView(NewRect(pt.X-1, pt.Y, 3, f.lineHeightAt(pt.Y)))
+	f.ScrollRectIntoView(Rect{Point: Point{X: pt.X - 1, Y: pt.Y}, Size: Size{Width: 3, Height: f.lineHeightAt(pt.Y)}})
 }
 
 // ScrollOffset returns the current autoscroll offset.
@@ -1191,9 +1192,9 @@ func (f *Field) textLeft(text *Text, bounds Rect) float32 {
 func (f *Field) textLeftForWidth(width float32, bounds Rect) float32 {
 	left := bounds.X
 	switch f.HAlign {
-	case MiddleAlignment:
+	case align.Middle:
 		left += (bounds.Width - width) / 2
-	case EndAlignment:
+	case align.End:
 		left += bounds.Width - width - 1 // Inset since we leave space for the cursor
 	default:
 		left++ // Inset since we leave space for the cursor
@@ -1226,13 +1227,13 @@ func (f *Field) FromSelectionIndex(index int) Point {
 			length++
 		}
 		if !f.multiLine || index < start+length {
-			return NewPoint(f.textLeft(line, rect)+line.PositionForRuneIndex(index-start)+f.scrollOffset.X, y)
+			return Point{X: f.textLeft(line, rect) + line.PositionForRuneIndex(index-start) + f.scrollOffset.X, Y: y}
 		}
 		lastHeight = max(line.Height(), f.Font.LineHeight())
 		y += lastHeight
 		start += length
 	}
-	return NewPoint(f.textLeftForWidth(0, rect)+f.scrollOffset.X, y-lastHeight)
+	return Point{X: f.textLeftForWidth(0, rect) + f.scrollOffset.X, Y: y - lastHeight}
 }
 
 func (f *Field) findWordAt(pos int) (start, end int) {

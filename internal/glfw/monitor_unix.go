@@ -34,8 +34,6 @@ import "C"
 
 import (
 	"unsafe"
-
-	"github.com/ddkwork/golibrary/mylog"
 )
 
 // Monitor represents a monitor.
@@ -62,7 +60,7 @@ func GetMonitors() ([]*Monitor, error) {
 	var length int
 
 	mC := C.glfwGetMonitors((*C.int)(unsafe.Pointer(&length)))
-	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
+	if err := fetchErrorIgnoringPlatformError(); err != nil {
 		return nil, err
 	}
 	if mC == nil {
@@ -82,7 +80,7 @@ func GetMonitors() ([]*Monitor, error) {
 // where elements like the Windows task bar or the OS X menu bar is located.
 func GetPrimaryMonitor() (*Monitor, error) {
 	m := C.glfwGetPrimaryMonitor()
-	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
+	if err := fetchErrorIgnoringPlatformError(); err != nil {
 		return nil, err
 	}
 	if m == nil {
@@ -96,7 +94,7 @@ func GetPrimaryMonitor() (*Monitor, error) {
 func (m *Monitor) GetPos() (x, y int, err error) {
 	var xpos, ypos C.int
 	C.glfwGetMonitorPos(m.data, &xpos, &ypos)
-	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
+	if err := fetchErrorIgnoringPlatformError(); err != nil {
 		return 0, 0, err
 	}
 	return int(xpos), int(ypos), nil
@@ -161,7 +159,7 @@ func (m *Monitor) GetUserPointer() unsafe.Pointer {
 func (m *Monitor) GetPhysicalSize() (width, height int, err error) {
 	var wi, h C.int
 	C.glfwGetMonitorPhysicalSize(m.data, &wi, &h)
-	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
+	if err := fetchErrorIgnoringPlatformError(); err != nil {
 		return 0, 0, err
 	}
 	return int(wi), int(h), nil
@@ -170,7 +168,7 @@ func (m *Monitor) GetPhysicalSize() (width, height int, err error) {
 // GetName returns a human-readable name of the monitor, encoded as UTF-8.
 func (m *Monitor) GetName() (string, error) {
 	mn := C.glfwGetMonitorName(m.data)
-	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
+	if err := fetchErrorIgnoringPlatformError(); err != nil {
 		return "", err
 	}
 	if mn == nil {
@@ -207,7 +205,7 @@ func (m *Monitor) GetVideoModes() ([]*VidMode, error) {
 	var length int
 
 	vC := C.glfwGetVideoModes(m.data, (*C.int)(unsafe.Pointer(&length)))
-	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
+	if err := fetchErrorIgnoringPlatformError(); err != nil {
 		return nil, err
 	}
 	if vC == nil {
@@ -232,7 +230,7 @@ func (m *Monitor) GetVideoMode() (*VidMode, error) {
 	if t == nil {
 		return nil, nil
 	}
-	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
+	if err := fetchErrorIgnoringPlatformError(); err != nil {
 		return nil, err
 	}
 	return &VidMode{int(t.width), int(t.height), int(t.redBits), int(t.greenBits), int(t.blueBits), int(t.refreshRate)}, nil
@@ -242,7 +240,7 @@ func (m *Monitor) GetVideoMode() (*VidMode, error) {
 // SetGamma with it.
 func (m *Monitor) SetGamma(gamma float32) error {
 	C.glfwSetGamma(m.data, C.float(gamma))
-	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
+	if err := fetchErrorIgnoringPlatformError(); err != nil {
 		return err
 	}
 	return nil
@@ -253,7 +251,7 @@ func (m *Monitor) GetGammaRamp() (*GammaRamp, error) {
 	var ramp GammaRamp
 
 	rampC := C.glfwGetGammaRamp(m.data)
-	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
+	if err := fetchErrorIgnoringPlatformError(); err != nil {
 		return nil, err
 	}
 	if rampC == nil {
@@ -287,7 +285,7 @@ func (m *Monitor) SetGammaRamp(ramp *GammaRamp) error {
 	}
 
 	C.glfwSetGammaRamp(m.data, &rampC)
-	if mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
+	if err := fetchErrorIgnoringPlatformError(); err != nil {
 		return err
 	}
 	return nil

@@ -1,4 +1,4 @@
-// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -21,7 +21,6 @@ import (
 	"time"
 
 	"github.com/OpenPrinting/goipp"
-	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/toolbox"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/i18n"
@@ -30,7 +29,7 @@ import (
 
 // PrinterID identifies a specific printer.
 type PrinterID struct {
-	UUID string `json:"uuid"`
+	ID   string `json:"id"`
 	Name string `json:"name"`
 	Host string `json:"host"`
 	Port int    `json:"port"`
@@ -46,19 +45,19 @@ func (p *PrinterID) String() string {
 // Printer holds the information for a printer. Note that the User, Password, and UseTLS fields must be filled in if you
 // wish to use those features, as the call to PrintManager.Printers() will not fill them in for you.
 type Printer struct {
-	PrinterID
+	httpClient       *http.Client
+	attributes       *PrinterAttributes
 	RemotePath       string
 	AuthInfoRequired string
 	User             string
 	Password         string
 	MimeTypes        []string
-	Color            bool
-	Duplex           bool
-	UseTLS           bool
-	lastID           uint32
-	httpClient       *http.Client
-	lock             sync.RWMutex
-	attributes       *PrinterAttributes
+	PrinterID
+	lock   sync.RWMutex
+	lastID uint32
+	Color  bool
+	Duplex bool
+	UseTLS bool
 }
 
 // MimeTypeSupported returns true if the given MIME type is supported by the printer.
@@ -92,9 +91,11 @@ func (p *Printer) Attributes(timeout time.Duration, allowCachedReturn bool) (*Pr
 	req.Operation.Add(goipp.MakeAttribute("requested-attributes", goipp.TagKeyword, goipp.String("all")))
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
-	rsp := mylog.Check2(p.sendRequest(ctx, req, nil, 0))
-
-	if mylog.Check(checkIPPStatus(rsp)); err != nil {
+	rsp, err := p.sendRequest(ctx, req, nil, 0)
+	if err != nil {
+		return NewAttributes(nil).ForPrinter(), err
+	}
+	if err = checkIPPStatus(rsp); err != nil {
 		return NewAttributes(nil).ForPrinter(), err
 	}
 	p.attributes = NewAttributes(rsp.Printer).ForPrinter()
@@ -110,9 +111,11 @@ func (p *Printer) Validate(ctx context.Context, jobName, mimeType string, attrib
 	req := p.newRequest(id, goipp.OpValidateJob)
 	addAttributesForJob(req, jobName, mimeType)
 	req.Job = attributes.toIPP()
-	rsp := mylog.Check2(p.sendRequest(ctx, req, nil, 0))
-
-	if mylog.Check(checkIPPStatus(rsp)); err != nil {
+	rsp, err := p.sendRequest(ctx, req, nil, 0)
+	if err != nil {
+		return nil, err
+	}
+	if err = checkIPPStatus(rsp); err != nil {
 		return nil, err
 	}
 	return NewAttributes(rsp.Unsupported).ForJob(), nil
@@ -127,8 +130,10 @@ func (p *Printer) Print(ctx context.Context, jobName, mimeType string, fileData 
 	req := p.newRequest(id, goipp.OpPrintJob)
 	addAttributesForJob(req, jobName, mimeType)
 	req.Job = attributes.toIPP()
-	rsp := mylog.Check2(p.sendRequest(ctx, req, fileData, fileLength))
-
+	rsp, err := p.sendRequest(ctx, req, fileData, fileLength)
+	if err != nil {
+		return err
+	}
 	return checkIPPStatus(rsp)
 }
 
@@ -173,15 +178,17 @@ func addAttributesForJob(req *goipp.Message, jobName, mimeType string) {
 }
 
 func (p *Printer) sendRequest(ctx context.Context, req *goipp.Message, fileData io.Reader, fileLength int) (*goipp.Message, error) {
-	data := mylog.Check2(req.EncodeBytes())
-
+	data, err := req.EncodeBytes()
+	if err != nil {
+		return nil, errs.Wrap(err)
+	}
 	var r io.Reader
 	r = bytes.NewReader(data)
 	if fileData != nil {
 		r = io.MultiReader(r, fileData)
 	}
 	var httpReq *http.Request
-	if httpReq = mylog.Check2(http.NewRequestWithContext(ctx, http.MethodPost, p.uri(), r)); err != nil {
+	if httpReq, err = http.NewRequestWithContext(ctx, http.MethodPost, p.uri(), r); err != nil {
 		return nil, errs.Wrap(err)
 	}
 	httpReq.Header.Set("Content-Length", strconv.Itoa(len(data)+fileLength))
@@ -190,7 +197,7 @@ func (p *Printer) sendRequest(ctx context.Context, req *goipp.Message, fileData 
 		httpReq.SetBasicAuth(p.User, p.Password)
 	}
 	var httpResp *http.Response
-	if httpResp = mylog.Check2(p.httpClient.Do(httpReq)); err != nil { //nolint:bodyclose // Body is closed by xio.DiscardAndCloseIgnoringErrors
+	if httpResp, err = p.httpClient.Do(httpReq); err != nil { //nolint:bodyclose // Body is closed by xio.DiscardAndCloseIgnoringErrors
 		return nil, errs.Wrap(err)
 	}
 	defer xio.DiscardAndCloseIgnoringErrors(httpResp.Body)
@@ -198,7 +205,7 @@ func (p *Printer) sendRequest(ctx context.Context, req *goipp.Message, fileData 
 		return nil, errs.Newf("unexpected http response code: %d", httpResp.StatusCode)
 	}
 	rsp := goipp.NewResponse(0, 0, 0)
-	if mylog.Check(rsp.Decode(httpResp.Body)); err != nil {
+	if err = rsp.Decode(httpResp.Body); err != nil {
 		return nil, errs.Wrap(err)
 	}
 	return rsp, nil

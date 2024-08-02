@@ -1,4 +1,4 @@
-// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -10,9 +10,10 @@
 package demo
 
 import (
-	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/toolbox/cmdline"
+	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/unison"
+	"github.com/richardwilkes/unison/enums/align"
 )
 
 var aboutWindow *unison.Window
@@ -23,8 +24,12 @@ func ShowAboutWindow(item unison.MenuItem) {
 	if aboutWindow == nil {
 
 		// Nope, so create it.
-
-		aboutWindow = mylog.Check2(unison.NewWindow(item.Title(), unison.NotResizableWindowOption()))
+		var err error
+		aboutWindow, err = unison.NewWindow(item.Title(), unison.NotResizableWindowOption())
+		if err != nil {
+			errs.Log(err)
+			return
+		}
 
 		// Clear our global when the window closes
 		aboutWindow.WillCloseCallback = func() { aboutWindow = nil }
@@ -40,39 +45,39 @@ func ShowAboutWindow(item unison.MenuItem) {
 
 		// Put the name of the app in a large font at the top
 		title := unison.NewLabel()
-		title.Text = cmdline.AppName
 		title.Font = unison.EmphasizedSystemFont.Face().Font(24)
+		title.SetTitle(cmdline.AppName)
 		title.SetLayoutData(&unison.FlexLayoutData{
 			HSpan:  1,
 			VSpan:  1,
-			HAlign: unison.MiddleAlignment,
-			VAlign: unison.MiddleAlignment,
+			HAlign: align.Middle,
+			VAlign: align.Middle,
 			HGrab:  true,
 		})
 		content.AddChild(title)
 
 		// Put a description below the title, line 1
 		desc := unison.NewLabel()
-		desc.Text = "A simple app to demonstrate"
 		desc.Font = unison.LabelFont.Face().Font(14)
+		desc.SetTitle("A simple app to demonstrate")
 		desc.SetLayoutData(&unison.FlexLayoutData{
 			HSpan:  1,
 			VSpan:  1,
-			HAlign: unison.MiddleAlignment,
-			VAlign: unison.MiddleAlignment,
+			HAlign: align.Middle,
+			VAlign: align.Middle,
 			HGrab:  true,
 		})
 		content.AddChild(desc)
 
 		// Put a description below the title, line 2
 		desc = unison.NewLabel()
-		desc.Text = "the capabilities of Unison"
 		desc.Font = unison.LabelFont.Face().Font(14)
+		desc.SetTitle("the capabilities of Unison")
 		desc.SetLayoutData(&unison.FlexLayoutData{
 			HSpan:  1,
 			VSpan:  1,
-			HAlign: unison.MiddleAlignment,
-			VAlign: unison.MiddleAlignment,
+			HAlign: align.Middle,
+			VAlign: align.Middle,
 			HGrab:  true,
 		})
 		content.AddChild(desc)
@@ -85,8 +90,7 @@ func ShowAboutWindow(item unison.MenuItem) {
 		frame.Height = wndFrame.Height
 		frame.X += (frame.Width - wndFrame.Width) / 2
 		frame.Width = wndFrame.Width
-		frame.Align()
-		aboutWindow.SetFrameRect(frame)
+		aboutWindow.SetFrameRect(frame.Align())
 	}
 
 	// Make it visible and in the front.

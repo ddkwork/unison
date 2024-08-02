@@ -1,4 +1,4 @@
-// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -20,7 +20,6 @@ import (
 	"syscall"
 	"unsafe"
 
-	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/toolbox/fatal"
 	"github.com/richardwilkes/toolbox/xio/fs"
 	"github.com/richardwilkes/toolbox/xmath/geom"
@@ -36,6 +35,7 @@ var (
 	grBackendRenderTargetDeleteProc                *syscall.Proc
 	grContextMakeGLProc                            *syscall.Proc
 	grContextDeleteProc                            *syscall.Proc
+	grContextFlushAndSubmitProc                    *syscall.Proc
 	grContextResetGLTextureBindings                *syscall.Proc
 	grContextReset                                 *syscall.Proc
 	grContextAbandonContextProc                    *syscall.Proc
@@ -81,20 +81,21 @@ var (
 	skCanvasGetSurfaceProc                         *syscall.Proc
 	skCanvasIsClipEmptyProc                        *syscall.Proc
 	skCanvasIsClipRectProc                         *syscall.Proc
-	skCanvasFlushProc                              *syscall.Proc
 	skColorFilterNewModeProc                       *syscall.Proc
 	skColorFilterNewLightingProc                   *syscall.Proc
 	skColorFilterNewComposeProc                    *syscall.Proc
 	skColorFilterNewColorMatrixProc                *syscall.Proc
 	skColorFilterNewLumaColorProc                  *syscall.Proc
 	skColorFilterNewHighContrastProc               *syscall.Proc
-	skColorFilterNewTableARGBProc                  *syscall.Proc
 	skColorFilterUnrefProc                         *syscall.Proc
 	skColorSpaceNewSRGBProc                        *syscall.Proc
 	skDataNewWithCopyProc                          *syscall.Proc
 	skDataGetSizeProc                              *syscall.Proc
 	skDataGetDataProc                              *syscall.Proc
 	skDataUnrefProc                                *syscall.Proc
+	skEncodeJPEGProc                               *syscall.Proc
+	skEncodePNGProc                                *syscall.Proc
+	skEncodeWEBPProc                               *syscall.Proc
 	skDocumentAbortProc                            *syscall.Proc
 	skDocumentBeginPageProc                        *syscall.Proc
 	skDocumentCloseProc                            *syscall.Proc
@@ -149,10 +150,9 @@ var (
 	skImageGetColorTypeProc                        *syscall.Proc
 	skImageGetAlphaTypeProc                        *syscall.Proc
 	skImageReadPixelsProc                          *syscall.Proc
-	skImageEncodeSpecificProc                      *syscall.Proc
 	skImageMakeNonTextureImageProc                 *syscall.Proc
 	skImageMakeShaderProc                          *syscall.Proc
-	skImageMakeTextureImageProc                    *syscall.Proc
+	skImageTextureFromImageProc                    *syscall.Proc
 	skImageUnrefProc                               *syscall.Proc
 	skImageFilterNewArithmeticProc                 *syscall.Proc
 	skImageFilterNewBlurProc                       *syscall.Proc
@@ -272,6 +272,7 @@ var (
 	skPathEffectCreateDashProc                     *syscall.Proc
 	skPathEffectCreateTrimProc                     *syscall.Proc
 	skPathEffectUnrefProc                          *syscall.Proc
+	skRegisterImageCodecsProc                      *syscall.Proc
 	skShaderNewColorProc                           *syscall.Proc
 	skShaderNewBlendProc                           *syscall.Proc
 	skShaderNewLinearGradientProc                  *syscall.Proc
@@ -322,7 +323,8 @@ type textBlobBuilderRunBuffer struct {
 }
 
 func init() {
-	dir := mylog.Check2(os.UserCacheDir())
+	dir, err := os.UserCacheDir()
+	fatal.IfErr(err)
 	dir = filepath.Join(dir, "unison", "dll_cache")
 	fatal.IfErr(os.MkdirAll(dir, 0755))
 	fatal.IfErr(windows.SetDllDirectory(dir))
@@ -337,6 +339,7 @@ func init() {
 	grBackendRenderTargetDeleteProc = skia.MustFindProc("gr_backendrendertarget_delete")
 	grContextMakeGLProc = skia.MustFindProc("gr_direct_context_make_gl")
 	grContextDeleteProc = skia.MustFindProc("gr_direct_context_delete")
+	grContextFlushAndSubmitProc = skia.MustFindProc("gr_direct_context_flush_and_submit")
 	grContextResetGLTextureBindings = skia.MustFindProc("gr_direct_context_reset_gl_texture_bindings")
 	grContextReset = skia.MustFindProc("gr_direct_context_reset")
 	grContextAbandonContextProc = skia.MustFindProc("gr_direct_context_abandon_context")
@@ -382,20 +385,21 @@ func init() {
 	skCanvasGetSurfaceProc = skia.MustFindProc("sk_canvas_get_surface")
 	skCanvasIsClipEmptyProc = skia.MustFindProc("sk_canvas_is_clip_empty")
 	skCanvasIsClipRectProc = skia.MustFindProc("sk_canvas_is_clip_rect")
-	skCanvasFlushProc = skia.MustFindProc("sk_canvas_flush")
 	skColorFilterNewModeProc = skia.MustFindProc("sk_colorfilter_new_mode")
 	skColorFilterNewLightingProc = skia.MustFindProc("sk_colorfilter_new_lighting")
 	skColorFilterNewComposeProc = skia.MustFindProc("sk_colorfilter_new_compose")
 	skColorFilterNewColorMatrixProc = skia.MustFindProc("sk_colorfilter_new_color_matrix")
 	skColorFilterNewLumaColorProc = skia.MustFindProc("sk_colorfilter_new_luma_color")
 	skColorFilterNewHighContrastProc = skia.MustFindProc("sk_colorfilter_new_high_contrast")
-	skColorFilterNewTableARGBProc = skia.MustFindProc("sk_colorfilter_new_table_argb")
 	skColorFilterUnrefProc = skia.MustFindProc("sk_colorfilter_unref")
 	skColorSpaceNewSRGBProc = skia.MustFindProc("sk_colorspace_new_srgb")
 	skDataNewWithCopyProc = skia.MustFindProc("sk_data_new_with_copy")
 	skDataGetSizeProc = skia.MustFindProc("sk_data_get_size")
 	skDataGetDataProc = skia.MustFindProc("sk_data_get_data")
 	skDataUnrefProc = skia.MustFindProc("sk_data_unref")
+	skEncodeJPEGProc = skia.MustFindProc("sk_encode_jpeg")
+	skEncodePNGProc = skia.MustFindProc("sk_encode_png")
+	skEncodeWEBPProc = skia.MustFindProc("sk_encode_webp")
 	skDocumentAbortProc = skia.MustFindProc("sk_document_abort")
 	skDocumentBeginPageProc = skia.MustFindProc("sk_document_begin_page")
 	skDocumentCloseProc = skia.MustFindProc("sk_document_close")
@@ -450,10 +454,9 @@ func init() {
 	skImageGetColorTypeProc = skia.MustFindProc("sk_image_get_color_type")
 	skImageGetAlphaTypeProc = skia.MustFindProc("sk_image_get_alpha_type")
 	skImageReadPixelsProc = skia.MustFindProc("sk_image_read_pixels")
-	skImageEncodeSpecificProc = skia.MustFindProc("sk_image_encode_specific")
 	skImageMakeNonTextureImageProc = skia.MustFindProc("sk_image_make_non_texture_image")
 	skImageMakeShaderProc = skia.MustFindProc("sk_image_make_shader")
-	skImageMakeTextureImageProc = skia.MustFindProc("sk_image_make_texture_image")
+	skImageTextureFromImageProc = skia.MustFindProc("sk_image_texture_from_image")
 	skImageUnrefProc = skia.MustFindProc("sk_image_unref")
 	skImageFilterNewArithmeticProc = skia.MustFindProc("sk_imagefilter_new_arithmetic")
 	skImageFilterNewBlurProc = skia.MustFindProc("sk_imagefilter_new_blur")
@@ -573,6 +576,7 @@ func init() {
 	skPathEffectCreateDashProc = skia.MustFindProc("sk_path_effect_create_dash")
 	skPathEffectCreateTrimProc = skia.MustFindProc("sk_path_effect_create_trim")
 	skPathEffectUnrefProc = skia.MustFindProc("sk_path_effect_unref")
+	skRegisterImageCodecsProc = skia.MustFindProc("register_image_codecs")
 	skShaderNewColorProc = skia.MustFindProc("sk_shader_new_color")
 	skShaderNewBlendProc = skia.MustFindProc("sk_shader_new_blend")
 	skShaderNewLinearGradientProc = skia.MustFindProc("sk_shader_new_linear_gradient")
@@ -646,6 +650,20 @@ type (
 	WStream              unsafe.Pointer
 )
 
+func fromGeomMatrix(m *geom.Matrix[float32]) uintptr {
+	if m == nil {
+		return 0
+	}
+	return uintptr(unsafe.Pointer(&Matrix{Matrix: *m, Persp2: 1}))
+}
+
+func fromGeomRect(r *geom.Rect[float32]) uintptr {
+	if r == nil {
+		return 0
+	}
+	return uintptr(unsafe.Pointer(&Rect{Left: r.X, Top: r.Y, Right: r.Right(), Bottom: r.Bottom()}))
+}
+
 func BackendRenderTargetNewGL(width, height, samples, stencilBits int, info *GLFrameBufferInfo) BackendRenderTarget {
 	r1, _, _ := grBackendRenderTargetNewGLProc.Call(uintptr(width), uintptr(height), uintptr(samples),
 		uintptr(stencilBits), uintptr(unsafe.Pointer(info)))
@@ -663,6 +681,10 @@ func ContextMakeGL(gl GLInterface) DirectContext {
 
 func ContextDelete(ctx DirectContext) {
 	grContextDeleteProc.Call(uintptr(ctx))
+}
+
+func ContextFlushAndSubmit(ctx DirectContext, syncCPU bool) {
+	grContextFlushAndSubmitProc.Call(uintptr(ctx), boolToUintptr(syncCPU))
 }
 
 func ContextResetGLTextureBindings(ctx DirectContext) {
@@ -738,22 +760,22 @@ func CanvasSkew(canvas Canvas, sx, sy float32) {
 	skCanvasSkewProc.Call(uintptr(canvas), uintptr(math.Float32bits(sx)), uintptr(math.Float32bits(sy)))
 }
 
-func CanvasConcat(canvas Canvas, matrix *Matrix) {
-	skCanvasConcatProc.Call(uintptr(canvas), uintptr(unsafe.Pointer(matrix)))
+func CanvasConcat(canvas Canvas, matrix geom.Matrix[float32]) {
+	skCanvasConcatProc.Call(uintptr(canvas), fromGeomMatrix(&matrix))
 }
 
 func CanvasResetMatrix(canvas Canvas) {
 	skCanvasResetMatrixProc.Call(uintptr(canvas))
 }
 
-func CanvasGetTotalMatrix(canvas Canvas) *Matrix {
+func CanvasGetTotalMatrix(canvas Canvas) geom.Matrix[float32] {
 	var matrix Matrix
 	skCanvasGetTotalMatrixProc.Call(uintptr(canvas), uintptr(unsafe.Pointer(&matrix)))
-	return &matrix
+	return matrix.Matrix
 }
 
-func CanvasSetMatrix(canvas Canvas, matrix *Matrix) {
-	skCanvasSetMatrixProc.Call(uintptr(canvas), uintptr(unsafe.Pointer(matrix)))
+func CanvasSetMatrix(canvas Canvas, matrix geom.Matrix[float32]) {
+	skCanvasSetMatrixProc.Call(uintptr(canvas), fromGeomMatrix(&matrix))
 }
 
 func CanvasQuickRejectPath(canvas Canvas, path Path) bool {
@@ -761,8 +783,8 @@ func CanvasQuickRejectPath(canvas Canvas, path Path) bool {
 	return r1 != 0
 }
 
-func CanvasQuickRejectRect(canvas Canvas, rect *Rect) bool {
-	r1, _, _ := skCanvasQuickRejectRectProc.Call(uintptr(canvas), uintptr(unsafe.Pointer(rect)))
+func CanvasQuickRejectRect(canvas Canvas, rect geom.Rect[float32]) bool {
+	r1, _, _ := skCanvasQuickRejectRectProc.Call(uintptr(canvas), fromGeomRect(&rect))
 	return r1 != 0
 }
 
@@ -774,34 +796,41 @@ func CanvasDrawPaint(canvas Canvas, paint Paint) {
 	skCanvasDrawPaintProc.Call(uintptr(canvas), uintptr(paint))
 }
 
-func CanvasDrawRect(canvas Canvas, rect *Rect, paint Paint) {
-	skCanvasDrawRectProc.Call(uintptr(canvas), uintptr(unsafe.Pointer(rect)), uintptr(paint))
+func CanvasDrawRect(canvas Canvas, rect geom.Rect[float32], paint Paint) {
+	skCanvasDrawRectProc.Call(uintptr(canvas), fromGeomRect(&rect), uintptr(paint))
 }
 
-func CanvasDrawRoundRect(canvas Canvas, rect *Rect, radiusX, radiusY float32, paint Paint) {
-	skCanvasDrawRoundRectProc.Call(uintptr(canvas), uintptr(unsafe.Pointer(rect)), uintptr(math.Float32bits(radiusX)), uintptr(math.Float32bits(radiusY)), uintptr(paint))
+func CanvasDrawRoundRect(canvas Canvas, rect geom.Rect[float32], radiusX, radiusY float32, paint Paint) {
+	skCanvasDrawRoundRectProc.Call(uintptr(canvas), fromGeomRect(&rect), uintptr(math.Float32bits(radiusX)),
+		uintptr(math.Float32bits(radiusY)), uintptr(paint))
 }
 
 func CanvasDrawCircle(canvas Canvas, centerX, centerY, radius float32, paint Paint) {
-	skCanvasDrawCircleProc.Call(uintptr(canvas), uintptr(math.Float32bits(centerX)), uintptr(math.Float32bits(centerY)), uintptr(math.Float32bits(radius)), uintptr(paint))
+	skCanvasDrawCircleProc.Call(uintptr(canvas), uintptr(math.Float32bits(centerX)), uintptr(math.Float32bits(centerY)),
+		uintptr(math.Float32bits(radius)), uintptr(paint))
 }
 
-func CanvasDrawOval(canvas Canvas, rect *Rect, paint Paint) {
-	skCanvasDrawOvalProc.Call(uintptr(canvas), uintptr(unsafe.Pointer(rect)), uintptr(paint))
+func CanvasDrawOval(canvas Canvas, rect geom.Rect[float32], paint Paint) {
+	skCanvasDrawOvalProc.Call(uintptr(canvas), fromGeomRect(&rect), uintptr(paint))
 }
 
 func CanvasDrawPath(canvas Canvas, path Path, paint Paint) {
 	skCanvasDrawPathProc.Call(uintptr(canvas), uintptr(path), uintptr(paint))
 }
 
-func CanvasDrawImageRect(canvas Canvas, img Image, srcRect, dstRect *Rect, sampling SamplingOptions, paint Paint) {
-	skCanvasDrawImageRectProc.Call(uintptr(canvas), uintptr(img), uintptr(unsafe.Pointer(srcRect)),
-		uintptr(unsafe.Pointer(dstRect)), uintptr(sampling), uintptr(paint))
+func CanvasDrawImageRect(canvas Canvas, img Image, srcRect, dstRect geom.Rect[float32], sampling SamplingOptions, paint Paint) {
+	skCanvasDrawImageRectProc.Call(uintptr(canvas), uintptr(img), fromGeomRect(&srcRect), fromGeomRect(&dstRect),
+		uintptr(sampling), uintptr(paint))
 }
 
-func CanvasDrawImageNine(canvas Canvas, img Image, centerRect *IRect, dstRect *Rect, filter FilterMode, paint Paint) {
-	skCanvasDrawImageNineProc.Call(uintptr(canvas), uintptr(img), uintptr(unsafe.Pointer(centerRect)),
-		uintptr(unsafe.Pointer(dstRect)), uintptr(filter), uintptr(paint))
+func CanvasDrawImageNine(canvas Canvas, img Image, centerRect, dstRect geom.Rect[float32], filter FilterMode, paint Paint) {
+	centerRect = centerRect.Align()
+	skCanvasDrawImageNineProc.Call(uintptr(canvas), uintptr(img), uintptr(unsafe.Pointer(&IRect{
+		Left:   int32(centerRect.X),
+		Top:    int32(centerRect.Y),
+		Right:  int32(centerRect.Right()),
+		Bottom: int32(centerRect.Bottom()),
+	})), fromGeomRect(&dstRect), uintptr(filter), uintptr(paint))
 }
 
 func CanvasDrawColor(canvas Canvas, color Color, mode BlendMode) {
@@ -812,43 +841,45 @@ func CanvasDrawPoint(canvas Canvas, x, y float32, paint Paint) {
 	skCanvasDrawPointProc.Call(uintptr(canvas), uintptr(math.Float32bits(x)), uintptr(math.Float32bits(y)), uintptr(paint))
 }
 
-func CanvasDrawPoints(canvas Canvas, mode PointMode, pts []geom.Pt32, paint Paint) {
+func CanvasDrawPoints(canvas Canvas, mode PointMode, pts []geom.Point[float32], paint Paint) {
 	skCanvasDrawPointsProc.Call(uintptr(canvas), uintptr(mode), uintptr(len(pts)),
 		uintptr(unsafe.Pointer(&pts[0])), uintptr(paint))
 }
 
 func CanvasDrawLine(canvas Canvas, sx, sy, ex, ey float32, paint Paint) {
-	skCanvasDrawLineProc.Call(uintptr(canvas), uintptr(math.Float32bits(sx)), uintptr(math.Float32bits(sy)), uintptr(math.Float32bits(ex)), uintptr(math.Float32bits(ey)), uintptr(paint))
+	skCanvasDrawLineProc.Call(uintptr(canvas), uintptr(math.Float32bits(sx)), uintptr(math.Float32bits(sy)),
+		uintptr(math.Float32bits(ex)), uintptr(math.Float32bits(ey)), uintptr(paint))
 }
 
-func CanvasDrawArc(canvas Canvas, oval *Rect, startAngle, sweepAngle float32, useCenter bool, paint Paint) {
-	skCanvasDrawArcProc.Call(uintptr(canvas), uintptr(unsafe.Pointer(oval)), uintptr(math.Float32bits(startAngle)), uintptr(math.Float32bits(sweepAngle)),
-		boolToUintptr(useCenter), uintptr(paint))
+func CanvasDrawArc(canvas Canvas, oval geom.Rect[float32], startAngle, sweepAngle float32, useCenter bool, paint Paint) {
+	skCanvasDrawArcProc.Call(uintptr(canvas), fromGeomRect(&oval), uintptr(math.Float32bits(startAngle)),
+		uintptr(math.Float32bits(sweepAngle)), boolToUintptr(useCenter), uintptr(paint))
 }
 
 func CanvasDrawSimpleText(canvas Canvas, str string, x, y float32, font Font, paint Paint) {
 	b := []byte(str)
 	skCanvasDrawSimpleTextProc.Call(uintptr(canvas), uintptr(unsafe.Pointer(&b[0])), uintptr(len(b)),
-		uintptr(TextEncodingUTF8), uintptr(math.Float32bits(x)), uintptr(math.Float32bits(y)), uintptr(font), uintptr(paint))
+		uintptr(TextEncodingUTF8), uintptr(math.Float32bits(x)), uintptr(math.Float32bits(y)), uintptr(font),
+		uintptr(paint))
 }
 
 func CanvasDrawTextBlob(canvas Canvas, txt TextBlob, x, y float32, paint Paint) {
-	skCanvasDrawTextBlobProc.Call(uintptr(canvas), uintptr(txt), uintptr(math.Float32bits(x)), uintptr(math.Float32bits(y)), uintptr(paint))
+	skCanvasDrawTextBlobProc.Call(uintptr(canvas), uintptr(txt), uintptr(math.Float32bits(x)),
+		uintptr(math.Float32bits(y)), uintptr(paint))
 }
 
-func CanavasClipRectWithOperation(canvas Canvas, rect *Rect, op ClipOp, antialias bool) {
-	skCanavasClipRectWithOperationProc.Call(uintptr(canvas), uintptr(unsafe.Pointer(rect)), uintptr(op),
-		boolToUintptr(antialias))
+func CanavasClipRectWithOperation(canvas Canvas, rect geom.Rect[float32], op ClipOp, antialias bool) {
+	skCanavasClipRectWithOperationProc.Call(uintptr(canvas), fromGeomRect(&rect), uintptr(op), boolToUintptr(antialias))
 }
 
 func CanavasClipPathWithOperation(canvas Canvas, path Path, op ClipOp, antialias bool) {
 	skCanavasClipPathWithOperationProc.Call(uintptr(canvas), uintptr(path), uintptr(op), boolToUintptr(antialias))
 }
 
-func CanvasGetLocalClipBounds(canvas Canvas) *Rect {
-	var rect Rect
-	skCanvasGetLocalClipBoundsProc.Call(uintptr(canvas), uintptr(unsafe.Pointer(&rect)))
-	return &rect
+func CanvasGetLocalClipBounds(canvas Canvas) geom.Rect[float32] {
+	var r Rect
+	skCanvasGetLocalClipBoundsProc.Call(uintptr(canvas), uintptr(unsafe.Pointer(&r)))
+	return toGeomRect(r)
 }
 
 func CanvasGetSurface(canvas Canvas) Surface {
@@ -864,10 +895,6 @@ func CanvasIsClipEmpty(canvas Canvas) bool {
 func CanvasIsClipRect(canvas Canvas) bool {
 	r1, _, _ := skCanvasIsClipRectProc.Call(uintptr(canvas))
 	return r1 != 0
-}
-
-func CanvasFlush(canvas Canvas) {
-	skCanvasFlushProc.Call(uintptr(canvas))
 }
 
 func ColorFilterNewMode(color Color, blendMode BlendMode) ColorFilter {
@@ -900,12 +927,6 @@ func ColorFilterNewHighContrast(config *HighContrastConfig) ColorFilter {
 	return ColorFilter(r1)
 }
 
-func ColorFilterNewTableARGB(a, r, g, b []byte) ColorFilter {
-	r1, _, _ := skColorFilterNewTableARGBProc.Call(uintptr(unsafe.Pointer(&a[0])), uintptr(unsafe.Pointer(&r[0])),
-		uintptr(unsafe.Pointer(&g[0])), uintptr(unsafe.Pointer(&b[0])))
-	return ColorFilter(r1)
-}
-
 func ColorFilterUnref(filter ColorFilter) {
 	skColorFilterUnrefProc.Call(uintptr(filter))
 }
@@ -932,6 +953,21 @@ func DataGetData(data Data) unsafe.Pointer {
 
 func DataUnref(data Data) {
 	skDataUnrefProc.Call(uintptr(data))
+}
+
+func EncodeJPEG(ctx DirectContext, img Image, quality int) Data {
+	r1, _, _ := skEncodeJPEGProc.Call(uintptr(ctx), uintptr(img), uintptr(quality))
+	return Data(r1)
+}
+
+func EncodePNG(ctx DirectContext, img Image, compressionLevel int) Data {
+	r1, _, _ := skEncodePNGProc.Call(uintptr(ctx), uintptr(img), uintptr(compressionLevel))
+	return Data(r1)
+}
+
+func EncodeWebp(ctx DirectContext, img Image, quality float32, lossy bool) Data {
+	r1, _, _ := skEncodeWEBPProc.Call(uintptr(ctx), uintptr(img), uintptr(math.Float32bits(quality)), boolToUintptr(lossy))
+	return Data(r1)
 }
 
 func DocumentMakePDF(stream WStream, metadata *MetaData) Document {
@@ -1210,24 +1246,19 @@ func ImageReadPixels(img Image, info *ImageInfo, pixels []byte, dstRowBytes, src
 	return r1 != 0
 }
 
-func ImageEncodeSpecific(img Image, format EncodedImageFormat, quality int) Data {
-	r1, _, _ := skImageEncodeSpecificProc.Call(uintptr(img), uintptr(format), uintptr(quality))
-	return Data(r1)
-}
-
-func ImageMakeShader(img Image, tileModeX, tileModeY TileMode, sampling SamplingOptions, matrix *Matrix) Shader {
-	r1, _, _ := skImageMakeShaderProc.Call(uintptr(img), uintptr(tileModeX), uintptr(tileModeY),
-		uintptr(sampling), uintptr(unsafe.Pointer(matrix)))
-	return Shader(r1)
-}
-
-func ImageMakeTextureImage(img Image, ctx DirectContext, mipMapped bool) Image {
-	r1, _, _ := skImageMakeTextureImageProc.Call(uintptr(img), uintptr(ctx), boolToUintptr(mipMapped))
+func ImageMakeNonTextureImage(img Image) Image {
+	r1, _, _ := skImageMakeNonTextureImageProc.Call(uintptr(img))
 	return Image(r1)
 }
 
-func ImageMakeNonTextureImage(img Image) Image {
-	r1, _, _ := skImageMakeNonTextureImageProc.Call(uintptr(img))
+func ImageMakeShader(img Image, tileModeX, tileModeY TileMode, sampling SamplingOptions, matrix geom.Matrix[float32]) Shader {
+	r1, _, _ := skImageMakeShaderProc.Call(uintptr(img), uintptr(tileModeX), uintptr(tileModeY),
+		uintptr(sampling), fromGeomMatrix(&matrix))
+	return Shader(r1)
+}
+
+func ImageTextureFromImage(ctx DirectContext, img Image, mipMapped, budgeted bool) Image {
+	r1, _, _ := skImageTextureFromImageProc.Call(uintptr(ctx), uintptr(img), boolToUintptr(mipMapped), boolToUintptr(budgeted))
 	return Image(r1)
 }
 
@@ -1235,22 +1266,22 @@ func ImageUnref(img Image) {
 	skImageUnrefProc.Call(uintptr(img))
 }
 
-func ImageFilterNewArithmetic(k1, k2, k3, k4 float32, enforcePMColor bool, background, foreground ImageFilter, cropRect *geom.Rect32) ImageFilter {
+func ImageFilterNewArithmetic(k1, k2, k3, k4 float32, enforcePMColor bool, background, foreground ImageFilter, cropRect *geom.Rect[float32]) ImageFilter {
 	r1, _, _ := skImageFilterNewArithmeticProc.Call(uintptr(math.Float32bits(k1)), uintptr(math.Float32bits(k2)),
 		uintptr(math.Float32bits(k3)), uintptr(math.Float32bits(k4)), boolToUintptr(enforcePMColor),
-		uintptr(background), uintptr(foreground), uintptr(unsafe.Pointer(cropRect)))
+		uintptr(background), uintptr(foreground), fromGeomRect(cropRect))
 	return ImageFilter(r1)
 }
 
-func ImageFilterNewBlur(sigmaX, sigmaY float32, tileMode TileMode, input ImageFilter, cropRect *geom.Rect32) ImageFilter {
-	r1, _, _ := skImageFilterNewBlurProc.Call(uintptr(math.Float32bits(sigmaX)), uintptr(math.Float32bits(sigmaY)), uintptr(tileMode), uintptr(input),
-		uintptr(unsafe.Pointer(cropRect)))
+func ImageFilterNewBlur(sigmaX, sigmaY float32, tileMode TileMode, input ImageFilter, cropRect *geom.Rect[float32]) ImageFilter {
+	r1, _, _ := skImageFilterNewBlurProc.Call(uintptr(math.Float32bits(sigmaX)), uintptr(math.Float32bits(sigmaY)),
+		uintptr(tileMode), uintptr(input), fromGeomRect(cropRect))
 	return ImageFilter(r1)
 }
 
-func ImageFilterNewColorFilter(colorFilter ColorFilter, input ImageFilter, cropRect *geom.Rect32) ImageFilter {
+func ImageFilterNewColorFilter(colorFilter ColorFilter, input ImageFilter, cropRect *geom.Rect[float32]) ImageFilter {
 	r1, _, _ := skImageFilterNewColorFilterProc.Call(uintptr(colorFilter), uintptr(input),
-		uintptr(unsafe.Pointer(cropRect)))
+		fromGeomRect(cropRect))
 	return ImageFilter(r1)
 }
 
@@ -1259,129 +1290,127 @@ func ImageFilterNewCompose(outer, inner ImageFilter) ImageFilter {
 	return ImageFilter(r1)
 }
 
-func ImageFilterNewDisplacementMapEffect(xChannelSelector, yChannelSelector ColorChannel, scale float32, displacement, color ImageFilter, cropRect *geom.Rect32) ImageFilter {
+func ImageFilterNewDisplacementMapEffect(xChannelSelector, yChannelSelector ColorChannel, scale float32, displacement, color ImageFilter, cropRect *geom.Rect[float32]) ImageFilter {
 	r1, _, _ := skImageFilterNewDisplacementMapEffectProc.Call(uintptr(xChannelSelector), uintptr(yChannelSelector),
-		uintptr(math.Float32bits(scale)), uintptr(displacement), uintptr(color), uintptr(unsafe.Pointer(cropRect)))
+		uintptr(math.Float32bits(scale)), uintptr(displacement), uintptr(color), fromGeomRect(cropRect))
 	return ImageFilter(r1)
 }
 
-func ImageFilterNewDropShadow(dx, dy, sigmaX, sigmaY float32, color Color, input ImageFilter, cropRect *geom.Rect32) ImageFilter {
+func ImageFilterNewDropShadow(dx, dy, sigmaX, sigmaY float32, color Color, input ImageFilter, cropRect *geom.Rect[float32]) ImageFilter {
 	r1, _, _ := skImageFilterNewDropShadowProc.Call(uintptr(math.Float32bits(dx)), uintptr(math.Float32bits(dy)),
 		uintptr(math.Float32bits(sigmaX)), uintptr(math.Float32bits(sigmaY)), uintptr(color), uintptr(input),
-		uintptr(unsafe.Pointer(cropRect)))
+		fromGeomRect(cropRect))
 	return ImageFilter(r1)
 }
 
-func ImageFilterNewDropShadowOnly(dx, dy, sigmaX, sigmaY float32, color Color, input ImageFilter, cropRect *geom.Rect32) ImageFilter {
+func ImageFilterNewDropShadowOnly(dx, dy, sigmaX, sigmaY float32, color Color, input ImageFilter, cropRect *geom.Rect[float32]) ImageFilter {
 	r1, _, _ := skImageFilterNewDropShadowOnlyProc.Call(uintptr(math.Float32bits(dx)), uintptr(math.Float32bits(dy)),
 		uintptr(math.Float32bits(sigmaX)), uintptr(math.Float32bits(sigmaY)), uintptr(color), uintptr(input),
-		uintptr(unsafe.Pointer(cropRect)))
+		fromGeomRect(cropRect))
 	return ImageFilter(r1)
 }
 
-func ImageFilterNewImageSource(img Image, srcRect, dstRect *geom.Rect32, sampling SamplingOptions) ImageFilter {
-	r1, _, _ := skImageFilterNewImageSourceProc.Call(uintptr(img), uintptr(unsafe.Pointer(RectToSkRect(srcRect))),
-		uintptr(unsafe.Pointer(RectToSkRect(dstRect))), uintptr(sampling))
+func ImageFilterNewImageSource(img Image, srcRect, dstRect geom.Rect[float32], sampling SamplingOptions) ImageFilter {
+	r1, _, _ := skImageFilterNewImageSourceProc.Call(uintptr(img), fromGeomRect(&srcRect), fromGeomRect(&dstRect),
+		uintptr(sampling))
 	return ImageFilter(r1)
 }
 
-func ImageFilterNewImageSourceDefault(img Image) ImageFilter {
-	r1, _, _ := skImageFilterNewImageSourceDefaultProc.Call(uintptr(img))
+func ImageFilterNewImageSourceDefault(img Image, sampling SamplingOptions) ImageFilter {
+	r1, _, _ := skImageFilterNewImageSourceDefaultProc.Call(uintptr(img), uintptr(sampling))
 	return ImageFilter(r1)
 }
 
-func ImageFilterNewMagnifier(src *geom.Rect32, inset float32, input ImageFilter, cropRect *geom.Rect32) ImageFilter {
-	r1, _, _ := skImageFilterNewMagnifierProc.Call(uintptr(unsafe.Pointer(RectToSkRect(src))),
-		uintptr(math.Float32bits(inset)), uintptr(input), uintptr(unsafe.Pointer(cropRect)))
+func ImageFilterNewMagnifier(lensBounds geom.Rect[float32], zoomAmount, inset float32, sampling SamplingOptions, input ImageFilter, cropRect *geom.Rect[float32]) ImageFilter {
+	r1, _, _ := skImageFilterNewMagnifierProc.Call(fromGeomRect(&lensBounds), uintptr(math.Float32bits(zoomAmount)),
+		uintptr(math.Float32bits(inset)), uintptr(sampling), uintptr(input), fromGeomRect(cropRect))
 	return ImageFilter(r1)
 }
 
-func ImageFilterNewMatrixConvolution(size *ISize, kernel []float32, gain, bias float32, offset *IPoint, tileMode TileMode, convolveAlpha bool, input ImageFilter, cropRect *geom.Rect32) ImageFilter {
+func ImageFilterNewMatrixConvolution(size *ISize, kernel []float32, gain, bias float32, offset *IPoint, tileMode TileMode, convolveAlpha bool, input ImageFilter, cropRect *geom.Rect[float32]) ImageFilter {
 	r1, _, _ := skImageFilterNewMatrixConvolutionProc.Call(uintptr(unsafe.Pointer(size)),
 		uintptr(unsafe.Pointer(&kernel[0])), uintptr(math.Float32bits(gain)), uintptr(math.Float32bits(bias)),
 		uintptr(unsafe.Pointer(offset)), uintptr(tileMode), boolToUintptr(convolveAlpha), uintptr(input),
-		uintptr(unsafe.Pointer(cropRect)))
+		fromGeomRect(cropRect))
 	return ImageFilter(r1)
 }
 
-func ImageFilterNewMatrixTransform(matrix *Matrix, sampling SamplingOptions, input ImageFilter) ImageFilter {
-	r1, _, _ := skImageFilterNewMatrixTransformProc.Call(uintptr(unsafe.Pointer(matrix)),
-		uintptr(sampling), uintptr(input))
+func ImageFilterNewMatrixTransform(matrix geom.Matrix[float32], sampling SamplingOptions, input ImageFilter) ImageFilter {
+	r1, _, _ := skImageFilterNewMatrixTransformProc.Call(fromGeomMatrix(&matrix), uintptr(sampling), uintptr(input))
 	return ImageFilter(r1)
 }
 
-func ImageFilterNewMerge(filters []ImageFilter, cropRect *geom.Rect32) ImageFilter {
+func ImageFilterNewMerge(filters []ImageFilter, cropRect *geom.Rect[float32]) ImageFilter {
 	r1, _, _ := skImageFilterNewMergeProc.Call(uintptr(unsafe.Pointer(&filters[0])), uintptr(len(filters)),
-		uintptr(unsafe.Pointer(cropRect)))
+		fromGeomRect(cropRect))
 	return ImageFilter(r1)
 }
 
-func ImageFilterNewOffset(dx, dy float32, input ImageFilter, cropRect *geom.Rect32) ImageFilter {
+func ImageFilterNewOffset(dx, dy float32, input ImageFilter, cropRect *geom.Rect[float32]) ImageFilter {
 	r1, _, _ := skImageFilterNewOffsetProc.Call(uintptr(math.Float32bits(dx)), uintptr(math.Float32bits(dy)),
-		uintptr(input), uintptr(unsafe.Pointer(cropRect)))
+		uintptr(input), fromGeomRect(cropRect))
 	return ImageFilter(r1)
 }
 
-func ImageFilterNewTile(src, dst *geom.Rect32, input ImageFilter) ImageFilter {
-	r1, _, _ := skImageFilterNewTileProc.Call(uintptr(unsafe.Pointer(RectToSkRect(src))),
-		uintptr(unsafe.Pointer(RectToSkRect(dst))), uintptr(input))
+func ImageFilterNewTile(src, dst geom.Rect[float32], input ImageFilter) ImageFilter {
+	r1, _, _ := skImageFilterNewTileProc.Call(fromGeomRect(&src), fromGeomRect(&dst), uintptr(input))
 	return ImageFilter(r1)
 }
 
-func ImageFilterNewDilate(radiusX, radiusY int, input ImageFilter, cropRect *geom.Rect32) ImageFilter {
+func ImageFilterNewDilate(radiusX, radiusY int, input ImageFilter, cropRect *geom.Rect[float32]) ImageFilter {
 	r1, _, _ := skImageFilterNewDilateProc.Call(uintptr(radiusX), uintptr(radiusY), uintptr(input),
-		uintptr(unsafe.Pointer(cropRect)))
+		fromGeomRect(cropRect))
 	return ImageFilter(r1)
 }
 
-func ImageFilterNewErode(radiusX, radiusY int, input ImageFilter, cropRect *geom.Rect32) ImageFilter {
+func ImageFilterNewErode(radiusX, radiusY int, input ImageFilter, cropRect *geom.Rect[float32]) ImageFilter {
 	r1, _, _ := skImageFilterNewErodeProc.Call(uintptr(radiusX), uintptr(radiusY), uintptr(input),
-		uintptr(unsafe.Pointer(cropRect)))
+		fromGeomRect(cropRect))
 	return ImageFilter(r1)
 }
 
-func ImageFilterNewDistantLitDiffuse(pt *Point3, color Color, scale, reflectivity float32, input ImageFilter, cropRect *geom.Rect32) ImageFilter {
+func ImageFilterNewDistantLitDiffuse(pt *Point3, color Color, scale, reflectivity float32, input ImageFilter, cropRect *geom.Rect[float32]) ImageFilter {
 	r1, _, _ := skImageFilterNewDistantLitDiffuseProc.Call(uintptr(unsafe.Pointer(pt)), uintptr(color),
 		uintptr(math.Float32bits(scale)), uintptr(math.Float32bits(reflectivity)), uintptr(input),
-		uintptr(unsafe.Pointer(cropRect)))
+		fromGeomRect(cropRect))
 	return ImageFilter(r1)
 }
 
-func ImageFilterNewPointLitDiffuse(pt *Point3, color Color, scale, reflectivity float32, input ImageFilter, cropRect *geom.Rect32) ImageFilter {
+func ImageFilterNewPointLitDiffuse(pt *Point3, color Color, scale, reflectivity float32, input ImageFilter, cropRect *geom.Rect[float32]) ImageFilter {
 	r1, _, _ := skImageFilterNewPointLitDiffuseProc.Call(uintptr(unsafe.Pointer(pt)), uintptr(color),
 		uintptr(math.Float32bits(scale)), uintptr(math.Float32bits(reflectivity)), uintptr(input),
-		uintptr(unsafe.Pointer(cropRect)))
+		fromGeomRect(cropRect))
 	return ImageFilter(r1)
 }
 
-func ImageFilterNewSpotLitDiffuse(pt, targetPt *Point3, specularExponent, cutoffAngle, scale, reflectivity float32, color Color, input ImageFilter, cropRect *geom.Rect32) ImageFilter {
+func ImageFilterNewSpotLitDiffuse(pt, targetPt *Point3, specularExponent, cutoffAngle, scale, reflectivity float32, color Color, input ImageFilter, cropRect *geom.Rect[float32]) ImageFilter {
 	r1, _, _ := skImageFilterNewSpotLitDiffuseProc.Call(uintptr(unsafe.Pointer(pt)),
 		uintptr(unsafe.Pointer(targetPt)), uintptr(math.Float32bits(specularExponent)),
 		uintptr(math.Float32bits(cutoffAngle)), uintptr(color), uintptr(math.Float32bits(scale)),
-		uintptr(math.Float32bits(reflectivity)), uintptr(input), uintptr(unsafe.Pointer(cropRect)))
+		uintptr(math.Float32bits(reflectivity)), uintptr(input), fromGeomRect(cropRect))
 	return ImageFilter(r1)
 }
 
-func ImageFilterNewDistantLitSpecular(pt *Point3, color Color, scale, reflectivity, shine float32, input ImageFilter, cropRect *geom.Rect32) ImageFilter {
+func ImageFilterNewDistantLitSpecular(pt *Point3, color Color, scale, reflectivity, shine float32, input ImageFilter, cropRect *geom.Rect[float32]) ImageFilter {
 	r1, _, _ := skImageFilterNewDistantLitSpecularProc.Call(uintptr(unsafe.Pointer(pt)), uintptr(color),
 		uintptr(math.Float32bits(scale)), uintptr(math.Float32bits(reflectivity)), uintptr(math.Float32bits(shine)),
-		uintptr(input), uintptr(unsafe.Pointer(cropRect)))
+		uintptr(input), fromGeomRect(cropRect))
 	return ImageFilter(r1)
 }
 
-func ImageFilterNewPointLitSpecular(pt *Point3, color Color, scale, reflectivity, shine float32, input ImageFilter, cropRect *geom.Rect32) ImageFilter {
+func ImageFilterNewPointLitSpecular(pt *Point3, color Color, scale, reflectivity, shine float32, input ImageFilter, cropRect *geom.Rect[float32]) ImageFilter {
 	r1, _, _ := skImageFilterNewPointLitSpecularProc.Call(uintptr(unsafe.Pointer(pt)), uintptr(color),
 		uintptr(math.Float32bits(scale)), uintptr(math.Float32bits(reflectivity)), uintptr(math.Float32bits(shine)),
-		uintptr(input), uintptr(unsafe.Pointer(cropRect)))
+		uintptr(input), fromGeomRect(cropRect))
 	return ImageFilter(r1)
 }
 
-func ImageFilterNewSpotLitSpecular(pt, targetPt *Point3, specularExponent, cutoffAngle, scale, reflectivity, shine float32, color Color, input ImageFilter, cropRect *geom.Rect32) ImageFilter {
+func ImageFilterNewSpotLitSpecular(pt, targetPt *Point3, specularExponent, cutoffAngle, scale, reflectivity, shine float32, color Color, input ImageFilter, cropRect *geom.Rect[float32]) ImageFilter {
 	r1, _, _ := skImageFilterNewSpotLitSpecularProc.Call(uintptr(unsafe.Pointer(pt)),
 		uintptr(unsafe.Pointer(targetPt)), uintptr(math.Float32bits(specularExponent)),
 		uintptr(math.Float32bits(cutoffAngle)), uintptr(color), uintptr(math.Float32bits(scale)),
 		uintptr(math.Float32bits(reflectivity)), uintptr(math.Float32bits(shine)), uintptr(input),
-		uintptr(unsafe.Pointer(cropRect)))
+		fromGeomRect(cropRect))
 	return ImageFilter(r1)
 }
 
@@ -1586,9 +1615,9 @@ func PaintSetPathEffect(paint Paint, effect PathEffect) {
 	skPaintSetPathEffectProc.Call(uintptr(paint), uintptr(effect))
 }
 
-func PaintGetFillPath(paint Paint, inPath, outPath Path, cullRect *Rect, resScale float32) bool {
-	r1, _, _ := skPaintGetFillPathProc.Call(uintptr(paint), uintptr(inPath), uintptr(outPath),
-		uintptr(unsafe.Pointer(cullRect)), uintptr(math.Float32bits(resScale)))
+func PaintGetFillPath(paint Paint, inPath, outPath Path, cullRect *geom.Rect[float32], resScale float32) bool {
+	r1, _, _ := skPaintGetFillPathProc.Call(uintptr(paint), uintptr(inPath), uintptr(outPath), fromGeomRect(cullRect),
+		uintptr(math.Float32bits(resScale)))
 	return r1 != 0
 }
 
@@ -1629,8 +1658,8 @@ func PathArcToWithPoints(path Path, x1, y1, x2, y2, radius float32) {
 		uintptr(math.Float32bits(x2)), uintptr(math.Float32bits(y2)), uintptr(math.Float32bits(radius)))
 }
 
-func PathArcToWithOval(path Path, rect *Rect, startAngle, sweepAngle float32, forceMoveTo bool) {
-	skPathArcToWithOvalProc.Call(uintptr(path), uintptr(unsafe.Pointer(rect)), uintptr(math.Float32bits(startAngle)),
+func PathArcToWithOval(path Path, rect geom.Rect[float32], startAngle, sweepAngle float32, forceMoveTo bool) {
+	skPathArcToWithOvalProc.Call(uintptr(path), fromGeomRect(&rect), uintptr(math.Float32bits(startAngle)),
 		uintptr(math.Float32bits(sweepAngle)), boolToUintptr(forceMoveTo))
 }
 
@@ -1640,16 +1669,16 @@ func PathRArcTo(path Path, dx, dy, rx, ry, rotation float32, arcSize ArcSize, di
 		uintptr(math.Float32bits(dy)))
 }
 
-func PathGetBounds(path Path) *Rect {
+func PathGetBounds(path Path) geom.Rect[float32] {
 	var r Rect
 	skPathGetBoundsProc.Call(uintptr(path), uintptr(unsafe.Pointer(&r)))
-	return &r
+	return toGeomRect(r)
 }
 
-func PathComputeTightBounds(path Path) *Rect {
+func PathComputeTightBounds(path Path) geom.Rect[float32] {
 	var r Rect
 	skPathComputeTightBoundsProc.Call(uintptr(path), uintptr(unsafe.Pointer(&r)))
-	return &r
+	return toGeomRect(r)
 }
 
 func PathAddCircle(path Path, x, y, radius float32, direction Direction) {
@@ -1704,8 +1733,8 @@ func PathRMoveTo(path Path, x, y float32) {
 	skPathRMoveToProc.Call(uintptr(path), uintptr(math.Float32bits(x)), uintptr(math.Float32bits(y)))
 }
 
-func PathAddOval(path Path, rect *Rect, direction Direction) {
-	skPathAddOvalProc.Call(uintptr(path), uintptr(unsafe.Pointer(rect)), uintptr(direction))
+func PathAddOval(path Path, rect geom.Rect[float32], direction Direction) {
+	skPathAddOvalProc.Call(uintptr(path), fromGeomRect(&rect), uintptr(direction))
 }
 
 func PathAddPath(path, other Path, mode PathAddMode) {
@@ -1716,8 +1745,8 @@ func PathAddPathReverse(path, other Path) {
 	skPathAddPathReverseProc.Call(uintptr(path), uintptr(other))
 }
 
-func PathAddPathMatrix(path, other Path, matrix *Matrix, mode PathAddMode) {
-	skPathAddPathMatrixProc.Call(uintptr(path), uintptr(other), uintptr(unsafe.Pointer(matrix)), uintptr(mode))
+func PathAddPathMatrix(path, other Path, matrix geom.Matrix[float32], mode PathAddMode) {
+	skPathAddPathMatrixProc.Call(uintptr(path), uintptr(other), fromGeomMatrix(&matrix), uintptr(mode))
 }
 
 func PathAddPathOffset(path, other Path, offsetX, offsetY float32, mode PathAddMode) {
@@ -1725,7 +1754,7 @@ func PathAddPathOffset(path, other Path, offsetX, offsetY float32, mode PathAddM
 		uintptr(math.Float32bits(offsetY)), uintptr(mode))
 }
 
-func PathAddPoly(path Path, pts []geom.Pt32, closePath bool) {
+func PathAddPoly(path Path, pts []geom.Point[float32], closePath bool) {
 	skPathAddPolyProc.Call(uintptr(path), uintptr(unsafe.Pointer(&pts[0])), uintptr(len(pts)), boolToUintptr(closePath))
 }
 
@@ -1734,21 +1763,21 @@ func PathQuadTo(path Path, cpx, cpy, x, y float32) {
 		uintptr(math.Float32bits(x)), uintptr(math.Float32bits(y)))
 }
 
-func PathAddRect(path Path, rect *Rect, direction Direction) {
-	skPathAddRectProc.Call(uintptr(path), uintptr(unsafe.Pointer(rect)), uintptr(direction))
+func PathAddRect(path Path, rect geom.Rect[float32], direction Direction) {
+	skPathAddRectProc.Call(uintptr(path), fromGeomRect(&rect), uintptr(direction))
 }
 
-func PathAddRoundedRect(path Path, rect *Rect, radiusX, radiusY float32, direction Direction) {
-	skPathAddRoundedRectProc.Call(uintptr(path), uintptr(unsafe.Pointer(rect)), uintptr(math.Float32bits(radiusX)),
+func PathAddRoundedRect(path Path, rect geom.Rect[float32], radiusX, radiusY float32, direction Direction) {
+	skPathAddRoundedRectProc.Call(uintptr(path), fromGeomRect(&rect), uintptr(math.Float32bits(radiusX)),
 		uintptr(math.Float32bits(radiusY)), uintptr(direction))
 }
 
-func PathTransform(path Path, matrix *Matrix) {
-	skPathTransformProc.Call(uintptr(path), uintptr(unsafe.Pointer(matrix)))
+func PathTransform(path Path, matrix geom.Matrix[float32]) {
+	skPathTransformProc.Call(uintptr(path), fromGeomMatrix(&matrix))
 }
 
-func PathTransformToDest(path, dstPath Path, matrix *Matrix) {
-	skPathTransformToDestProc.Call(uintptr(path), uintptr(unsafe.Pointer(matrix)), uintptr(dstPath))
+func PathTransformToDest(path, dstPath Path, matrix geom.Matrix[float32]) {
+	skPathTransformToDestProc.Call(uintptr(path), fromGeomMatrix(&matrix), uintptr(dstPath))
 }
 
 func PathReset(path Path) {
@@ -1764,8 +1793,8 @@ func PathContains(path Path, x, y float32) bool {
 	return r1 != 0
 }
 
-func PathGetLastPoint(path Path) geom.Pt32 {
-	var pt geom.Pt32
+func PathGetLastPoint(path Path) geom.Point[float32] {
+	var pt geom.Point[float32]
 	skPathGetLastPointProc.Call(uintptr(path), uintptr(unsafe.Pointer(&pt)))
 	return pt
 }
@@ -1811,13 +1840,13 @@ func PathEffectCreate1dPath(path Path, advance, phase float32, style PathEffect1
 	return PathEffect(r1)
 }
 
-func PathEffectCreate2dLine(width float32, matrix *Matrix) PathEffect {
-	r1, _, _ := skPathEffectCreate2dLineProc.Call(uintptr(math.Float32bits(width)), uintptr(unsafe.Pointer(matrix)))
+func PathEffectCreate2dLine(width float32, matrix geom.Matrix[float32]) PathEffect {
+	r1, _, _ := skPathEffectCreate2dLineProc.Call(uintptr(math.Float32bits(width)), fromGeomMatrix(&matrix))
 	return PathEffect(r1)
 }
 
-func PathEffectCreate2dPath(matrix *Matrix, path Path) PathEffect {
-	r1, _, _ := skPathEffectCreate2dPathProc.Call(uintptr(unsafe.Pointer(matrix)), uintptr(path))
+func PathEffectCreate2dPath(matrix geom.Matrix[float32], path Path) PathEffect {
+	r1, _, _ := skPathEffectCreate2dPathProc.Call(fromGeomMatrix(&matrix), uintptr(path))
 	return PathEffect(r1)
 }
 
@@ -1837,6 +1866,10 @@ func PathEffectUnref(effect PathEffect) {
 	skPathEffectUnrefProc.Call(uintptr(effect))
 }
 
+func RegisterImageCodecs() {
+	skRegisterImageCodecsProc.Call()
+}
+
 func ShaderNewColor(color Color) Shader {
 	r1, _, _ := skShaderNewColorProc.Call(uintptr(color))
 	return Shader(r1)
@@ -1847,34 +1880,35 @@ func ShaderNewBlend(blendMode BlendMode, dst, src Shader) Shader {
 	return Shader(r1)
 }
 
-func ShaderNewLinearGradient(start, end geom.Pt32, colors []Color, colorPos []float32, tileMode TileMode, matrix *Matrix) Shader {
-	pts := make([]geom.Pt32, 2)
+func ShaderNewLinearGradient(start, end geom.Point[float32], colors []Color, colorPos []float32, tileMode TileMode, matrix geom.Matrix[float32]) Shader {
+	pts := make([]geom.Point[float32], 2)
 	pts[0] = start
 	pts[1] = end
-	r1, _, _ := skShaderNewLinearGradientProc.Call(uintptr(unsafe.Pointer(&pts[0])), uintptr(unsafe.Pointer(&colors[0])),
-		uintptr(unsafe.Pointer(&colorPos[0])), uintptr(len(colors)), uintptr(tileMode), uintptr(unsafe.Pointer(matrix)))
+	r1, _, _ := skShaderNewLinearGradientProc.Call(uintptr(unsafe.Pointer(&pts[0])),
+		uintptr(unsafe.Pointer(&colors[0])), uintptr(unsafe.Pointer(&colorPos[0])), uintptr(len(colors)),
+		uintptr(tileMode), fromGeomMatrix(&matrix))
 	return Shader(r1)
 }
 
-func ShaderNewRadialGradient(center geom.Pt32, radius float32, colors []Color, colorPos []float32, tileMode TileMode, matrix *Matrix) Shader {
+func ShaderNewRadialGradient(center geom.Point[float32], radius float32, colors []Color, colorPos []float32, tileMode TileMode, matrix geom.Matrix[float32]) Shader {
 	r1, _, _ := skShaderNewRadialGradientProc.Call(uintptr(unsafe.Pointer(&center)), uintptr(math.Float32bits(radius)),
 		uintptr(unsafe.Pointer(&colors[0])), uintptr(unsafe.Pointer(&colorPos[0])), uintptr(len(colors)),
-		uintptr(tileMode), uintptr(unsafe.Pointer(matrix)))
+		uintptr(tileMode), fromGeomMatrix(&matrix))
 	return Shader(r1)
 }
 
-func ShaderNewSweepGradient(center geom.Pt32, startAngle, endAngle float32, colors []Color, colorPos []float32, tileMode TileMode, matrix *Matrix) Shader {
+func ShaderNewSweepGradient(center geom.Point[float32], startAngle, endAngle float32, colors []Color, colorPos []float32, tileMode TileMode, matrix geom.Matrix[float32]) Shader {
 	r1, _, _ := skShaderNewSweepGradientProc.Call(uintptr(unsafe.Pointer(&center)), uintptr(unsafe.Pointer(&colors[0])),
 		uintptr(unsafe.Pointer(&colorPos[0])), uintptr(len(colors)), uintptr(tileMode),
-		uintptr(math.Float32bits(startAngle)), uintptr(math.Float32bits(endAngle)), uintptr(unsafe.Pointer(matrix)))
+		uintptr(math.Float32bits(startAngle)), uintptr(math.Float32bits(endAngle)), fromGeomMatrix(&matrix))
 	return Shader(r1)
 }
 
-func ShaderNewTwoPointConicalGradient(startPt, endPt geom.Pt32, startRadius, endRadius float32, colors []Color, colorPos []float32, tileMode TileMode, matrix *Matrix) Shader {
+func ShaderNewTwoPointConicalGradient(startPt, endPt geom.Point[float32], startRadius, endRadius float32, colors []Color, colorPos []float32, tileMode TileMode, matrix geom.Matrix[float32]) Shader {
 	r1, _, _ := skShaderNewTwoPointConicalGradientProc.Call(uintptr(unsafe.Pointer(&startPt)),
 		uintptr(math.Float32bits(startRadius)), uintptr(unsafe.Pointer(&endPt)), uintptr(math.Float32bits(endRadius)),
 		uintptr(unsafe.Pointer(&colors[0])), uintptr(unsafe.Pointer(&colorPos[0])), uintptr(len(colors)),
-		uintptr(tileMode), uintptr(unsafe.Pointer(matrix)))
+		uintptr(tileMode), fromGeomMatrix(&matrix))
 	return Shader(r1)
 }
 
@@ -1891,8 +1925,8 @@ func ShaderNewPerlinNoiseTurbulence(baseFreqX, baseFreqY, seed float32, numOctav
 	return Shader(r1)
 }
 
-func ShaderWithLocalMatrix(shader Shader, matrix *Matrix) Shader {
-	r1, _, _ := skShaderWithLocalMatrixProc.Call(uintptr(shader), uintptr(unsafe.Pointer(matrix)))
+func ShaderWithLocalMatrix(shader Shader, matrix geom.Matrix[float32]) Shader {
+	r1, _, _ := skShaderWithLocalMatrixProc.Call(uintptr(shader), fromGeomMatrix(&matrix))
 	return Shader(r1)
 }
 
@@ -1917,12 +1951,11 @@ func StringNewEmpty() String {
 }
 
 func StringGetString(str String) string {
-	r1, _, _ := skStringGetCStrProc.Call(uintptr(str))
-	ptr := (*[1 << 30]byte)(unsafe.Pointer(r1))
-	r1, _, _ = skStringGetSizeProc.Call(uintptr(str))
-	data := make([]byte, int(r1))
-	copy(data, ptr[:len(data)])
-	return string(data)
+	data, _, _ := skStringGetCStrProc.Call(uintptr(str))
+	size, _, _ := skStringGetSizeProc.Call(uintptr(str))
+	s := make([]byte, int(size))
+	copy(s, unsafe.Slice((*byte)(unsafe.Pointer(data)), size))
+	return string(s)
 }
 
 func StringDelete(str String) {
@@ -1934,8 +1967,8 @@ func SurfaceMakeRasterDirect(info *ImageInfo, pixels []byte, rowBytes int, surfa
 	return Surface(r1)
 }
 
-func SurfaceMakeRasterN32PreMul(width, height int, surfaceProps SurfaceProps) Surface {
-	r1, _, _ := skSurfaceMakeRasterN32PreMulProc.Call(uintptr(width), uintptr(height), uintptr(surfaceProps))
+func SurfaceMakeRasterN32PreMul(info *ImageInfo, surfaceProps SurfaceProps) Surface {
+	r1, _, _ := skSurfaceMakeRasterN32PreMulProc.Call(uintptr(unsafe.Pointer(info)), uintptr(surfaceProps))
 	return Surface(r1)
 }
 
@@ -1970,10 +2003,10 @@ func TextBlobMakeFromText(text string, font Font) TextBlob {
 	return TextBlob(r1)
 }
 
-func TextBlobGetBounds(txt TextBlob) *Rect {
+func TextBlobGetBounds(txt TextBlob) geom.Rect[float32] {
 	var r Rect
 	skTextBlobGetBoundsProc.Call(uintptr(txt), uintptr(unsafe.Pointer(&r)))
-	return &r
+	return toGeomRect(r)
 }
 
 func TextBlobGetIntercepts(txt TextBlob, p Paint, start, end float32, intercepts []float32) int {
@@ -2004,15 +2037,15 @@ func TextBlobBuilderAllocRun(builder TextBlobBuilder, font Font, glyphs []uint16
 	r1, _, _ := skTextBlobBuilderAllocRunProc.Call(uintptr(builder), uintptr(font), uintptr(len(glyphs)),
 		uintptr(math.Float32bits(x)), uintptr(math.Float32bits(y)), 0)
 	buffer := (*textBlobBuilderRunBuffer)(unsafe.Pointer(r1))
-	copy(((*[1 << 30]uint16)(unsafe.Pointer(buffer.Glyphs)))[:len(glyphs)], glyphs)
+	copy(unsafe.Slice((*uint16)(unsafe.Pointer(buffer.Glyphs)), len(glyphs)), glyphs)
 }
 
 func TextBlobBuilderAllocRunPosH(builder TextBlobBuilder, font Font, glyphs []uint16, positions []float32, y float32) {
 	r1, _, _ := skTextBlobBuilderAllocRunPosHProc.Call(uintptr(builder), uintptr(font), uintptr(len(glyphs)),
 		uintptr(math.Float32bits(y)), 0)
 	buffer := (*textBlobBuilderRunBuffer)(unsafe.Pointer(r1))
-	copy(((*[1 << 30]uint16)(unsafe.Pointer(buffer.Glyphs)))[:len(glyphs)], glyphs)
-	copy(((*[1 << 30]float32)(unsafe.Pointer(buffer.Pos)))[:len(positions)], positions)
+	copy(unsafe.Slice((*uint16)(unsafe.Pointer(buffer.Glyphs)), len(glyphs)), glyphs)
+	copy(unsafe.Slice((*float32)(unsafe.Pointer(buffer.Pos)), len(positions)), positions)
 }
 
 func TextBlobBuilderDelete(builder TextBlobBuilder) {

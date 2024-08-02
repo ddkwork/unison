@@ -1,4 +1,4 @@
-// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -13,7 +13,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ddkwork/golibrary/mylog"
+	"github.com/richardwilkes/toolbox"
 )
 
 var (
@@ -56,7 +56,7 @@ func processReleaseQueue() {
 			funcs := list
 			InvokeTask(func() {
 				for _, f := range funcs {
-					mylog.Call(f)
+					toolbox.Call(f)
 				}
 			})
 			allocation[pos] = len(list)

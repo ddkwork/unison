@@ -1,4 +1,4 @@
-// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -13,6 +13,7 @@ import (
 	"strconv"
 
 	"github.com/richardwilkes/toolbox/i18n"
+	"github.com/richardwilkes/unison/enums/paintstyle"
 )
 
 var _ Layout = &dockHeader{}
@@ -20,10 +21,12 @@ var _ Layout = &dockHeader{}
 // DefaultDockHeaderTheme holds the default DockHeaderTheme values for DockHeaders. Modifying this data will not alter
 // existing DockHeaders, but will alter any DockHeaders created in the future.
 var DefaultDockHeaderTheme = DockHeaderTheme{
-	BackgroundInk: BackgroundColor,
-	DropAreaInk:   DropAreaColor,
-	HeaderBorder: NewCompoundBorder(NewLineBorder(DividerColor, 0, Insets{Bottom: 1}, false),
-		NewEmptyBorder(NewHorizontalInsets(4))),
+	BackgroundInk: ThemeSurface,
+	DropAreaInk:   ThemeWarning,
+	HeaderBorder: NewCompoundBorder(
+		NewLineBorder(ThemeSurfaceEdge, 0, Insets{Bottom: 1}, false),
+		NewEmptyBorder(NewHorizontalInsets(4)),
+	),
 	MinimumTabWidth: 50,
 	TabGap:          4,
 	TabInsertSize:   3,
@@ -40,12 +43,12 @@ type DockHeaderTheme struct {
 }
 
 type dockHeader struct {
-	Panel
-	DockHeaderTheme
 	owner                 *DockContainer
 	overflowButton        *Button
 	maximizeRestoreButton *Button
-	dragInsertIndex       int
+	DockHeaderTheme
+	Panel
+	dragInsertIndex int
 }
 
 func newDockHeader(dc *DockContainer) *dockHeader {
@@ -74,7 +77,7 @@ func newDockHeader(dc *DockContainer) *dockHeader {
 }
 
 func (d *dockHeader) DefaultDraw(gc *Canvas, rect Rect) {
-	gc.DrawRect(rect, d.BackgroundInk.Paint(gc, rect, Fill))
+	gc.DrawRect(rect, d.BackgroundInk.Paint(gc, rect, paintstyle.Fill))
 	if d.dragInsertIndex >= 0 {
 		r := d.ContentRect(false)
 		r.Width = d.TabInsertSize
@@ -85,7 +88,7 @@ func (d *dockHeader) DefaultDraw(gc *Canvas, rect Rect) {
 		default:
 			r.X = tabs[len(tabs)-1].FrameRect().Right()
 		}
-		gc.DrawRect(r, d.DropAreaInk.Paint(gc, rect, Fill))
+		gc.DrawRect(r, d.DropAreaInk.Paint(gc, rect, paintstyle.Fill))
 	}
 }
 
@@ -179,9 +182,9 @@ func (d *dockHeader) LayoutSizes(target *Panel, _ Size) (minSize, prefSize, maxS
 	prefSize.Width += gaps
 	minSize.Height = prefSize.Height
 	if b := target.Border(); b != nil {
-		insets := b.Insets()
-		minSize.AddInsets(insets)
-		prefSize.AddInsets(insets)
+		insets := b.Insets().Size()
+		minSize = minSize.Add(insets)
+		prefSize = prefSize.Add(insets)
 	}
 	return minSize, prefSize, MaxSize(prefSize)
 }
@@ -249,7 +252,7 @@ func (d *dockHeader) PerformLayout(_ *Panel) {
 					}
 					remaining -= buttonSizes[overflowIndex].Width
 					hidden[tabs[i]] = true
-					d.overflowButton.Text = "»" + strconv.Itoa(len(hidden))
+					d.overflowButton.SetTitle("»" + strconv.Itoa(len(hidden)))
 					_, buttonSizes[overflowIndex], _ = d.overflowButton.Sizes(Size{})
 					remaining += buttonSizes[overflowIndex].Width
 					remaining -= tabSizes[i].Width + d.TabGap
@@ -271,9 +274,10 @@ func (d *dockHeader) PerformLayout(_ *Panel) {
 			dt.Hidden = true
 		} else {
 			dt.Hidden = false
-			r := NewRect(x, contentRect.Y+(contentRect.Height-tabSizes[i].Height)/2, tabSizes[i].Width, tabSizes[i].Height)
-			r.Align()
-			dt.SetFrameRect(r)
+			dt.SetFrameRect(Rect{
+				Point: Point{X: x, Y: contentRect.Y + (contentRect.Height-tabSizes[i].Height)/2},
+				Size:  tabSizes[i],
+			}.Align())
 			x += tabSizes[i].Width + d.TabGap
 		}
 	}
@@ -283,9 +287,10 @@ func (d *dockHeader) PerformLayout(_ *Panel) {
 			b.Hidden = true
 		} else {
 			b.Hidden = false
-			r := NewRect(x, contentRect.Y+(contentRect.Height-buttonSizes[i].Height)/2, buttonSizes[i].Width, buttonSizes[i].Height)
-			r.Align()
-			b.SetFrameRect(r)
+			b.SetFrameRect(Rect{
+				Point: Point{X: x, Y: contentRect.Y + (contentRect.Height-buttonSizes[i].Height)/2},
+				Size:  buttonSizes[i],
+			}.Align())
 			x += buttonSizes[i].Width + d.TabGap
 		}
 	}

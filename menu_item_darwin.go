@@ -1,4 +1,4 @@
-// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -10,6 +10,7 @@
 package unison
 
 import (
+	"github.com/richardwilkes/unison/enums/check"
 	"github.com/richardwilkes/unison/internal/ns"
 )
 
@@ -98,23 +99,23 @@ func (mi *macMenuItem) SubMenu() Menu {
 	}
 }
 
-func (mi *macMenuItem) CheckState() CheckState {
+func (mi *macMenuItem) CheckState() check.Enum {
 	switch mi.item.State() {
 	case ns.ControlStateValueOn:
-		return OnCheckState
+		return check.On
 	case ns.ControlStateValueOff:
-		return OffCheckState
+		return check.Off
 	default:
-		return MixedCheckState
+		return check.Mixed
 	}
 }
 
-func (mi *macMenuItem) SetCheckState(s CheckState) {
+func (mi *macMenuItem) SetCheckState(s check.Enum) {
 	var itemState ns.ControlStateValue
 	switch s {
-	case OnCheckState:
+	case check.On:
 		itemState = ns.ControlStateValueOn
-	case OffCheckState:
+	case check.Off:
 		itemState = ns.ControlStateValueOff
 	default:
 		itemState = ns.ControlStateValueMixed

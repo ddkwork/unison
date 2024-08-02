@@ -1,4 +1,4 @@
-// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -12,8 +12,6 @@ package w32
 import (
 	"syscall"
 	"unsafe"
-
-	"github.com/ddkwork/golibrary/mylog"
 )
 
 var (
@@ -22,8 +20,10 @@ var (
 )
 
 func SysAllocString(str string) *int16 {
-	p := mylog.Check2(syscall.UTF16PtrFromString(str))
-
+	p, err := syscall.UTF16PtrFromString(str)
+	if err != nil {
+		return nil
+	}
 	r1, _, _ := sysAllocStringProc.Call(uintptr(unsafe.Pointer(p)))
 	return (*int16)(unsafe.Pointer(r1))
 }

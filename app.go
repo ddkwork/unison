@@ -1,4 +1,4 @@
-// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -17,10 +17,11 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/ddkwork/golibrary/mylog"
+	"github.com/richardwilkes/toolbox"
 	"github.com/richardwilkes/toolbox/atexit"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/fatal"
+	"github.com/richardwilkes/unison/enums/thememode"
 	"github.com/richardwilkes/unison/internal/glfw"
 	"github.com/richardwilkes/unison/internal/skia"
 )
@@ -38,7 +39,7 @@ var (
 	noGlobalMenuBar                   bool
 	quitLock                          sync.RWMutex
 	calledAtExit                      bool
-	currentColorMode                  = AutomaticColorMode
+	currentThemeMode                  = thememode.Auto
 	needPlatformDarkModeUpdate        = true
 	platformDarkModeEnabled           bool
 )
@@ -129,15 +130,19 @@ func NoGlobalMenuBar() StartupOption {
 // Start the application. This function does NOT return. While some calls may be safe to make, it should be assumed no
 // calls into unison can be made prior to Start() being called unless explicitly stated otherwise.
 func Start(options ...StartupOption) {
-	pwd := mylog.Check2(filepath.Abs("."))
-
+	pwd, err := filepath.Abs(".")
+	if err != nil {
+		errs.Log(err)
+	}
 	for _, option := range options {
 		fatal.IfErr(option(startupOption{}))
 	}
-	// glfw.InitHint(glfw.CocoaMenubar, glfw.False)//todo
+	//glfw.InitHint(glfw.CocoaMenubar, glfw.False)
 	fatal.IfErr(glfw.Init())
 	// Restore the original working directory, as glfw changes it on some platforms
-	mylog.Check(os.Chdir(pwd))
+	if err = os.Chdir(pwd); err != nil {
+		errs.Log(err)
+	}
 	atexit.Register(quitting)
 	atexit.Register(func() {
 		quitLock.Lock()
@@ -175,7 +180,7 @@ func finishStartup() {
 	RebuildDynamicColors()
 	platformLateInit()
 	if startupFinishedCallback != nil {
-		mylog.Call(startupFinishedCallback)
+		toolbox.Call(startupFinishedCallback)
 	}
 	platformFinishedStartup()
 }
@@ -186,7 +191,7 @@ func finishStartup() {
 func ThemeChanged() {
 	MarkDynamicColorsForRebuild()
 	if themeChangedCallback != nil {
-		mylog.Call(themeChangedCallback)
+		toolbox.Call(themeChangedCallback)
 	}
 	for _, wnd := range Windows() {
 		wnd.MarkForRedraw()
@@ -195,7 +200,7 @@ func ThemeChanged() {
 
 func uiTaskRecovery(err error) {
 	if recoveryCallback != nil {
-		mylog.Call(func() { recoveryCallback(err) })
+		toolbox.Call(func() { recoveryCallback(err) })
 	} else {
 		errs.Log(err)
 	}
@@ -204,7 +209,7 @@ func uiTaskRecovery(err error) {
 func quitAfterLastWindowClosed() bool {
 	if quitAfterLastWindowClosedCallback != nil {
 		quit := true
-		mylog.Call(func() { quit = quitAfterLastWindowClosedCallback() })
+		toolbox.Call(func() { quit = quitAfterLastWindowClosedCallback() })
 		return quit
 	}
 	return true
@@ -213,7 +218,7 @@ func quitAfterLastWindowClosed() bool {
 func allowQuit() bool {
 	if allowQuitCallback != nil {
 		allow := true
-		mylog.Call(func() { allow = allowQuitCallback() })
+		toolbox.Call(func() { allow = allowQuitCallback() })
 		return allow
 	}
 	return true
@@ -225,7 +230,7 @@ func quitting() {
 	quittingCallback = nil
 	quitLock.Unlock()
 	if callback != nil {
-		mylog.Call(callback)
+		toolbox.Call(callback)
 	}
 	// atexit.Exit() is called here once to ensure registered atexit hooks are actually called, as OS's may directly
 	// terminate the app after returning from this function.
@@ -252,20 +257,20 @@ func Beep() {
 }
 
 // IsColorModeTrackingPossible returns true if the underlying platform can provide the current dark mode state. On those
-// platforms that return false from this function, AutomaticColorMode is the same as LightColorMode.
+// platforms that return false from this function, thememode.Auto is the same as thememode.Light.
 func IsColorModeTrackingPossible() bool {
 	return platformIsDarkModeTrackingPossible()
 }
 
-// CurrentColorMode returns the current ColorMode state.
-func CurrentColorMode() ColorMode {
-	return currentColorMode
+// CurrentThemeMode returns the current theme mode state.
+func CurrentThemeMode() thememode.Enum {
+	return currentThemeMode
 }
 
-// SetColorMode sets the current ColorMode.
-func SetColorMode(mode ColorMode) {
-	if currentColorMode != mode {
-		currentColorMode = mode
+// SetThemeMode sets the current theme mode state.
+func SetThemeMode(mode thememode.Enum) {
+	if currentThemeMode != mode {
+		currentThemeMode = mode
 		needPlatformDarkModeUpdate = true
 		InvokeTask(ThemeChanged)
 	}
@@ -273,10 +278,10 @@ func SetColorMode(mode ColorMode) {
 
 // IsDarkModeEnabled returns true if the OS is currently using a "dark mode".
 func IsDarkModeEnabled() bool {
-	switch currentColorMode {
-	case LightColorMode:
+	switch currentThemeMode {
+	case thememode.Light:
 		return false
-	case DarkColorMode:
+	case thememode.Dark:
 		return true
 	default:
 		if needPlatformDarkModeUpdate {

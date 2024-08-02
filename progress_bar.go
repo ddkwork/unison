@@ -1,4 +1,4 @@
-// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -11,14 +11,16 @@ package unison
 
 import (
 	"time"
+
+	"github.com/richardwilkes/unison/enums/paintstyle"
 )
 
 // DefaultProgressBarTheme holds the default ProgressBarTheme values for ProgressBars. Modifying this data will not
 // alter existing ProgressBars, but will alter any ProgressBars created in the future.
 var DefaultProgressBarTheme = ProgressBarTheme{
-	BackgroundInk:      BackgroundColor,
-	FillInk:            SelectionColor,
-	EdgeInk:            ControlEdgeColor,
+	BackgroundInk:      ThemeSurface,
+	FillInk:            ThemeFocus,
+	EdgeInk:            ThemeSurfaceEdge,
 	TickSpeed:          time.Second / 30,
 	FullTraversalSpeed: time.Second,
 	PreferredBarHeight: 8,
@@ -42,11 +44,11 @@ type ProgressBarTheme struct {
 
 // ProgressBar provides a meter showing progress.
 type ProgressBar struct {
-	Panel
-	ProgressBarTheme
-	current           float32
-	maximum           float32
 	lastAnimationTime time.Time
+	ProgressBarTheme
+	Panel
+	current float32
+	maximum float32
 }
 
 // NewProgressBar creates a new progress bar. A max of zero will create an indeterminate progress bar, i.e. one whose
@@ -111,16 +113,12 @@ func (p *ProgressBar) DefaultSizes(hint Size) (minSize, prefSize, maxSize Size) 
 	maxSize.Width = DefaultMaxSize
 	maxSize.Height = p.PreferredBarHeight
 	if border := p.Border(); border != nil {
-		insets := border.Insets()
-		minSize.AddInsets(insets)
-		prefSize.AddInsets(insets)
-		maxSize.AddInsets(insets)
+		insets := border.Insets().Size()
+		minSize = minSize.Add(insets)
+		prefSize = prefSize.Add(insets)
+		maxSize = maxSize.Add(insets)
 	}
-	minSize.GrowToInteger()
-	prefSize.GrowToInteger()
-	maxSize.GrowToInteger()
-	prefSize.ConstrainForHint(hint)
-	return prefSize, prefSize, MaxSize(prefSize)
+	return minSize.Ceil(), prefSize.Ceil().ConstrainForHint(hint), MaxSize(maxSize.Ceil())
 }
 
 // DefaultDraw provides the default drawing.
@@ -143,19 +141,21 @@ func (p *ProgressBar) DefaultDraw(canvas *Canvas, _ Rect) {
 	} else if p.current > 0 {
 		meter.Width = bounds.Width * (p.current / p.maximum)
 	}
-	canvas.DrawRoundedRect(bounds, p.CornerRadius, p.CornerRadius, p.BackgroundInk.Paint(canvas, bounds, Fill))
+	canvas.DrawRoundedRect(bounds, p.CornerRadius, p.CornerRadius,
+		p.BackgroundInk.Paint(canvas, bounds, paintstyle.Fill))
 	if meter.Width > 0 {
 		trimmedMeter := meter
 		trimmedMeter.X += 0.5
 		trimmedMeter.Width--
-		canvas.DrawRoundedRect(trimmedMeter, p.CornerRadius, p.CornerRadius, p.FillInk.Paint(canvas, trimmedMeter, Fill))
+		canvas.DrawRoundedRect(trimmedMeter, p.CornerRadius, p.CornerRadius,
+			p.FillInk.Paint(canvas, trimmedMeter, paintstyle.Fill))
 	}
-	bounds.InsetUniform(p.EdgeThickness / 2)
-	paint := p.EdgeInk.Paint(canvas, bounds, Stroke)
+	bounds = bounds.Inset(NewUniformInsets(p.EdgeThickness / 2))
+	paint := p.EdgeInk.Paint(canvas, bounds, paintstyle.Stroke)
 	paint.SetStrokeWidth(p.EdgeThickness)
 	canvas.DrawRoundedRect(bounds, p.CornerRadius, p.CornerRadius, paint)
 	if meter.Width > 0 {
-		meter.InsetUniform(p.EdgeThickness / 2)
+		meter = meter.Inset(NewUniformInsets(p.EdgeThickness / 2))
 		canvas.DrawRoundedRect(meter, p.CornerRadius, p.CornerRadius, paint)
 	}
 	if p.maximum == 0 {

@@ -1,4 +1,4 @@
-// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -12,23 +12,8 @@ package demo
 import (
 	_ "embed" // Used to embed the images
 
-	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/unison"
 )
-
-var (
-	//go:embed resources/home.png
-	homePngBytes []byte
-	homeImage    *unison.Image
-)
-
-// HomeImage returns a stylized image of a home, suitable for an icon.
-func HomeImage() (*unison.Image, error) {
-	if homeImage == nil {
-		homeImage = mylog.Check2(unison.NewImageFromBytes(homePngBytes, 0.5))
-	}
-	return homeImage, nil
-}
 
 var (
 	//go:embed resources/classic-apple-logo.png
@@ -39,7 +24,10 @@ var (
 // ClassicAppleLogoImage returns an image of the classic rainbow-colored Apple logo.
 func ClassicAppleLogoImage() (*unison.Image, error) {
 	if classicAppleLogoImage == nil {
-		classicAppleLogoImage = mylog.Check2(unison.NewImageFromBytes(classicAppleLogoPngBytes, 0.5))
+		var err error
+		if classicAppleLogoImage, err = unison.NewImageFromBytes(classicAppleLogoPngBytes, 0.5); err != nil {
+			return nil, err
+		}
 	}
 	return classicAppleLogoImage, nil
 }
@@ -53,7 +41,10 @@ var (
 // MountainsImage returns an image of some mountains.
 func MountainsImage() (*unison.Image, error) {
 	if mountainsImage == nil {
-		mountainsImage = mylog.Check2(unison.NewImageFromBytes(mountainsJpgBytes, 0.5))
+		var err error
+		if mountainsImage, err = unison.NewImageFromBytes(mountainsJpgBytes, 0.5); err != nil {
+			return nil, err
+		}
 	}
 	return mountainsImage, nil
 }

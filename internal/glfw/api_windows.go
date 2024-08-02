@@ -21,8 +21,6 @@ import (
 	"syscall"
 	"unsafe"
 
-	"github.com/ddkwork/golibrary/mylog"
-
 	"golang.org/x/sys/windows"
 )
 
@@ -881,7 +879,11 @@ func _BringWindowToTop(hWnd windows.HWND) error {
 func _ChangeDisplaySettingsExW(deviceName string, lpDevMode *_DEVMODEW, hwnd windows.HWND, dwflags uint32, lParam unsafe.Pointer) int32 {
 	var lpszDeviceName *uint16
 	if deviceName != "" {
-		lpszDeviceName = mylog.Check2(windows.UTF16PtrFromString(deviceName))
+		var err error
+		lpszDeviceName, err = windows.UTF16PtrFromString(deviceName)
+		if err != nil {
+			panic("glfw: device name must not include a NUL character")
+		}
 	}
 
 	r, _, _ := procChangeDisplaySettingsExW.Call(uintptr(unsafe.Pointer(lpszDeviceName)), uintptr(unsafe.Pointer(lpDevMode)), uintptr(hwnd), uintptr(dwflags), uintptr(lParam))
@@ -980,12 +982,20 @@ func _CreateIconIndirect(piconinfo *_ICONINFO) (_HICON, error) {
 func _CreateWindowExW(dwExStyle uint32, className string, windowName string, dwStyle uint32, x, y, nWidth, nHeight int32, hWndParent windows.HWND, hMenu _HMENU, hInstance _HINSTANCE, lpParam unsafe.Pointer) (windows.HWND, error) {
 	var lpClassName *uint16
 	if className != "" {
-		lpClassName = mylog.Check2(windows.UTF16PtrFromString(className))
+		var err error
+		lpClassName, err = windows.UTF16PtrFromString(className)
+		if err != nil {
+			panic("glfw: class name msut not include a NUL character")
+		}
 	}
 
 	var lpWindowName *uint16
 	if windowName != "" {
-		lpWindowName = mylog.Check2(windows.UTF16PtrFromString(windowName))
+		var err error
+		lpWindowName, err = windows.UTF16PtrFromString(windowName)
+		if err != nil {
+			panic("glfw: window name msut not include a NUL character")
+		}
 	}
 
 	r, _, e := procCreateWindowExW.Call(
@@ -1127,7 +1137,11 @@ func _EnableNonClientDpiScaling(hwnd windows.HWND) error {
 func _EnumDisplayDevicesW(device string, iDevNum uint32, dwFlags uint32) (_DISPLAY_DEVICEW, bool) {
 	var lpDevice *uint16
 	if device != "" {
-		lpDevice = mylog.Check2(windows.UTF16PtrFromString(device))
+		var err error
+		lpDevice, err = windows.UTF16PtrFromString(device)
+		if err != nil {
+			panic("glfw: device name must not include a NUL character")
+		}
 	}
 
 	var displayDevice _DISPLAY_DEVICEW
@@ -1152,7 +1166,11 @@ func _EnumDisplayMonitors(hdc _HDC, lprcClip *_RECT, lpfnEnum uintptr, dwData _L
 func _EnumDisplaySettingsExW(deviceName string, iModeNum uint32, dwFlags uint32) (_DEVMODEW, bool) {
 	var lpszDeviceName *uint16
 	if deviceName != "" {
-		lpszDeviceName = mylog.Check2(windows.UTF16PtrFromString(deviceName))
+		var err error
+		lpszDeviceName, err = windows.UTF16PtrFromString(deviceName)
+		if err != nil {
+			panic("glfw: device name must not include a NUL character")
+		}
 	}
 
 	var dm _DEVMODEW
@@ -1170,7 +1188,11 @@ func _EnumDisplaySettingsExW(deviceName string, iModeNum uint32, dwFlags uint32)
 func _EnumDisplaySettingsW(deviceName string, iModeNum uint32) (_DEVMODEW, bool) {
 	var lpszDeviceName *uint16
 	if deviceName != "" {
-		lpszDeviceName = mylog.Check2(windows.UTF16PtrFromString(deviceName))
+		var err error
+		lpszDeviceName, err = windows.UTF16PtrFromString(deviceName)
+		if err != nil {
+			panic("glfw: device name must not include a NUL character")
+		}
 	}
 
 	var dm _DEVMODEW
@@ -1266,8 +1288,10 @@ func _GetModuleHandleExW(dwFlags uint32, lpModuleName any) (_HMODULE, error) {
 	switch moduleName := lpModuleName.(type) {
 	case string:
 		if moduleName != "" {
-			p := mylog.Check2(windows.UTF16PtrFromString(moduleName))
-
+			p, err := windows.UTF16PtrFromString(moduleName)
+			if err != nil {
+				panic("glfw: module name must not include a NUL character")
+			}
 			ptr = unsafe.Pointer(p)
 		}
 	case unsafe.Pointer:
@@ -1620,7 +1644,10 @@ func _SetWindowPos(hWnd windows.HWND, hWndInsertAfter windows.HWND, x, y, cx, cy
 
 func _SetWindowTextW(hWnd windows.HWND, str string) error {
 	// An empty string is also a valid value. Always create an uint16 pointer.
-	lpString := mylog.Check2(windows.UTF16PtrFromString(str))
+	lpString, err := windows.UTF16PtrFromString(str)
+	if err != nil {
+		panic("glfw: str must not include a NUL character")
+	}
 
 	r, _, e := procSetWindowTextW.Call(uintptr(hWnd), uintptr(unsafe.Pointer(lpString)))
 	runtime.KeepAlive(lpString)
@@ -1718,7 +1745,11 @@ func _TrackMouseEvent(lpEventTrack *_TRACKMOUSEEVENT) error {
 func _UnregisterClassW(className string, hInstance _HINSTANCE) error {
 	var lpClassName *uint16
 	if className != "" {
-		lpClassName = mylog.Check2(windows.UTF16PtrFromString(className))
+		var err error
+		lpClassName, err = windows.UTF16PtrFromString(className)
+		if err != nil {
+			panic("glfw: class name must not include a NUL character")
+		}
 	}
 
 	r, _, e := procUnregisterClassW.Call(uintptr(unsafe.Pointer(lpClassName)), uintptr(hInstance))
@@ -1746,12 +1777,12 @@ func _WaitMessage() error {
 	return nil
 }
 
-func wglCreateContext(unnamedParam1 _HDC) _HGLRC {
+func wglCreateContext(unnamedParam1 _HDC) (_HGLRC, error) {
 	r, _, e := procWGLCreateContext.Call(uintptr(unnamedParam1))
 	if _HGLRC(r) == 0 {
-		mylog.Check(fmt.Errorf("glfw: wglCreateContext failed: %w", e))
+		return 0, fmt.Errorf("glfw: wglCreateContext failed: %w", e)
 	}
-	return _HGLRC(r)
+	return _HGLRC(r), nil
 }
 
 func wglCreateContextAttribsARB(hDC _HDC, hshareContext _HGLRC, attribList *int32) (_HGLRC, error) {
@@ -1808,8 +1839,10 @@ func wglGetPixelFormatAttribivARB(hdc _HDC, iPixelFormat int32, iLayerPlane int3
 }
 
 func wglGetProcAddress(unnamedParam1 string) uintptr {
-	ptr := mylog.Check2(windows.BytePtrFromString(unnamedParam1))
-
+	ptr, err := windows.BytePtrFromString(unnamedParam1)
+	if err != nil {
+		panic("glfw: unnamedParam1 must not include a NUL character")
+	}
 	r, _, _ := procWGLGetProcAddress.Call(uintptr(unsafe.Pointer(ptr)))
 	return r
 }

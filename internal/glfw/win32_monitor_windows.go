@@ -6,11 +6,10 @@ package glfw
 
 import (
 	"errors"
-	"unsafe"
-
 	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/unison/internal/microsoftgdk"
 	"github.com/richardwilkes/unison/internal/winver"
+	"unsafe"
 
 	"golang.org/x/sys/windows"
 )
@@ -62,7 +61,9 @@ func createMonitor(adapter *_DISPLAY_DEVICEW, display *_DISPLAY_DEVICEW) (*Monit
 		right:  dm.dmPosition.x + int32(dm.dmPelsWidth),
 		bottom: dm.dmPosition.y + int32(dm.dmPelsHeight),
 	}
-	mylog.Check(_EnumDisplayMonitors(0, &rect, monitorCallbackPtr, _LPARAM(unsafe.Pointer(monitor))))
+	if err := _EnumDisplayMonitors(0, &rect, monitorCallbackPtr, _LPARAM(unsafe.Pointer(monitor))); err != nil {
+		return nil, err
+	}
 	return monitor, nil
 }
 
@@ -104,16 +105,26 @@ adapterLoop:
 			for i, monitor := range disconnected {
 				if monitor != nil && monitor.platform.displayName == windows.UTF16ToString(display.DeviceName[:]) {
 					disconnected[i] = nil
-					mylog.Check(_EnumDisplayMonitors(0, nil, monitorCallbackPtr, _LPARAM(unsafe.Pointer(_glfw.monitors[i]))))
+					err := _EnumDisplayMonitors(0, nil, monitorCallbackPtr, _LPARAM(unsafe.Pointer(_glfw.monitors[i])))
+					if err != nil {
+						return err
+					}
 
 					continue displayLoop
 				}
 			}
-			monitor := mylog.Check2(createMonitor(&adapter, &display))
+
+			monitor, err := createMonitor(&adapter, &display)
+			if err != nil {
+				return err
+			}
 			if monitor == nil {
 				return nil
 			}
-			mylog.Check(inputMonitor(monitor, Connected, typ))
+
+			if err := inputMonitor(monitor, Connected, typ); err != nil {
+				return err
+			}
 			typ = _GLFW_INSERT_LAST
 		}
 
@@ -126,17 +137,26 @@ adapterLoop:
 					continue adapterLoop
 				}
 			}
-			monitor := mylog.Check2(createMonitor(&adapter, nil))
+
+			monitor, err := createMonitor(&adapter, nil)
+			if err != nil {
+				return err
+			}
 			if monitor == nil {
 				return nil
 			}
-			mylog.Check(inputMonitor(monitor, Connected, typ))
+
+			if err := inputMonitor(monitor, Connected, typ); err != nil {
+				return err
+			}
 		}
 	}
 
 	for _, monitor := range disconnected {
 		if monitor != nil {
-			mylog.Check(inputMonitor(monitor, Disconnected, 0))
+			if err := inputMonitor(monitor, Disconnected, 0); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -144,8 +164,10 @@ adapterLoop:
 }
 
 func (m *Monitor) setVideoModeWin32(desired *VidMode) error {
-	best := mylog.Check2(m.chooseVideoMode(desired))
-
+	best, err := m.chooseVideoMode(desired)
+	if err != nil {
+		return err
+	}
 	current := m.platformGetVideoMode()
 	if best.equals(current) {
 		return nil
@@ -194,11 +216,18 @@ func (m *Monitor) restoreVideoModeWin32() {
 
 func getMonitorContentScaleWin32(handle _HMONITOR) (xscale, yscale float32) {
 	var xdpi, ydpi uint32
-	if winver.IsWindows8Point1OrGreater() {
-		xdpi, ydpi = mylog.Check3(_GetDpiForMonitor(handle, _MDT_EFFECTIVE_DPI))
-	} else {
-		dc := mylog.Check2(_GetDC(0))
 
+	if winver.IsWindows8Point1OrGreater() {
+		var err error
+		xdpi, ydpi, err = _GetDpiForMonitor(handle, _MDT_EFFECTIVE_DPI)
+		if err != nil {
+			return 0, 0
+		}
+	} else {
+		dc, err := _GetDC(0)
+		if err != nil {
+			return 0, 0
+		}
 		defer _ReleaseDC(0, dc)
 
 		xdpi = uint32(_GetDeviceCaps(dc, _LOGPIXELSX))
@@ -226,6 +255,7 @@ func (m *Monitor) platformGetMonitorContentScale() (xscale, yscale float32) {
 	if microsoftgdk.IsXbox() {
 		return 1, 1
 	}
+
 	return getMonitorContentScaleWin32(m.platform.handle)
 }
 
@@ -314,14 +344,14 @@ func (m *Monitor) platformGetVideoMode() *VidMode {
 
 func (m *Monitor) in32Adapter() (string, error) {
 	if !_glfw.initialized {
-		return "", NotInitialized
+		mylog.Check(NotInitialized.Error())
 	}
 	return m.platform.adapterName, nil
 }
 
 func (m *Monitor) win32Monitor() (string, error) {
 	if !_glfw.initialized {
-		return "", NotInitialized
+		mylog.Check(NotInitialized.Error())
 	}
 	return m.platform.displayName, nil
 }

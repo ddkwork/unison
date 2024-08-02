@@ -1,4 +1,4 @@
-// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -13,55 +13,17 @@ import (
 	"runtime"
 
 	"github.com/richardwilkes/toolbox/errs"
+	"github.com/richardwilkes/unison/enums/arcsize"
+	"github.com/richardwilkes/unison/enums/direction"
+	"github.com/richardwilkes/unison/enums/filltype"
+	"github.com/richardwilkes/unison/enums/pathop"
 	"github.com/richardwilkes/unison/internal/skia"
-)
-
-// ArcSize holds the relative size of an arc.
-type ArcSize byte
-
-// Possible values for ArcSize.
-const (
-	SmallArcSize ArcSize = iota
-	LargeArcSize
-)
-
-// Direction holds the direction of a path.
-type Direction byte
-
-// Possible values for Direction.
-const (
-	Clockwise Direction = iota
-	CounterClockwise
-)
-
-// FillType holds the type of fill operation to perform, which affects how overlapping contours interact with each
-// other.
-type FillType byte
-
-// Possible values for FillType.
-const (
-	Winding FillType = iota
-	EvenOdd
-	InverseWinding
-	InverseEvenOdd
-)
-
-// PathOp holds the possible operations that can be performed on a pair of paths.
-type PathOp byte
-
-// Possible values for PathOp.
-const (
-	Difference PathOp = iota
-	Intersect
-	Union
-	Xor
-	ReverseDifference
 )
 
 // PathOpPair holds the combination of a Path and a PathOp.
 type PathOpPair struct {
 	Path *Path
-	Op   PathOp
+	Op   pathop.Enum
 }
 
 // Path holds geometry.
@@ -101,18 +63,18 @@ func (p *Path) ToSVGString(useAbsoluteValues bool) string {
 }
 
 // FillType returns the FillType for this path.
-func (p *Path) FillType() FillType {
-	return FillType(skia.PathGetFillType(p.path))
+func (p *Path) FillType() filltype.Enum {
+	return filltype.Enum(skia.PathGetFillType(p.path))
 }
 
 // SetFillType sets the FillType for this path.
-func (p *Path) SetFillType(fillType FillType) {
+func (p *Path) SetFillType(fillType filltype.Enum) {
 	skia.PathSetFillType(p.path, skia.FillType(fillType))
 }
 
 // ArcTo appends an arc. rotation is in degrees.
-func (p *Path) ArcTo(x, y, rx, ry, rotation float32, arcSize ArcSize, direction Direction) {
-	skia.PathArcTo(p.path, x, y, rx, ry, rotation, skia.ArcSize(arcSize), skia.Direction(direction))
+func (p *Path) ArcTo(x, y, rx, ry, rotation float32, arcSize arcsize.Enum, dir direction.Enum) {
+	skia.PathArcTo(p.path, x, y, rx, ry, rotation, skia.ArcSize(arcSize), skia.Direction(dir))
 }
 
 // ArcToFromTangent appends an arc. The arc is contained by the tangent from the current point to (x1, y1) and the
@@ -123,20 +85,20 @@ func (p *Path) ArcToFromTangent(x1, y1, x2, y2, radius float32) {
 }
 
 // ArcToRelative appends an arc. The destination point is relative to the current point. rotation is in degrees.
-func (p *Path) ArcToRelative(dx, dy, rx, ry, rotation float32, arcSize ArcSize, direction Direction) {
-	skia.PathRArcTo(p.path, dx, dy, rx, ry, rotation, skia.ArcSize(arcSize), skia.Direction(direction))
+func (p *Path) ArcToRelative(dx, dy, rx, ry, rotation float32, arcSize arcsize.Enum, dir direction.Enum) {
+	skia.PathRArcTo(p.path, dx, dy, rx, ry, rotation, skia.ArcSize(arcSize), skia.Direction(dir))
 }
 
 // ArcToOval appends an arc bounded by an oval. Both startAngle and sweepAngle are in degrees. A positive sweepAngle
 // extends clockwise while a negative value extends counter-clockwise. If forceMoveTo is true, a new contour is started.
 func (p *Path) ArcToOval(bounds Rect, startAngle, sweepAngle float32, forceMoveTo bool) {
-	skia.PathArcToWithOval(p.path, skia.RectToSkRect(&bounds), startAngle, sweepAngle, forceMoveTo)
+	skia.PathArcToWithOval(p.path, bounds, startAngle, sweepAngle, forceMoveTo)
 }
 
 // Bounds returns the bounding rectangle of the path. This is an approximation and may be different than the actual area
 // covered when drawn.
 func (p *Path) Bounds() Rect {
-	return skia.PathGetBounds(p.path).ToRect()
+	return skia.PathGetBounds(p.path)
 }
 
 // ComputeTightBounds returns the bounding rectangle of the path. This is an approximation and may be different than the
@@ -144,19 +106,19 @@ func (p *Path) Bounds() Rect {
 // Bounds(), though slower. When a path contains curves, the computed bounds includes the maximum extent of the quad,
 // conic, or cubic.
 func (p *Path) ComputeTightBounds() Rect {
-	return skia.PathComputeTightBounds(p.path).ToRect()
+	return skia.PathComputeTightBounds(p.path)
 }
 
 // Circle adds a circle to the path with a clockwise direction. The circle is a complete contour, i.e. it starts with a
 // MoveTo and ends with a Close operation.
 func (p *Path) Circle(x, y, radius float32) {
-	skia.PathAddCircle(p.path, x, y, radius, skia.Direction(Clockwise))
+	skia.PathAddCircle(p.path, x, y, radius, skia.Direction(direction.Clockwise))
 }
 
 // CircleWithDirection adds a circle to the path. The circle is a complete contour, i.e. it starts with a MoveTo and
 // ends with a Close operation.
-func (p *Path) CircleWithDirection(x, y, radius float32, direction Direction) {
-	skia.PathAddCircle(p.path, x, y, radius, skia.Direction(direction))
+func (p *Path) CircleWithDirection(x, y, radius float32, dir direction.Enum) {
+	skia.PathAddCircle(p.path, x, y, radius, skia.Direction(dir))
 }
 
 // Clone this path.
@@ -212,13 +174,13 @@ func (p *Path) MoveToRelative(x, y float32) {
 // Oval adds an oval to the path with a clockwise direction. The oval is a complete contour, i.e. it starts with a
 // MoveTo and ends with a Close operation.
 func (p *Path) Oval(bounds Rect) {
-	skia.PathAddOval(p.path, skia.RectToSkRect(&bounds), skia.Direction(Clockwise))
+	skia.PathAddOval(p.path, bounds, skia.Direction(direction.Clockwise))
 }
 
 // OvalWithDirection adds an oval to the path. The oval is a complete contour, i.e. it starts with a MoveTo and ends
 // with a Close operation.
-func (p *Path) OvalWithDirection(bounds Rect, direction Direction) {
-	skia.PathAddOval(p.path, skia.RectToSkRect(&bounds), skia.Direction(direction))
+func (p *Path) OvalWithDirection(bounds Rect, dir direction.Enum) {
+	skia.PathAddOval(p.path, bounds, skia.Direction(dir))
 }
 
 // Path appends a path. If extend is true, a line from the current point to the start of the added path is created.
@@ -234,19 +196,19 @@ func (p *Path) PathReverse(path *Path) {
 // PathRotated appends a path after rotating it. If extend is true, a line from the current point to the start of the
 // added path is created.
 func (p *Path) PathRotated(path *Path, degrees float32, extend bool) {
-	skia.PathAddPathMatrix(p.path, path.path, skia.Matrix2DtoMatrix(NewRotationByDegreesMatrix(degrees)), pathAddMode(extend))
+	skia.PathAddPathMatrix(p.path, path.path, NewRotationByDegreesMatrix(degrees), pathAddMode(extend))
 }
 
 // PathScaled appends a path after scaling it. If extend is true, a line from the current point to the start of the
 // added path is created.
 func (p *Path) PathScaled(path *Path, sx, sy float32, extend bool) {
-	skia.PathAddPathMatrix(p.path, path.path, skia.Matrix2DtoMatrix(NewScaleMatrix(sx, sy)), pathAddMode(extend))
+	skia.PathAddPathMatrix(p.path, path.path, NewScaleMatrix(sx, sy), pathAddMode(extend))
 }
 
 // PathTransformed appends a path after transforming it. If extend is true, a line from the current point to the start
 // of the added path is created.
-func (p *Path) PathTransformed(path *Path, matrix *Matrix, extend bool) {
-	skia.PathAddPathMatrix(p.path, path.path, skia.Matrix2DtoMatrix(matrix), pathAddMode(extend))
+func (p *Path) PathTransformed(path *Path, matrix Matrix, extend bool) {
+	skia.PathAddPathMatrix(p.path, path.path, matrix, pathAddMode(extend))
 }
 
 // PathTranslated appends a path after translating it with the given offset. If extend is true, a line from the current
@@ -277,72 +239,72 @@ func (p *Path) QuadTo(cpx, cpy, x, y float32) {
 // Rect adds a rectangle to the path with a clockwise direction. The rectangle is a complete contour, i.e. it starts
 // with a MoveTo and ends with a Close operation.
 func (p *Path) Rect(bounds Rect) {
-	skia.PathAddRect(p.path, skia.RectToSkRect(&bounds), skia.Direction(Clockwise))
+	skia.PathAddRect(p.path, bounds, skia.Direction(direction.Clockwise))
 }
 
 // RectWithDirection adds a rectangle to the path. The rectangle is a complete contour, i.e. it starts with a MoveTo and
 // ends with a Close operation.
-func (p *Path) RectWithDirection(bounds Rect, direction Direction) {
-	skia.PathAddRect(p.path, skia.RectToSkRect(&bounds), skia.Direction(direction))
+func (p *Path) RectWithDirection(bounds Rect, dir direction.Enum) {
+	skia.PathAddRect(p.path, bounds, skia.Direction(dir))
 }
 
 // RoundedRect adds a rectangle with curved corners to the path with a clockwise direction. The rectangle is a complete
 // contour, i.e. it starts with a MoveTo and ends with a Close operation.
 func (p *Path) RoundedRect(bounds Rect, radiusX, radiusY float32) {
-	skia.PathAddRoundedRect(p.path, skia.RectToSkRect(&bounds), radiusX, radiusY, skia.Direction(Clockwise))
+	skia.PathAddRoundedRect(p.path, bounds, radiusX, radiusY, skia.Direction(direction.Clockwise))
 }
 
 // RoundedRectWithDirection adds a rectangle with curved corners to the path. The rectangle is a complete contour, i.e.
 // it starts with a MoveTo and ends with a Close operation.
-func (p *Path) RoundedRectWithDirection(bounds Rect, radiusX, radiusY float32, direction Direction) {
-	skia.PathAddRoundedRect(p.path, skia.RectToSkRect(&bounds), radiusX, radiusY, skia.Direction(direction))
+func (p *Path) RoundedRectWithDirection(bounds Rect, radiusX, radiusY float32, dir direction.Enum) {
+	skia.PathAddRoundedRect(p.path, bounds, radiusX, radiusY, skia.Direction(dir))
 }
 
 // Rotate the path.
 func (p *Path) Rotate(degrees float32) {
-	skia.PathTransform(p.path, skia.Matrix2DtoMatrix(NewRotationByDegreesMatrix(degrees)))
+	skia.PathTransform(p.path, NewRotationByDegreesMatrix(degrees))
 }
 
 // Scale the path.
 func (p *Path) Scale(sx, sy float32) {
-	skia.PathTransform(p.path, skia.Matrix2DtoMatrix(NewScaleMatrix(sx, sy)))
+	skia.PathTransform(p.path, NewScaleMatrix(sx, sy))
 }
 
 // Transform the path by the provided matrix.
-func (p *Path) Transform(matrix *Matrix) {
-	skia.PathTransform(p.path, skia.Matrix2DtoMatrix(matrix))
+func (p *Path) Transform(matrix Matrix) {
+	skia.PathTransform(p.path, matrix)
 }
 
 // Translate the path.
 func (p *Path) Translate(x, y float32) {
-	skia.PathTransform(p.path, skia.Matrix2DtoMatrix(NewTranslationMatrix(x, y)))
+	skia.PathTransform(p.path, NewTranslationMatrix(x, y))
 }
 
 // NewRotated creates a copy of this path and then rotates it.
 func (p *Path) NewRotated(degrees float32) *Path {
 	path := NewPath()
-	skia.PathTransformToDest(p.path, path.path, skia.Matrix2DtoMatrix(NewRotationByDegreesMatrix(degrees)))
+	skia.PathTransformToDest(p.path, path.path, NewRotationByDegreesMatrix(degrees))
 	return path
 }
 
 // NewScaled creates a copy of this path and then scales it.
 func (p *Path) NewScaled(sx, sy float32) *Path {
 	path := NewPath()
-	skia.PathTransformToDest(p.path, path.path, skia.Matrix2DtoMatrix(NewScaleMatrix(sx, sy)))
+	skia.PathTransformToDest(p.path, path.path, NewScaleMatrix(sx, sy))
 	return path
 }
 
 // NewTransformed creates a copy of this path and then transforms it by the provided matrix.
-func (p *Path) NewTransformed(matrix *Matrix) *Path {
+func (p *Path) NewTransformed(matrix Matrix) *Path {
 	path := NewPath()
-	skia.PathTransformToDest(p.path, path.path, skia.Matrix2DtoMatrix(matrix))
+	skia.PathTransformToDest(p.path, path.path, matrix)
 	return path
 }
 
 // NewTranslated creates a copy of this path and then translates it.
 func (p *Path) NewTranslated(x, y float32) *Path {
 	path := NewPath()
-	skia.PathTransformToDest(p.path, path.path, skia.Matrix2DtoMatrix(NewTranslationMatrix(x, y)))
+	skia.PathTransformToDest(p.path, path.path, NewTranslationMatrix(x, y))
 	return path
 }
 
@@ -369,22 +331,22 @@ func (p *Path) CurrentPt() Point {
 
 // Union this path with the other path. Returns true if successful. Path is left unmodified if not successful.
 func (p *Path) Union(other *Path) bool {
-	return skia.PathCompute(p.path, other.path, skia.PathOp(Union))
+	return skia.PathCompute(p.path, other.path, skia.PathOp(pathop.Union))
 }
 
 // Subtract the other path from this path. Returns true if successful. Path is left unmodified if not successful.
 func (p *Path) Subtract(other *Path) bool {
-	return skia.PathCompute(p.path, other.path, skia.PathOp(Difference))
+	return skia.PathCompute(p.path, other.path, skia.PathOp(pathop.Difference))
 }
 
 // Intersect this path with the other path. Returns true if successful. Path is left unmodified if not successful.
 func (p *Path) Intersect(other *Path) bool {
-	return skia.PathCompute(p.path, other.path, skia.PathOp(Intersect))
+	return skia.PathCompute(p.path, other.path, skia.PathOp(pathop.Intersect))
 }
 
 // Xor this path with the other path. Returns true if successful. Path is left unmodified if not successful.
 func (p *Path) Xor(other *Path) bool {
-	return skia.PathCompute(p.path, other.path, skia.PathOp(Xor))
+	return skia.PathCompute(p.path, other.path, skia.PathOp(pathop.Xor))
 }
 
 // Simplify this path. Returns true if successful. Path is left unmodified if not successful.

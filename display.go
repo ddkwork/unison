@@ -1,4 +1,4 @@
-// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -10,6 +10,9 @@
 package unison
 
 import (
+	"runtime"
+
+	"github.com/richardwilkes/toolbox"
 	"github.com/richardwilkes/unison/internal/glfw"
 )
 
@@ -71,13 +74,12 @@ func BestDisplayForRect(r Rect) *Display {
 	var bestArea float32
 	var bestDisplay *Display
 	for _, display := range AllDisplays() {
-		if display.Usable.ContainsRect(r) {
+		if r.In(display.Usable) {
 			return display
 		}
-		intersection := r
-		intersection.Intersect(display.Usable)
-		if !intersection.IsEmpty() {
-			area := intersection.Width * intersection.Height
+		ri := r.Intersect(display.Usable)
+		if !ri.Empty() {
+			area := ri.Width * ri.Height
 			if bestArea < area {
 				bestArea = area
 				bestDisplay = display
@@ -116,4 +118,29 @@ func AllDisplays() []*Display {
 		displays[i] = convertMonitorToDisplay(monitor)
 	}
 	return displays
+}
+
+func convertMonitorToDisplay(monitor *glfw.Monitor) *Display {
+	x, y := monitor.GetPos()
+	vidMode := monitor.GetVideoMode()
+	workX, workY, workWidth, workHeight := monitor.GetWorkarea()
+	sx, sy := monitor.GetContentScale()
+	mmx, mmy := monitor.GetPos() //GetPhysicalSize()
+	display := &Display{
+		Name:        monitor.GetName(),
+		Frame:       NewRect(float32(x), float32(y), float32(vidMode.Width), float32(vidMode.Height)),
+		Usable:      NewRect(float32(workX), float32(workY), float32(workWidth), float32(workHeight)),
+		ScaleX:      sx,
+		ScaleY:      sy,
+		RefreshRate: vidMode.RefreshRate,
+		WidthMM:     mmx,
+		HeightMM:    mmy,
+	}
+	if runtime.GOOS != toolbox.MacOS {
+		display.Frame.X /= sx
+		display.Frame.Y /= sy
+		display.Frame.Width /= sx
+		display.Frame.Height /= sy
+	}
+	return display
 }

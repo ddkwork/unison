@@ -1,10 +1,6 @@
 run:
   timeout: 5m
   modules-download-mode: readonly
-  skip-dirs:
-    - internal/ns
-    - internal/skia
-    - internal/w32
 output:
   sort-results: true
 linters-settings:
@@ -20,39 +16,23 @@ linters-settings:
   gofumpt:
     extra-rules: true
   govet:
-    check-shadowing: true
     enable-all: true
-    settings:
-      printf:
-        funcs:
-          - Errorf
-          - Warnf
-          - Infof
-          - Debugf
-          - Fatalf
-          - StartRootSpanf
-          - StartSubSpanf
-          - EndWithMsgf
-          - Newf
-          - NewWithCausef
+    disable:
+      - composites
   misspell:
     locale: US
   staticcheck:
-    go: "1.19"
-    checks: [ "all", "-SA3000" ]
-  unused:
-    check-exported: false
+    checks: ["all", "-SA3000"]
 linters:
   disable-all: true
   enable:
-    - bodyclose
     - depguard
     - errcheck
     - errorlint
     - exportloopref
     - goconst
     - gofumpt
-    - gosec
+    - goimports
     - gosimple
     - govet
     - ineffassign
@@ -62,13 +42,15 @@ linters:
     - predeclared
     - revive
     - staticcheck
+    - typecheck
     - unconvert
     - unused
 issues:
   max-same-issues: 10
   exclude-use-default: false
+  exclude-dirs:
+    - internal/ns
+    - internal/skia
+    - internal/w32
   exclude:
-    - "fieldalignment: struct with \\d+ pointer bytes could be"
-    - "G204:"
-    - "G304:"
     - "package-comments: should have a package comment"

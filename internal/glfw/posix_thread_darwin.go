@@ -41,7 +41,7 @@ func _glfwPlatformGetTls(tls *C._GLFWtls) unsafe.Pointer {
 	if tls.posix.allocated != True {
 		panic("glfw: TLS must be allocated")
 	}
-	p := pthread_getspecific(tls.posix.key)
+	var p = pthread_getspecific(tls.posix.key)
 	return *(*unsafe.Pointer)(unsafe.Pointer(&p)) // TODO: replace with uintptr
 }
 

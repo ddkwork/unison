@@ -1,4 +1,4 @@
-// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -29,10 +29,10 @@ type Dockable interface {
 
 // DockContainer holds one or more Dockable panels.
 type DockContainer struct {
-	Panel
 	Dock    *Dock
 	header  *dockHeader
 	content *dockContainerContent
+	Panel
 }
 
 // NewDockContainer creates a new DockContainer.
@@ -247,10 +247,7 @@ func (d *DockContainer) LayoutSizes(target *Panel, hint Size) (minSize, prefSize
 	minSize, prefSize, maxSize = d.header.Sizes(Size{Width: hint.Width})
 	minSize.Height = prefSize.Height
 	maxSize.Height = prefSize.Height
-	min2, pref2, max2 := d.content.Sizes(Size{
-		Width:  hint.Width,
-		Height: max(hint.Height-prefSize.Height, 0),
-	})
+	min2, pref2, max2 := d.content.Sizes(Size{Width: hint.Width, Height: max(hint.Height-prefSize.Height, 0)})
 	minSize.Width = min2.Width
 	prefSize.Width = pref2.Width
 	maxSize.Width = max2.Width
@@ -258,7 +255,7 @@ func (d *DockContainer) LayoutSizes(target *Panel, hint Size) (minSize, prefSize
 	prefSize.Height += pref2.Height
 	maxSize.Height += max2.Height
 	if b := target.Border(); b != nil {
-		prefSize.AddInsets(b.Insets())
+		prefSize = prefSize.Add(b.Insets().Size())
 	}
 	return minSize, prefSize, maxSize
 }
@@ -267,6 +264,11 @@ func (d *DockContainer) LayoutSizes(target *Panel, hint Size) (minSize, prefSize
 func (d *DockContainer) PerformLayout(_ *Panel) {
 	r := d.ContentRect(false)
 	_, pref, _ := d.header.Sizes(Size{Width: r.Width})
-	d.header.SetFrameRect(NewRect(r.X, r.Y, r.Width, pref.Height))
-	d.content.SetFrameRect(NewRect(r.X, r.Y+pref.Height, r.Width, max(r.Height-pref.Height, 0)))
+	hr := r
+	hr.Height = pref.Height
+	d.header.SetFrameRect(hr)
+	fr := r
+	fr.Y += pref.Height
+	fr.Height = max(r.Height-pref.Height, 0)
+	d.content.SetFrameRect(fr)
 }

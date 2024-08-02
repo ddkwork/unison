@@ -1,4 +1,4 @@
-// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -9,12 +9,17 @@
 
 package unison
 
+import (
+	"github.com/richardwilkes/unison/enums/filltype"
+	"github.com/richardwilkes/unison/enums/paintstyle"
+)
+
 var _ Border = &LineBorder{}
 
 // LineBorder private a lined border.
 type LineBorder struct {
-	insets       Insets
 	ink          Ink
+	insets       Insets
 	cornerRadius float32
 	noInset      bool
 }
@@ -41,10 +46,9 @@ func (b *LineBorder) Insets() Insets {
 
 // Draw the border into rect.
 func (b *LineBorder) Draw(canvas *Canvas, rect Rect) {
-	clip := rect
-	clip.Inset(b.insets)
+	clip := rect.Inset(b.insets)
 	path := NewPath()
-	path.SetFillType(EvenOdd)
+	path.SetFillType(filltype.EvenOdd)
 	if b.cornerRadius > 0 {
 		path.RoundedRect(rect, b.cornerRadius, b.cornerRadius)
 		radius := max(b.cornerRadius-((b.insets.Width()+b.insets.Height())/4), 1)
@@ -53,5 +57,5 @@ func (b *LineBorder) Draw(canvas *Canvas, rect Rect) {
 		path.Rect(rect)
 		path.Rect(clip)
 	}
-	canvas.DrawPath(path, b.ink.Paint(canvas, rect, Fill))
+	canvas.DrawPath(path, b.ink.Paint(canvas, rect, paintstyle.Fill))
 }

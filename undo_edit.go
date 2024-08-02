@@ -1,4 +1,4 @@
-// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -43,15 +43,15 @@ type Undoable interface {
 
 // UndoEdit provides a standard Undoable.
 type UndoEdit[T any] struct {
-	ID          int64
-	EditName    string
-	EditCost    int
 	UndoFunc    func(*UndoEdit[T])
 	RedoFunc    func(*UndoEdit[T])
 	AbsorbFunc  func(*UndoEdit[T], Undoable) bool
 	ReleaseFunc func(*UndoEdit[T])
 	BeforeData  T
 	AfterData   T
+	EditName    string
+	ID          int64
+	EditCost    int
 }
 
 // NextUndoID returns the next available undo ID.

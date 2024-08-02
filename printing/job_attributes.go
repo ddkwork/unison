@@ -1,4 +1,4 @@
-// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -14,7 +14,6 @@ import (
 	"strings"
 
 	"github.com/OpenPrinting/goipp"
-	"github.com/ddkwork/golibrary/mylog"
 )
 
 const (
@@ -106,7 +105,7 @@ func ExtractPageRanges(text string) (ranges []goipp.Range, noErrors bool) {
 		switch len(parts) {
 		case 1:
 			if parts[0] != "" {
-				if value := mylog.Check2(strconv.Atoi(parts[0])); err != nil {
+				if value, err := strconv.Atoi(parts[0]); err != nil {
 					noErrors = false
 				} else {
 					ranges = append(ranges, goipp.Range{
@@ -116,11 +115,11 @@ func ExtractPageRanges(text string) (ranges []goipp.Range, noErrors bool) {
 				}
 			}
 		case 2:
-			if lower := mylog.Check2(strconv.Atoi(parts[0])); err != nil {
+			if lower, err := strconv.Atoi(parts[0]); err != nil {
 				noErrors = false
 			} else {
 				var upper int
-				if upper = mylog.Check2(strconv.Atoi(parts[1])); err != nil {
+				if upper, err = strconv.Atoi(parts[1]); err != nil {
 					noErrors = false
 				} else {
 					ranges = append(ranges, goipp.Range{

@@ -1,4 +1,4 @@
-// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -22,7 +22,9 @@ func installDefaultMenus(wnd *unison.Window) {
 		newMenu.InsertItem(-1, NewWindowAction.NewMenuItem(f))
 		newMenu.InsertItem(-1, NewTableWindowAction.NewMenuItem(f))
 		newMenu.InsertItem(-1, NewDockWindowAction.NewMenuItem(f))
+		newMenu.InsertItem(-1, NewMarkdownWindowAction.NewMenuItem(f))
 		fileMenu.InsertMenu(0, newMenu)
 		fileMenu.InsertItem(1, OpenAction.NewMenuItem(f))
+		fileMenu.InsertItem(2, ShowColorsWindowAction.NewMenuItem(f))
 	})
 }

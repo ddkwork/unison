@@ -1,4 +1,4 @@
-// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -11,6 +11,8 @@ package unison
 
 import (
 	"fmt"
+
+	"github.com/richardwilkes/unison/enums/paintstyle"
 )
 
 type dragDrawable struct {
@@ -21,12 +23,11 @@ type dragDrawable struct {
 func NewTableDragDrawable[T TableRowConstraint[T]](data *TableDragData[T], svg *SVG, singularName, pluralName string) Drawable {
 	label := NewLabel()
 	label.DrawCallback = func(gc *Canvas, rect Rect) {
-		r := rect
-		r.Inset(NewUniformInsets(1))
+		r := rect.Inset(NewUniformInsets(1))
 		corner := r.Height / 2
 		gc.SaveWithOpacity(0.7)
-		gc.DrawRoundedRect(r, corner, corner, data.Table.SelectionInk.Paint(gc, r, Fill))
-		gc.DrawRoundedRect(r, corner, corner, data.Table.OnSelectionInk.Paint(gc, r, Stroke))
+		gc.DrawRoundedRect(r, corner, corner, data.Table.SelectionInk.Paint(gc, r, paintstyle.Fill))
+		gc.DrawRoundedRect(r, corner, corner, data.Table.OnSelectionInk.Paint(gc, r, paintstyle.Stroke))
 		gc.Restore()
 		label.DefaultDraw(gc, rect)
 	}
@@ -38,15 +39,15 @@ func NewTableDragDrawable[T TableRowConstraint[T]](data *TableDragData[T], svg *
 		Right:  label.Font.LineHeight(),
 	}))
 	if count := CountTableRows(data.Rows); count == 1 {
-		label.Text = fmt.Sprintf("1 %s", singularName)
+		label.SetTitle(fmt.Sprintf("1 %s", singularName))
 	} else {
-		label.Text = fmt.Sprintf("%d %s", count, pluralName)
+		label.SetTitle(fmt.Sprintf("%d %s", count, pluralName))
 	}
 	if svg != nil {
 		baseline := label.Font.Baseline()
 		label.Drawable = &DrawableSVG{
 			SVG:  svg,
-			Size: NewSize(baseline, baseline),
+			Size: Size{Width: baseline, Height: baseline},
 		}
 	}
 	_, pref, _ := label.Sizes(Size{})

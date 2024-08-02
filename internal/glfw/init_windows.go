@@ -7,21 +7,33 @@ package glfw
 
 import (
 	"errors"
-
-	"github.com/ddkwork/golibrary/mylog"
 )
 
 func terminate() error {
 	for _, w := range _glfw.windows {
-		mylog.Check(w.Destroy())
+		if err := w.Destroy(); err != nil {
+			return err
+		}
 	}
+
 	for _, c := range _glfw.cursors {
-		mylog.Check(c.Destroy())
+		if err := c.Destroy(); err != nil {
+			return err
+		}
 	}
+
 	_glfw.monitors = nil
-	mylog.Check(platformTerminate())
+
+	if err := platformTerminate(); err != nil {
+		return err
+	}
+
 	_glfw.initialized = false
-	mylog.Check(_glfw.contextSlot.destroy())
+
+	if err := _glfw.contextSlot.destroy(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -36,17 +48,29 @@ func Init() (ferr error) {
 				ferr = nil
 				return
 			}
-			mylog.Check(terminate())
+			_ = terminate()
 		}
 	}()
+
 	if _glfw.initialized {
 		return nil
 	}
+
 	_glfw.hints.init.hatButtons = true
-	mylog.Check(platformInit())
-	mylog.Check(_glfw.contextSlot.create())
+
+	if err := platformInit(); err != nil {
+		return err
+	}
+
+	if err := _glfw.contextSlot.create(); err != nil {
+		return err
+	}
+
 	_glfw.initialized = true
-	mylog.Check(defaultWindowHints())
+
+	if err := defaultWindowHints(); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -54,6 +78,8 @@ func Terminate() error {
 	if !_glfw.initialized {
 		return nil
 	}
-	mylog.Check(terminate())
+	if err := terminate(); err != nil {
+		return err
+	}
 	return nil
 }

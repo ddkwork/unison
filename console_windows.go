@@ -1,4 +1,4 @@
-// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -13,15 +13,14 @@ import (
 	"os"
 	"syscall"
 
-	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/unison/internal/w32"
 	"golang.org/x/sys/windows"
 )
 
 var (
-	preservedStdin  *os.File
-	preservedStdout *os.File
-	preservedStderr *os.File
+	preservedStdin  *os.File //nolint:unused // We don't want them garbage collected
+	preservedStdout *os.File //nolint:unused // We don't want them garbage collected
+	preservedStderr *os.File //nolint:unused // We don't want them garbage collected
 )
 
 func attachConsole() {
@@ -31,9 +30,9 @@ func attachConsole() {
 	preservedStderr = os.Stderr
 
 	// Get the existing stdin/stdout/stderr handles.
-	stdin, _ := syscall.GetStdHandle(syscall.STD_INPUT_HANDLE)
-	stdout, _ := syscall.GetStdHandle(syscall.STD_OUTPUT_HANDLE)
-	stderr, _ := syscall.GetStdHandle(syscall.STD_ERROR_HANDLE)
+	stdin, _ := syscall.GetStdHandle(syscall.STD_INPUT_HANDLE)   //nolint:errcheck // A result of 0 is adequate
+	stdout, _ := syscall.GetStdHandle(syscall.STD_OUTPUT_HANDLE) //nolint:errcheck // A result of 0 is adequate
+	stderr, _ := syscall.GetStdHandle(syscall.STD_ERROR_HANDLE)  //nolint:errcheck // A result of 0 is adequate
 
 	// Attach the console if any of stdin/stdout/stderr are currently unattached, loading the newly-found handles for
 	// the unattached ones.
@@ -41,14 +40,14 @@ func attachConsole() {
 	if stdin == 0 || stdout == 0 || stderr == 0 {
 		if w32.AttachConsole(w32.AttachParentProcessID) {
 			if stdin == 0 {
-				stdin, _ = syscall.GetStdHandle(syscall.STD_INPUT_HANDLE)
+				stdin, _ = syscall.GetStdHandle(syscall.STD_INPUT_HANDLE) //nolint:errcheck // A result of 0 is adequate
 			}
 			if stdout == 0 {
-				stdout, _ = syscall.GetStdHandle(syscall.STD_OUTPUT_HANDLE)
+				stdout, _ = syscall.GetStdHandle(syscall.STD_OUTPUT_HANDLE) //nolint:errcheck // A result of 0 is adequate
 				console = stdout
 			}
 			if stderr == 0 {
-				stderr, _ = syscall.GetStdHandle(syscall.STD_ERROR_HANDLE)
+				stderr, _ = syscall.GetStdHandle(syscall.STD_ERROR_HANDLE) //nolint:errcheck // A result of 0 is adequate
 				console = stderr
 			}
 		}
@@ -57,9 +56,9 @@ func attachConsole() {
 	// Set the console mode, if necessary, to ensure LF is turned into CRLF on output
 	if console != 0 {
 		var mode uint32
-		mylog.Check(windows.GetConsoleMode(windows.Handle(console), &mode))
-		windows.SetConsoleMode(windows.Handle(console), mode&^windows.DISABLE_NEWLINE_AUTO_RETURN)
-
+		if err := windows.GetConsoleMode(windows.Handle(console), &mode); err == nil {
+			_ = windows.SetConsoleMode(windows.Handle(console), mode&^windows.DISABLE_NEWLINE_AUTO_RETURN) //nolint:errcheck // Don't care
+		}
 	}
 
 	// Setup the new stdin/stdout/stderr file handles

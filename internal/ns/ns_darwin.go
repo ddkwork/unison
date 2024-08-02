@@ -1,4 +1,4 @@
-// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -395,7 +395,6 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/xio/fs"
 	"github.com/richardwilkes/toolbox/xmath/geom"
@@ -470,10 +469,8 @@ func (s String) Release() {
 	C.CFRelease(C.CFTypeRef(s))
 }
 
-type (
-	MutableArray C.CFMutableArrayRef
-	Array        C.CFArrayRef
-)
+type MutableArray C.CFMutableArrayRef
+type Array C.CFArrayRef
 
 func NewArrayFromStringSlice(slice []string) Array {
 	a := C.CFArrayCreateMutable(0, C.long(len(slice)), &C.kCFTypeArrayCallBacks)
@@ -506,8 +503,11 @@ func (a Array) ArrayOfURLToStringSlice() []string {
 	result := make([]string, 0, count)
 	for i := 0; i < count; i++ {
 		urlStr := a.URLAtIndex(i).AbsoluteString()
-		u := mylog.Check2(url.Parse(urlStr))
-
+		u, err := url.Parse(urlStr)
+		if err != nil {
+			errs.Log(errs.NewWithCause("unable to parse URL", err), "url", urlStr)
+			continue
+		}
 		result = append(result, u.Path)
 	}
 	return result
@@ -535,11 +535,8 @@ func NewFileURL(str string) URL {
 
 func (u URL) AbsoluteString() string {
 	other := C.CFURLCopyAbsoluteURL(C.CFURLRef(u))
-	s := String(C.CFURLGetString(other))
-	str := s.String()
-	s.Release()
-	// If the following line is uncommented, I get a random crash at some later time
-	// URL(other).Release()
+	str := String(C.CFURLGetString(other)).String()
+	URL(other).Release()
 	return str
 }
 
@@ -657,19 +654,11 @@ func (w Window) ContentView() View {
 
 type View C.NSViewRef
 
-func (v View) Frame() geom.Rect32 {
+func (v View) Frame() geom.Rect[float32] {
 	var frame C.NSRect
 	C.viewFrame(C.NSViewRef(v), &frame)
-	return geom.Rect32{
-		Point: geom.Pt32{
-			X: float32(frame.origin.x),
-			Y: float32(frame.origin.y),
-		},
-		Size: geom.Size32{
-			Width:  float32(frame.size.width),
-			Height: float32(frame.size.height),
-		},
-	}
+	return geom.NewRect(float32(frame.origin.x), float32(frame.origin.y), float32(frame.size.width),
+		float32(frame.size.height))
 }
 
 func IsDarkModeEnabled() bool {
@@ -719,7 +708,7 @@ func (m Menu) Title() string {
 	return String(C.menuTitle(C.NSMenuRef(m))).String()
 }
 
-func (m Menu) Popup(wnd Window, menu Menu, item MenuItem, bounds geom.Rect32) {
+func (m Menu) Popup(wnd Window, menu Menu, item MenuItem, bounds geom.Rect[float32]) {
 	C.menuPopup(C.NSWindowRef(wnd), C.NSMenuRef(menu), C.NSMenuItemRef(item), C.CGRect{
 		origin: C.CGPoint{
 			x: C.double(bounds.X),

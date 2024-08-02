@@ -1,4 +1,4 @@
-// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -10,20 +10,21 @@
 package unison
 
 import (
-	"github.com/ddkwork/golibrary/mylog"
-	"github.com/richardwilkes/toolbox/collection/slice"
+	"slices"
+
+	"github.com/richardwilkes/toolbox"
 )
 
 var _ Layout = &rootPanel{}
 
 type rootPanel struct {
-	Panel
 	window         *Window
 	openMenuPanels []*menuPanel
 	menuBarPanel   *menuPanel
 	tooltipPanel   *Panel
 	contentPanel   *Panel
 	menuBar        *menu
+	Panel
 }
 
 func newRootPanel(wnd *Window) *rootPanel {
@@ -67,7 +68,7 @@ func (p *rootPanel) insertMenu(panel *menuPanel) {
 func (p *rootPanel) removeMenu(panel *menuPanel) {
 	for i, one := range p.openMenuPanels {
 		if one == panel {
-			p.openMenuPanels = slice.ZeroedDelete(p.openMenuPanels, i, i+1)
+			p.openMenuPanels = slices.Delete(p.openMenuPanels, i, i+1)
 			panel.RemoveFromParent()
 			panel.menu.popupPanel = nil
 			p.MarkForRedraw()
@@ -146,7 +147,7 @@ func (p *rootPanel) preKeyDown(wnd *Window, keyCode KeyCode, mod Modifiers, repe
 	}
 	if p.menuBar != nil {
 		stop := false
-		mylog.Call(func() { stop = p.menuBar.preKeyDown(wnd, keyCode, mod) })
+		toolbox.Call(func() { stop = p.menuBar.preKeyDown(wnd, keyCode, mod) })
 		return stop
 	}
 	return false
@@ -155,7 +156,7 @@ func (p *rootPanel) preKeyDown(wnd *Window, keyCode KeyCode, mod Modifiers, repe
 func (p *rootPanel) preKeyUp(wnd *Window, keyCode KeyCode, mod Modifiers) bool {
 	if p.menuBar != nil {
 		stop := false
-		mylog.Call(func() { stop = p.menuBar.preKeyUp(wnd, keyCode, mod) })
+		toolbox.Call(func() { stop = p.menuBar.preKeyUp(wnd, keyCode, mod) })
 		return stop
 	}
 	return false
@@ -164,7 +165,7 @@ func (p *rootPanel) preKeyUp(wnd *Window, keyCode KeyCode, mod Modifiers) bool {
 func (p *rootPanel) preRuneTyped(wnd *Window, ch rune) bool {
 	if p.menuBar != nil {
 		stop := false
-		mylog.Call(func() { stop = p.menuBar.preRuneTyped(wnd, ch) })
+		toolbox.Call(func() { stop = p.menuBar.preRuneTyped(wnd, ch) })
 		return stop
 	}
 	return false
@@ -173,7 +174,7 @@ func (p *rootPanel) preRuneTyped(wnd *Window, ch rune) bool {
 func (p *rootPanel) preMouseDown(wnd *Window, where Point) bool {
 	if p.menuBar != nil {
 		stop := false
-		mylog.Call(func() { stop = p.menuBar.preMouseDown(wnd, where) })
+		toolbox.Call(func() { stop = p.menuBar.preMouseDown(wnd, where) })
 		return stop
 	}
 	return false
@@ -181,6 +182,6 @@ func (p *rootPanel) preMouseDown(wnd *Window, where Point) bool {
 
 func (p *rootPanel) preMoved(wnd *Window) {
 	if p.menuBar != nil {
-		mylog.Call(func() { p.menuBar.preMoved(wnd) })
+		toolbox.Call(func() { p.menuBar.preMoved(wnd) })
 	}
 }

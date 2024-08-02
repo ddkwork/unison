@@ -1,4 +1,4 @@
-// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -13,6 +13,8 @@ import (
 	"strings"
 
 	"github.com/richardwilkes/toolbox/i18n"
+	"github.com/richardwilkes/unison/enums/align"
+	"github.com/richardwilkes/unison/enums/paintstyle"
 )
 
 // TabCloser defines the methods that must be implemented to cause the tabs to show a close button.
@@ -26,28 +28,29 @@ type TabCloser interface {
 // DefaultDockTabTheme holds the default DockTabTheme values for DockTabs. Modifying this data will not alter existing
 // DockTabs, but will alter any DockTabs created in the future.
 var DefaultDockTabTheme = DockTabTheme{
-	BackgroundInk:   ControlColor,
-	OnBackgroundInk: OnControlColor,
-	EdgeInk:         ControlEdgeColor,
-	TabFocusedInk:   TabFocusedColor,
-	OnTabFocusedInk: OnTabFocusedColor,
-	TabCurrentInk:   TabCurrentColor,
-	OnTabCurrentInk: OnTabCurrentColor,
+	BackgroundInk:   ThemeAboveSurface,
+	OnBackgroundInk: ThemeOnAboveSurface,
+	EdgeInk:         ThemeSurfaceEdge,
+	TabFocusedInk:   ThemeFocus,
+	OnTabFocusedInk: ThemeOnFocus,
+	TabCurrentInk:   ThemeDeepestFocus,
+	OnTabCurrentInk: ThemeOnDeepestFocus,
 	TabBorder:       NewEmptyBorder(Insets{Top: 2, Left: 4, Bottom: 2, Right: 4}),
 	Gap:             4,
-	LabelTheme:      defaultLabelTheme(),
-	ButtonTheme:     defaultButtonTheme(),
+	LabelTheme:      defaultDockLabelTheme(),
+	ButtonTheme:     defaultDockButtonTheme(),
 }
 
-func defaultLabelTheme() LabelTheme {
+func defaultDockLabelTheme() LabelTheme {
 	theme := DefaultLabelTheme
 	theme.Font = SystemFont
 	return theme
 }
 
-func defaultButtonTheme() ButtonTheme {
+func defaultDockButtonTheme() ButtonTheme {
 	theme := DefaultButtonTheme
 	theme.HideBase = true
+	theme.SelectionInk = ThemeWarning
 	return theme
 }
 
@@ -61,18 +64,18 @@ type DockTabTheme struct {
 	TabCurrentInk   Ink
 	OnTabCurrentInk Ink
 	TabBorder       Border
-	Gap             float32
 	LabelTheme      LabelTheme
 	ButtonTheme     ButtonTheme
+	Gap             float32
 }
 
 type dockTab struct {
-	Panel
-	DockTabTheme
-	dockable Dockable
 	title    *Label
 	button   *Button
-	pressed  bool
+	dockable Dockable
+	Panel
+	DockTabTheme
+	pressed bool
 }
 
 func newDockTab(dockable Dockable) *dockTab {
@@ -90,9 +93,9 @@ func newDockTab(dockable Dockable) *dockTab {
 	}
 	t.SetLayout(flex)
 	t.title.LabelTheme = t.LabelTheme
-	t.title.Text = t.fullTitle()
+	t.title.SetTitle(t.fullTitle())
 	t.title.Drawable = t.TitleIcon()
-	t.title.SetLayoutData(&FlexLayoutData{HGrab: true, VAlign: MiddleAlignment})
+	t.title.SetLayoutData(&FlexLayoutData{HGrab: true, VAlign: align.Middle})
 	t.AddChild(t.title)
 	if _, ok := t.dockable.(TabCloser); ok {
 		t.button = NewButton()
@@ -103,7 +106,7 @@ func newDockTab(dockable Dockable) *dockTab {
 			SVG:  CircledXSVG,
 			Size: Size{Width: fSize, Height: fSize},
 		}
-		t.button.SetLayoutData(&FlexLayoutData{HAlign: EndAlignment, VAlign: MiddleAlignment})
+		t.button.SetLayoutData(&FlexLayoutData{HAlign: align.End, VAlign: align.Middle})
 		t.AddChild(t.button)
 		t.button.ClickCallback = func() { t.attemptClose() }
 		flex.Columns++
@@ -132,8 +135,8 @@ func (t *dockTab) fullTitle() string {
 func (t *dockTab) updateTitle() {
 	drawable := t.TitleIcon()
 	title := t.fullTitle()
-	if title != t.title.Text || t.title.Drawable != drawable {
-		t.title.Text = title
+	if title != t.title.String() || t.title.Drawable != drawable {
+		t.title.SetTitle(title)
 		t.title.Drawable = drawable
 		t.NeedsLayout = true
 		t.title.NeedsLayout = true
@@ -161,9 +164,12 @@ func (t *dockTab) draw(gc *Canvas, _ Rect) {
 		bg = t.BackgroundInk
 		fg = t.OnBackgroundInk
 	}
-	t.title.OnBackgroundInk = fg
+	if t.title.OnBackgroundInk != fg {
+		t.title.OnBackgroundInk = fg
+		t.title.SetTitle(t.title.String())
+	}
 	if t.button != nil {
-		t.button.BackgroundInk = fg
+		t.button.OnBackgroundInk = fg
 	}
 	r := t.ContentRect(true)
 	p := NewPath()
@@ -176,8 +182,8 @@ func (t *dockTab) draw(gc *Canvas, _ Rect) {
 	p.CubicTo(rightCornerStart, 1, right, 1, right, 7)
 	p.LineTo(right, r.Height)
 	p.Close()
-	gc.DrawPath(p, bg.Paint(gc, r, Fill))
-	gc.DrawPath(p, t.EdgeInk.Paint(gc, r, Stroke))
+	gc.DrawPath(p, bg.Paint(gc, r, paintstyle.Fill))
+	gc.DrawPath(p, t.EdgeInk.Paint(gc, r, paintstyle.Stroke))
 }
 
 func (t *dockTab) attemptClose() bool {
@@ -226,6 +232,9 @@ func (t *dockTab) mouseDown(where Point, button, clickCount int, _ Modifiers) bo
 }
 
 func (t *dockTab) mouseDrag(where Point, _ int, _ Modifiers) bool {
+	if !t.pressed {
+		return true
+	}
 	if t.IsDragGesture(where) {
 		if dc := Ancestor[*DockContainer](t.dockable); dc != nil {
 			icon := t.TitleIcon()
@@ -234,7 +243,7 @@ func (t *dockTab) mouseDrag(where Point, _ int, _ Modifiers) bool {
 				Data:     map[string]any{dc.Dock.DragKey: t.dockable},
 				Drawable: icon,
 				Ink:      t.title.OnBackgroundInk,
-				Offset:   NewPoint(-size.Width/2, -size.Height/2),
+				Offset:   Point{X: -size.Width / 2, Y: -size.Height / 2},
 			})
 		}
 	}
@@ -242,7 +251,10 @@ func (t *dockTab) mouseDrag(where Point, _ int, _ Modifiers) bool {
 }
 
 func (t *dockTab) mouseUp(where Point, _ int, _ Modifiers) bool {
-	if t.ContentRect(true).ContainsPoint(where) {
+	if !t.pressed {
+		return true
+	}
+	if where.In(t.ContentRect(true)) {
 		if dc := Ancestor[*DockContainer](t.dockable); dc != nil {
 			switch {
 			case dc.CurrentDockable() != t.dockable:

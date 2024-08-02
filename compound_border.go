@@ -1,4 +1,4 @@
-// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -26,7 +26,7 @@ func NewCompoundBorder(borders ...Border) *CompoundBorder {
 func (b *CompoundBorder) Insets() Insets {
 	insets := Insets{}
 	for _, one := range b.borders {
-		insets.Add(one.Insets())
+		insets = insets.Add(one.Insets())
 	}
 	return insets
 }
@@ -37,6 +37,6 @@ func (b *CompoundBorder) Draw(canvas *Canvas, rect Rect) {
 		canvas.Save()
 		one.Draw(canvas, rect)
 		canvas.Restore()
-		rect.Inset(one.Insets())
+		rect = rect.Inset(one.Insets())
 	}
 }

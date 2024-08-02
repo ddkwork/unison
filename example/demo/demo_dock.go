@@ -1,4 +1,4 @@
-// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -12,8 +12,9 @@ package demo
 import (
 	"fmt"
 
-	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/unison"
+	"github.com/richardwilkes/unison/enums/align"
+	"github.com/richardwilkes/unison/enums/side"
 )
 
 var dockCounter int
@@ -22,7 +23,10 @@ var dockCounter int
 func NewDemoDockWindow(where unison.Point) (*unison.Window, error) {
 	// Create the window
 	dockCounter++
-	wnd := mylog.Check2(unison.NewWindow(fmt.Sprintf("Dock #%d", dockCounter)))
+	wnd, err := unison.NewWindow(fmt.Sprintf("Dock #%d", dockCounter))
+	if err != nil {
+		return nil, err
+	}
 
 	// Install our menus
 	installDefaultMenus(wnd)
@@ -33,16 +37,16 @@ func NewDemoDockWindow(where unison.Point) (*unison.Window, error) {
 	// Create the dock
 	dock := unison.NewDock()
 	yellowDockable := NewDockablePanel("Yellow", "", unison.Yellow)
-	dock.DockTo(yellowDockable, nil, unison.LeftSide)
-	dock.DockTo(NewDockablePanel("Green", "", unison.Green), unison.Ancestor[*unison.DockContainer](yellowDockable), unison.RightSide)
+	dock.DockTo(yellowDockable, nil, side.Left)
+	dock.DockTo(NewDockablePanel("Green", "", unison.Green), unison.Ancestor[*unison.DockContainer](yellowDockable), side.Right)
 	blueDockable := NewDockablePanel("Blue with a tooltip", "I've got a tooltip!", unison.Blue)
-	dock.DockTo(blueDockable, nil, unison.BottomSide)
+	dock.DockTo(blueDockable, nil, side.Bottom)
 	unison.Ancestor[*unison.DockContainer](blueDockable).Stack(NewDockablePanel("Orange", "", unison.Orange), -1)
 	dock.SetLayoutData(&unison.FlexLayoutData{
 		HSpan:  1,
 		VSpan:  1,
-		HAlign: unison.FillAlignment,
-		VAlign: unison.FillAlignment,
+		HAlign: align.Fill,
+		VAlign: align.Fill,
 		HGrab:  true,
 		VGrab:  true,
 	})

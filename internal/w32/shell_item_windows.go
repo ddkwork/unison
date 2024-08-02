@@ -1,4 +1,4 @@
-// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -48,6 +48,9 @@ func (obj *ShellItem) vmt() *vmtShellItem {
 	return (*vmtShellItem)(obj.UnsafeVirtualMethodTable)
 }
 
+const sizeofUint16 = unsafe.Sizeof(uint16(0))
+const maxUint16Array = (1<<31 - sizeofUint16) / sizeofUint16
+
 func (obj *ShellItem) DisplayName() string {
 	var p *uint16
 	r1, _, _ := syscall.SyscallN(obj.vmt().GetDisplayName, uintptr(unsafe.Pointer(obj)), SIGDN_FILESYSPATH,
@@ -56,7 +59,7 @@ func (obj *ShellItem) DisplayName() string {
 		return ""
 	}
 	defer CoTaskMemFree(uintptr(unsafe.Pointer(p)))
-	return syscall.UTF16ToString((*[1 << 30]uint16)(unsafe.Pointer(p))[:])
+	return syscall.UTF16ToString(unsafe.Slice(p, maxUint16Array))
 }
 
 type ShellItemArray struct {

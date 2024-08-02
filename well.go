@@ -1,4 +1,4 @@
-// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -10,10 +10,13 @@
 package unison
 
 import (
-	"context"
 	"time"
 
-	"github.com/ddkwork/golibrary/mylog"
+	"github.com/richardwilkes/toolbox/errs"
+	"github.com/richardwilkes/unison/enums/blendmode"
+	"github.com/richardwilkes/unison/enums/imgfmt"
+	"github.com/richardwilkes/unison/enums/paintstyle"
+	"github.com/richardwilkes/unison/enums/pathop"
 )
 
 // WellMask is used to limit the types of ink permitted in the ink well.
@@ -29,9 +32,9 @@ const (
 // DefaultWellTheme holds the default WellTheme values for Wells. Modifying this data will not alter existing Wells, but
 // will alter any Wells created in the future.
 var DefaultWellTheme = WellTheme{
-	BackgroundInk:      ControlColor,
-	EdgeInk:            ControlEdgeColor,
-	SelectionInk:       SelectionColor,
+	BackgroundInk:      ThemeAboveSurface,
+	EdgeInk:            ThemeSurfaceEdge,
+	SelectionInk:       ThemeFocus,
 	ImageScale:         0.5,
 	ContentSize:        20,
 	CornerRadius:       4,
@@ -55,14 +58,14 @@ type WellTheme struct {
 
 // Well represents a control that holds and lets a user choose an ink.
 type Well struct {
-	Panel
-	WellTheme
 	ImageFromSpecCallback func(ctx context.Context, filePathOrURL string, scale float32) (*Image, error)
 	InkChangedCallback    func()
 	ClickCallback         func()
 	ValidateImageCallback func(*Image) *Image
 	ink                   Ink
-	Pressed               bool
+	WellTheme
+	Panel
+	Pressed bool
 }
 
 // NewWell creates a new Well.
@@ -128,10 +131,9 @@ func (w *Well) DefaultSizes(hint Size) (minSize, prefSize, maxSize Size) {
 	prefSize.Width = 4 + w.ContentSize
 	prefSize.Height = 4 + w.ContentSize
 	if border := w.Border(); border != nil {
-		prefSize.AddInsets(border.Insets())
+		prefSize = prefSize.Add(border.Insets().Size())
 	}
-	prefSize.GrowToInteger()
-	prefSize.ConstrainForHint(hint)
+	prefSize = prefSize.Ceil().ConstrainForHint(hint)
 	return prefSize, prefSize, prefSize
 }
 
@@ -151,31 +153,33 @@ func (w *Well) DefaultDraw(canvas *Canvas, _ Rect) {
 	default:
 		bg = w.BackgroundInk
 	}
+	edge := w.EdgeInk
 	thickness := float32(1)
 	wellInset := thickness + 2.5
 	if w.Focused() {
 		thickness++
+		edge = w.SelectionInk
 	}
-	DrawRoundedRectBase(canvas, r, w.CornerRadius, thickness, bg, w.EdgeInk)
-	r.InsetUniform(wellInset)
+	DrawRoundedRectBase(canvas, r, w.CornerRadius, thickness, bg, edge)
+	r = r.Inset(NewUniformInsets(wellInset))
 	radius := w.CornerRadius - (wellInset - 2)
 	if pattern, ok := w.ink.(*Pattern); ok {
 		canvas.Save()
 		path := NewPath()
 		path.RoundedRect(r, radius, radius)
-		canvas.ClipPath(path, IntersectClipOp, true)
+		canvas.ClipPath(path, pathop.Intersect, true)
 		canvas.DrawImageInRect(pattern.Image, r, nil, nil)
 		canvas.Restore()
 	} else {
-		canvas.DrawRoundedRect(r, radius, radius, w.ink.Paint(canvas, r, Fill))
+		canvas.DrawRoundedRect(r, radius, radius, w.ink.Paint(canvas, r, paintstyle.Fill))
 	}
 	if !w.Enabled() {
-		p := Black.Paint(canvas, r, Stroke)
-		p.SetBlendMode(XorBlendMode)
+		p := Black.Paint(canvas, r, paintstyle.Stroke)
+		p.SetBlendMode(blendmode.Xor)
 		canvas.DrawLine(r.X+1, r.Y+1, r.Right()-1, r.Bottom()-1, p)
 		canvas.DrawLine(r.X+1, r.Bottom()-1, r.Right()-1, r.Y+1, p)
 	}
-	canvas.DrawRoundedRect(r, radius, radius, w.EdgeInk.Paint(canvas, r, Stroke))
+	canvas.DrawRoundedRect(r, radius, radius, edge.Paint(canvas, r, paintstyle.Stroke))
 }
 
 // DefaultMouseDown provides the default mouse down handling.
@@ -188,8 +192,7 @@ func (w *Well) DefaultMouseDown(_ Point, _, _ int, _ Modifiers) bool {
 // DefaultMouseDrag provides the default mouse drag handling.
 func (w *Well) DefaultMouseDrag(where Point, _ int, _ Modifiers) bool {
 	rect := w.ContentRect(false)
-	pressed := rect.ContainsPoint(where)
-	if w.Pressed != pressed {
+	if pressed := where.In(rect); pressed != w.Pressed {
 		w.Pressed = pressed
 		w.MarkForRedraw()
 	}
@@ -200,8 +203,7 @@ func (w *Well) DefaultMouseDrag(where Point, _ int, _ Modifiers) bool {
 func (w *Well) DefaultMouseUp(where Point, _ int, _ Modifiers) bool {
 	w.Pressed = false
 	w.MarkForRedraw()
-	rect := w.ContentRect(false)
-	if rect.ContainsPoint(where) {
+	if where.In(w.ContentRect(false)) {
 		if w.ClickCallback != nil {
 			w.ClickCallback()
 		}
@@ -240,9 +242,12 @@ func (w *Well) Click() {
 // DefaultFileDrop provides the default file drop behavior.
 func (w *Well) DefaultFileDrop(files []string) {
 	for _, one := range files {
-		if imageSpec := DistillImageSpecFor(one); imageSpec != "" {
-			img := mylog.Check2(w.loadImage(imageSpec))
-
+		if imageSpec := imgfmt.Distill(one); imageSpec != "" {
+			img, err := w.loadImage(imageSpec)
+			if err != nil {
+				errs.Log(err, "spec", imageSpec)
+				continue
+			}
 			if w.ValidateImageCallback != nil {
 				img = w.ValidateImageCallback(img)
 			}
@@ -262,5 +267,8 @@ func (w *Well) loadImage(imageSpec string) (*Image, error) {
 
 // DefaultUpdateCursor provides the default cursor for wells.
 func (w *Well) DefaultUpdateCursor(_ Point) *Cursor {
+	if !w.Enabled() {
+		return ArrowCursor()
+	}
 	return PointingCursor()
 }

@@ -1,4 +1,4 @@
-// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -17,7 +17,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/i18n"
 )
@@ -87,14 +86,16 @@ func (d *linuxOpenDialog) Paths() []string {
 }
 
 func (d *linuxOpenDialog) RunModal() bool {
-	kdialog := mylog.Check2(exec.LookPath("kdialog"))
-
+	kdialog, err := exec.LookPath("kdialog")
+	if err != nil {
+		kdialog = ""
+	}
 	if os.Getenv("KDE_FULL_SESSION") != "" && kdialog != "" {
 		return d.runKDialog(kdialog)
 	}
 
 	var zenity string
-	if zenity = mylog.Check2(exec.LookPath("zenity")); err != nil {
+	if zenity, err = exec.LookPath("zenity"); err != nil {
 		zenity = ""
 	}
 	if zenity != "" {
@@ -155,8 +156,10 @@ func (d *linuxOpenDialog) prepExt() []string {
 }
 
 func (d *linuxOpenDialog) runModal(cmd *exec.Cmd, splitOn string) bool {
-	wnd := mylog.Check2(NewWindow("", FloatingWindowOption(), UndecoratedWindowOption(), NotResizableWindowOption()))
-
+	wnd, err := NewWindow("", FloatingWindowOption(), UndecoratedWindowOption(), NotResizableWindowOption())
+	if err != nil {
+		errs.Log(err)
+	}
 	wnd.SetFrameRect(NewRect(-10000, -10000, 1, 1))
 	InvokeTaskAfter(func() { go d.runCmd(wnd, cmd, splitOn) }, time.Millisecond)
 	return wnd.RunModal() == ModalResponseOK
@@ -165,8 +168,15 @@ func (d *linuxOpenDialog) runModal(cmd *exec.Cmd, splitOn string) bool {
 func (d *linuxOpenDialog) runCmd(wnd *Window, cmd *exec.Cmd, splitOn string) {
 	code := ModalResponseCancel
 	defer func() { InvokeTask(func() { wnd.StopModal(code) }) }()
-	out := mylog.Check2(cmd.Output())
-
+	out, err := cmd.Output()
+	if err != nil {
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) && exitErr.ExitCode() == 1 {
+			return
+		}
+		errs.Log(err)
+		return
+	}
 	if cmd.ProcessState.ExitCode() != 0 {
 		return
 	}
