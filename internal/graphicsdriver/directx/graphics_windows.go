@@ -279,7 +279,7 @@ func (g *graphicsInfra) initSwapChain(width, height int, device unsafe.Pointer, 
 	if g.allowTearing {
 		desc.Flags |= uint32(_DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING)
 	}
-	s, err := g.factory.CreateSwapChain(device, desc)
+	s := g.factory.CreateSwapChain(device, desc)
 
 	g.swapChain = s
 	defer func() {
@@ -342,8 +342,7 @@ func (g *graphicsInfra) present(vsyncEnabled bool) error {
 		}
 	}
 
-	occluded, err := g.swapChain.Present(syncInterval, uint32(flags))
-
+	occluded := g.swapChain.Present(syncInterval, uint32(flags))
 	g.occluded = occluded
 
 	// Reduce FPS when the screen is invisible.
@@ -358,6 +357,6 @@ func (g *graphicsInfra) present(vsyncEnabled bool) error {
 	return nil
 }
 
-func (g *graphicsInfra) getBuffer(buffer uint32, riid *windows.GUID) (unsafe.Pointer, error) {
+func (g *graphicsInfra) getBuffer(buffer uint32, riid *windows.GUID) unsafe.Pointer {
 	return g.swapChain.GetBuffer(buffer, riid)
 }

@@ -681,9 +681,9 @@ func (i *_ID3D11Device) CreateBlendState(pBlendStateDesc *_D3D11_BLEND_DESC) (*_
 	return blendState, nil
 }
 
-func (i *_ID3D11Device) CreateBuffer(pDesc *_D3D11_BUFFER_DESC, pInitialData *_D3D11_SUBRESOURCE_DATA) (*_ID3D11Buffer, error) {
+func (i *_ID3D11Device) CreateBuffer(pDesc *_D3D11_BUFFER_DESC, pInitialData *_D3D11_SUBRESOURCE_DATA) *_ID3D11Buffer {
 	if pDesc.BindFlags&uint32(_D3D11_BIND_CONSTANT_BUFFER) != 0 && pDesc.ByteWidth%16 != 0 {
-		return nil, fmt.Errorf("directx: ByteLength for a constant buffer must be multiples of 16 but was %d at ID3D11Device::CreateBuffer", pDesc.ByteWidth)
+		return nil //, fmt.Errorf("directx: ByteLength for a constant buffer must be multiples of 16 but was %d at ID3D11Device::CreateBuffer", pDesc.ByteWidth)
 	}
 
 	var buffer *_ID3D11Buffer
@@ -693,9 +693,9 @@ func (i *_ID3D11Device) CreateBuffer(pDesc *_D3D11_BUFFER_DESC, pInitialData *_D
 	runtime.KeepAlive(pDesc)
 	runtime.KeepAlive(pInitialData)
 	if uint32(r) != uint32(windows.S_OK) {
-		return nil, fmt.Errorf("directx: ID3D11Device::CreateBuffer failed: %w", handleError(windows.Handle(uint32(r))))
+		return nil //, fmt.Errorf("directx: ID3D11Device::CreateBuffer failed: %w", handleError(windows.Handle(uint32(r))))
 	}
-	return buffer, nil
+	return buffer
 }
 
 func (i *_ID3D11Device) CreateDepthStencilState(pDepthStencilDesc *_D3D11_DEPTH_STENCIL_DESC) (*_ID3D11DepthStencilState, error) {

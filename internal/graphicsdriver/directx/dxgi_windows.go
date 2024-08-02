@@ -197,7 +197,7 @@ type _IDXGIAdapter_Vtbl struct {
 
 func (i *_IDXGIAdapter) EnumOutputs(output uint32) (*_IDXGIOutput, error) {
 	var pOutput *_IDXGIOutput
-	r, _, _ := syscall.Syscall(i.vtbl.EnumOutputs, 3, uintptr(unsafe.Pointer(i)), uintptr(output), uintptr(unsafe.Pointer(&pOutput)))
+	r, _, _ := syscall.SyscallN(i.vtbl.EnumOutputs, 3, uintptr(unsafe.Pointer(i)), uintptr(output), uintptr(unsafe.Pointer(&pOutput)))
 	if uint32(r) != uint32(windows.S_OK) {
 		return nil, fmt.Errorf("directx: IDXGIAdapter::EnumOutputs failed: %w", handleError(windows.Handle(uint32(r))))
 	}
@@ -206,7 +206,7 @@ func (i *_IDXGIAdapter) EnumOutputs(output uint32) (*_IDXGIOutput, error) {
 
 func (i *_IDXGIAdapter) GetParent(riid *windows.GUID) (unsafe.Pointer, error) {
 	var v unsafe.Pointer
-	r, _, _ := syscall.Syscall(i.vtbl.GetParent, 3, uintptr(unsafe.Pointer(i)), uintptr(unsafe.Pointer(riid)), uintptr(unsafe.Pointer(&v)))
+	r, _, _ := syscall.SyscallN(i.vtbl.GetParent, 3, uintptr(unsafe.Pointer(i)), uintptr(unsafe.Pointer(riid)), uintptr(unsafe.Pointer(&v)))
 	runtime.KeepAlive(riid)
 	if uint32(r) != uint32(windows.S_OK) {
 		return nil, fmt.Errorf("directx: IDXGIAdapter::GetParent failed: %w", handleError(windows.Handle(uint32(r))))
@@ -215,7 +215,7 @@ func (i *_IDXGIAdapter) GetParent(riid *windows.GUID) (unsafe.Pointer, error) {
 }
 
 func (i *_IDXGIAdapter) Release() uint32 {
-	r, _, _ := syscall.Syscall(i.vtbl.Release, 1, uintptr(unsafe.Pointer(i)), 0, 0)
+	r, _, _ := syscall.SyscallN(i.vtbl.Release, 1, uintptr(unsafe.Pointer(i)), 0, 0)
 	return uint32(r)
 }
 
@@ -239,13 +239,13 @@ type _IDXGIAdapter1_Vtbl struct {
 }
 
 func (i *_IDXGIAdapter1) Release() uint32 {
-	r, _, _ := syscall.Syscall(i.vtbl.Release, 1, uintptr(unsafe.Pointer(i)), 0, 0)
+	r, _, _ := syscall.SyscallN(i.vtbl.Release, 1, uintptr(unsafe.Pointer(i)), 0, 0)
 	return uint32(r)
 }
 
 func (i *_IDXGIAdapter1) GetDesc1() (*_DXGI_ADAPTER_DESC1, error) {
 	var desc _DXGI_ADAPTER_DESC1
-	r, _, _ := syscall.Syscall(i.vtbl.GetDesc1, 2, uintptr(unsafe.Pointer(i)), uintptr(unsafe.Pointer(&desc)), 0)
+	r, _, _ := syscall.SyscallN(i.vtbl.GetDesc1, 2, uintptr(unsafe.Pointer(i)), uintptr(unsafe.Pointer(&desc)), 0)
 	if uint32(r) != uint32(windows.S_OK) {
 		return nil, fmt.Errorf("directx: IDXGIAdapter1::GetDesc1 failed: %w", handleError(windows.Handle(uint32(r))))
 	}
@@ -274,7 +274,7 @@ type _IDXGIDevice_Vtbl struct {
 
 func (i *_IDXGIDevice) GetAdapter() (*_IDXGIAdapter, error) {
 	var adapter *_IDXGIAdapter
-	r, _, _ := syscall.Syscall(i.vtbl.GetAdapter, 2, uintptr(unsafe.Pointer(i)), uintptr(unsafe.Pointer(&adapter)), 0)
+	r, _, _ := syscall.SyscallN(i.vtbl.GetAdapter, 2, uintptr(unsafe.Pointer(i)), uintptr(unsafe.Pointer(&adapter)), 0)
 	if uint32(r) != uint32(windows.S_OK) {
 		return nil, fmt.Errorf("directx: IDXGIDevice::GetAdapter failed: %w", handleError(windows.Handle(uint32(r))))
 	}
@@ -282,7 +282,7 @@ func (i *_IDXGIDevice) GetAdapter() (*_IDXGIAdapter, error) {
 }
 
 func (i *_IDXGIDevice) Release() uint32 {
-	r, _, _ := syscall.Syscall(i.vtbl.Release, 1, uintptr(unsafe.Pointer(i)), 0, 0)
+	r, _, _ := syscall.SyscallN(i.vtbl.Release, 1, uintptr(unsafe.Pointer(i)), 0, 0)
 	return uint32(r)
 }
 
@@ -306,7 +306,7 @@ type _IDXGIFactory_Vtbl struct {
 	CreateSoftwareAdapter   uintptr
 }
 
-func (i *_IDXGIFactory) CreateSwapChain(pDevice unsafe.Pointer, pDesc *_DXGI_SWAP_CHAIN_DESC) (*_IDXGISwapChain, error) {
+func (i *_IDXGIFactory) CreateSwapChain(pDevice unsafe.Pointer, pDesc *_DXGI_SWAP_CHAIN_DESC) *_IDXGISwapChain {
 	var swapChain *_IDXGISwapChain
 	r, _, _ := syscall.Syscall6(i.vtbl.CreateSwapChain, 4, uintptr(unsafe.Pointer(i)),
 		uintptr(pDevice), uintptr(unsafe.Pointer(pDesc)), uintptr(unsafe.Pointer(&swapChain)),
@@ -314,13 +314,13 @@ func (i *_IDXGIFactory) CreateSwapChain(pDevice unsafe.Pointer, pDesc *_DXGI_SWA
 	runtime.KeepAlive(pDevice)
 	runtime.KeepAlive(pDesc)
 	if uint32(r) != uint32(windows.S_OK) {
-		return nil, fmt.Errorf("directx: IDXGIFactory::CreateSwapChain failed: %w", handleError(windows.Handle(uint32(r))))
+		return nil //, fmt.Errorf("directx: IDXGIFactory::CreateSwapChain failed: %w", handleError(windows.Handle(uint32(r))))
 	}
-	return swapChain, nil
+	return swapChain
 }
 
 func (i *_IDXGIFactory) MakeWindowAssociation(windowHandle windows.HWND, flags uint32) error {
-	r, _, _ := syscall.Syscall(i.vtbl.MakeWindowAssociation, 3, uintptr(unsafe.Pointer(i)), uintptr(windowHandle), uintptr(flags))
+	r, _, _ := syscall.SyscallN(i.vtbl.MakeWindowAssociation, 3, uintptr(unsafe.Pointer(i)), uintptr(windowHandle), uintptr(flags))
 	if uint32(r) != uint32(windows.S_OK) {
 		return fmt.Errorf("directx: IDXGIFactory::MakeWIndowAssociation failed: %w", handleError(windows.Handle(uint32(r))))
 	}
@@ -329,7 +329,7 @@ func (i *_IDXGIFactory) MakeWindowAssociation(windowHandle windows.HWND, flags u
 
 func (i *_IDXGIFactory) QueryInterface(riid *windows.GUID) (unsafe.Pointer, error) {
 	var v unsafe.Pointer
-	r, _, _ := syscall.Syscall(i.vtbl.QueryInterface, 3, uintptr(unsafe.Pointer(i)), uintptr(unsafe.Pointer(riid)), uintptr(unsafe.Pointer(&v)))
+	r, _, _ := syscall.SyscallN(i.vtbl.QueryInterface, 3, uintptr(unsafe.Pointer(i)), uintptr(unsafe.Pointer(riid)), uintptr(unsafe.Pointer(&v)))
 	runtime.KeepAlive(riid)
 	if uint32(r) != uint32(windows.S_OK) {
 		return nil, fmt.Errorf("directx: IDXGIFactory::QueryInterface failed: %w", handleError(windows.Handle(uint32(r))))
@@ -338,7 +338,7 @@ func (i *_IDXGIFactory) QueryInterface(riid *windows.GUID) (unsafe.Pointer, erro
 }
 
 func (i *_IDXGIFactory) Release() uint32 {
-	r, _, _ := syscall.Syscall(i.vtbl.Release, 1, uintptr(unsafe.Pointer(i)), 0, 0)
+	r, _, _ := syscall.SyscallN(i.vtbl.Release, 1, uintptr(unsafe.Pointer(i)), 0, 0)
 	return uint32(r)
 }
 
@@ -380,7 +380,7 @@ type _IDXGIFactory4_Vtbl struct {
 
 func (i *_IDXGIFactory4) EnumAdapters1(adapter uint32) (*_IDXGIAdapter1, error) {
 	var ptr *_IDXGIAdapter1
-	r, _, _ := syscall.Syscall(i.vtbl.EnumAdapters1, 3, uintptr(unsafe.Pointer(i)), uintptr(adapter), uintptr(unsafe.Pointer(&ptr)))
+	r, _, _ := syscall.SyscallN(i.vtbl.EnumAdapters1, 3, uintptr(unsafe.Pointer(i)), uintptr(adapter), uintptr(unsafe.Pointer(&ptr)))
 	if uint32(r) != uint32(windows.S_OK) {
 		return nil, fmt.Errorf("directx: IDXGIFactory4::EnumAdapters1 failed: %w", handleError(windows.Handle(uint32(r))))
 	}
@@ -389,7 +389,7 @@ func (i *_IDXGIFactory4) EnumAdapters1(adapter uint32) (*_IDXGIAdapter1, error) 
 
 func (i *_IDXGIFactory4) EnumWarpAdapter() (*_IDXGIAdapter1, error) {
 	var ptr *_IDXGIAdapter1
-	r, _, _ := syscall.Syscall(i.vtbl.EnumWarpAdapter, 3, uintptr(unsafe.Pointer(i)), uintptr(unsafe.Pointer(&_IID_IDXGIAdapter1)), uintptr(unsafe.Pointer(&ptr)))
+	r, _, _ := syscall.SyscallN(i.vtbl.EnumWarpAdapter, 3, uintptr(unsafe.Pointer(i)), uintptr(unsafe.Pointer(&_IID_IDXGIAdapter1)), uintptr(unsafe.Pointer(&ptr)))
 	if uint32(r) != uint32(windows.S_OK) {
 		return nil, fmt.Errorf("directx: IDXGIFactory4::EnumWarpAdapter failed: %w", handleError(windows.Handle(uint32(r))))
 	}
@@ -397,7 +397,7 @@ func (i *_IDXGIFactory4) EnumWarpAdapter() (*_IDXGIAdapter1, error) {
 }
 
 func (i *_IDXGIFactory4) Release() uint32 {
-	r, _, _ := syscall.Syscall(i.vtbl.Release, 1, uintptr(unsafe.Pointer(i)), 0, 0)
+	r, _, _ := syscall.SyscallN(i.vtbl.Release, 1, uintptr(unsafe.Pointer(i)), 0, 0)
 	return uint32(r)
 }
 
@@ -450,7 +450,7 @@ func (i *_IDXGIFactory5) CheckFeatureSupport(feature _DXGI_FEATURE, pFeatureSupp
 }
 
 func (i *_IDXGIFactory5) Release() uint32 {
-	r, _, _ := syscall.Syscall(i.vtbl.Release, 1, uintptr(unsafe.Pointer(i)), 0, 0)
+	r, _, _ := syscall.SyscallN(i.vtbl.Release, 1, uintptr(unsafe.Pointer(i)), 0, 0)
 	return uint32(r)
 }
 
@@ -482,7 +482,7 @@ type _IDXGIOutput_Vtbl struct {
 }
 
 func (i *_IDXGIOutput) Release() uint32 {
-	r, _, _ := syscall.Syscall(i.vtbl.Release, 1, uintptr(unsafe.Pointer(i)), 0, 0)
+	r, _, _ := syscall.SyscallN(i.vtbl.Release, 1, uintptr(unsafe.Pointer(i)), 0, 0)
 	return uint32(r)
 }
 
@@ -512,16 +512,16 @@ type _IDXGISwapChain_Vtbl struct {
 	GetLastPresentCount     uintptr
 }
 
-func (i *_IDXGISwapChain) GetBuffer(buffer uint32, riid *windows.GUID) (unsafe.Pointer, error) {
+func (i *_IDXGISwapChain) GetBuffer(buffer uint32, riid *windows.GUID) unsafe.Pointer {
 	var resource unsafe.Pointer
-	r, _, _ := syscall.Syscall6(i.vtbl.GetBuffer, 4, uintptr(unsafe.Pointer(i)),
+	r, _, _ := syscall.SyscallN(i.vtbl.GetBuffer, 4, uintptr(unsafe.Pointer(i)),
 		uintptr(buffer), uintptr(unsafe.Pointer(riid)), uintptr(unsafe.Pointer(&resource)),
 		0, 0)
 	runtime.KeepAlive(riid)
 	if uint32(r) != uint32(windows.S_OK) {
-		return nil, fmt.Errorf("directx: IDXGISwapChain::GetBuffer failed: %w", handleError(windows.Handle(uint32(r))))
+		return nil //, fmt.Errorf("directx: IDXGISwapChain::GetBuffer failed: %w", handleError(windows.Handle(uint32(r))))
 	}
-	return resource, nil
+	return resource
 }
 
 func (i *_IDXGISwapChain) ResizeBuffers(bufferCount uint32, width uint32, height uint32, newFormat _DXGI_FORMAT, swapChainFlags uint32) error {
@@ -534,21 +534,21 @@ func (i *_IDXGISwapChain) ResizeBuffers(bufferCount uint32, width uint32, height
 	return nil
 }
 
-func (i *_IDXGISwapChain) Present(syncInterval uint32, flags uint32) (occluded bool, err error) {
-	r, _, _ := syscall.Syscall(i.vtbl.Present, 3, uintptr(unsafe.Pointer(i)), uintptr(syncInterval), uintptr(flags))
+func (i *_IDXGISwapChain) Present(syncInterval uint32, flags uint32) (occluded bool) {
+	r, _, _ := syscall.SyscallN(i.vtbl.Present, 3, uintptr(unsafe.Pointer(i)), uintptr(syncInterval), uintptr(flags))
 	if uint32(r) != uint32(windows.S_OK) {
 		// During a screen lock, Present fails (#2179).
 		if uint32(r) == uint32(windows.DXGI_STATUS_OCCLUDED) {
-			return true, nil
+			return true
 		}
-		return false, fmt.Errorf("directx: IDXGISwapChain::Present failed: %w", handleError(windows.Handle(uint32(r))))
+		return false //, fmt.Errorf("directx: IDXGISwapChain::Present failed: %w", handleError(windows.Handle(uint32(r))))
 	}
-	return false, nil
+	return false
 }
 
 func (i *_IDXGISwapChain) QueryInterface(riid *windows.GUID) (unsafe.Pointer, error) {
 	var v unsafe.Pointer
-	r, _, _ := syscall.Syscall(i.vtbl.QueryInterface, 3, uintptr(unsafe.Pointer(i)), uintptr(unsafe.Pointer(riid)), uintptr(unsafe.Pointer(&v)))
+	r, _, _ := syscall.SyscallN(i.vtbl.QueryInterface, 3, uintptr(unsafe.Pointer(i)), uintptr(unsafe.Pointer(riid)), uintptr(unsafe.Pointer(&v)))
 	runtime.KeepAlive(riid)
 	if uint32(r) != uint32(windows.S_OK) {
 		return nil, fmt.Errorf("directx: IDXGISwapChain::QueryInterface failed: %w", handleError(windows.Handle(uint32(r))))
@@ -557,7 +557,7 @@ func (i *_IDXGISwapChain) QueryInterface(riid *windows.GUID) (unsafe.Pointer, er
 }
 
 func (i *_IDXGISwapChain) Release() uint32 {
-	r, _, _ := syscall.Syscall(i.vtbl.Release, 1, uintptr(unsafe.Pointer(i)), 0, 0)
+	r, _, _ := syscall.SyscallN(i.vtbl.Release, 1, uintptr(unsafe.Pointer(i)), 0, 0)
 	return uint32(r)
 }
 
@@ -612,11 +612,11 @@ type _IDXGISwapChain4_Vtbl struct {
 }
 
 func (i *_IDXGISwapChain4) GetCurrentBackBufferIndex() uint32 {
-	r, _, _ := syscall.Syscall(i.vtbl.GetCurrentBackBufferIndex, 1, uintptr(unsafe.Pointer(i)), 0, 0)
+	r, _, _ := syscall.SyscallN(i.vtbl.GetCurrentBackBufferIndex, 1, uintptr(unsafe.Pointer(i)), 0, 0)
 	return uint32(r)
 }
 
 func (i *_IDXGISwapChain4) Release() uint32 {
-	r, _, _ := syscall.Syscall(i.vtbl.Release, 1, uintptr(unsafe.Pointer(i)), 0, 0)
+	r, _, _ := syscall.SyscallN(i.vtbl.Release, 1, uintptr(unsafe.Pointer(i)), 0, 0)
 	return uint32(r)
 }

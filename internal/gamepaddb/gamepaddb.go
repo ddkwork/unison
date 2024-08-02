@@ -86,17 +86,17 @@ var (
 	mappingsM             sync.RWMutex
 )
 
-func parseLine(line string, platform platform) (id string, name string, buttons map[StandardButton]mapping, axes map[StandardAxis]mapping, err error) {
+func parseLine(line string, platform platform) (id string, name string, buttons map[StandardButton]mapping, axes map[StandardAxis]mapping) {
 	line = strings.TrimSpace(line)
 	if len(line) == 0 {
-		return "", "", nil, nil, nil
+		return "", "", nil, nil
 	}
 	if line[0] == '#' {
-		return "", "", nil, nil, nil
+		return "", "", nil, nil
 	}
 	tokens := strings.Split(line, ",")
 	if len(tokens) < 2 {
-		return "", "", nil, nil, fmt.Errorf("gamepaddb: syntax error")
+		return "", "", nil, nil //, fmt.Errorf("gamepaddb: syntax error")
 	}
 
 	for _, token := range tokens[2:] {
@@ -105,7 +105,7 @@ func parseLine(line string, platform platform) (id string, name string, buttons 
 		}
 		tks := strings.Split(token, ":")
 		if len(tks) < 2 {
-			return "", "", nil, nil, fmt.Errorf("gamepaddb: syntax error")
+			return "", "", nil, nil //, fmt.Errorf("gamepaddb: syntax error")
 		}
 
 		// Note that the platform part is listed in the definition of SDL_GetPlatform.
@@ -113,35 +113,35 @@ func parseLine(line string, platform platform) (id string, name string, buttons 
 			switch tks[1] {
 			case "Windows":
 				if platform != platformWindows {
-					return "", "", nil, nil, nil
+					return "", "", nil, nil
 				}
 			case "Mac OS X":
 				if platform != platformMacOS {
-					return "", "", nil, nil, nil
+					return "", "", nil, nil
 				}
 			case "Linux":
 				if platform != platformUnix {
-					return "", "", nil, nil, nil
+					return "", "", nil, nil
 				}
 			case "Android":
 				if platform != platformAndroid {
-					return "", "", nil, nil, nil
+					return "", "", nil, nil
 				}
 			case "iOS":
 				if platform != platformIOS {
-					return "", "", nil, nil, nil
+					return "", "", nil, nil
 				}
 			case "":
 				// Allow any platforms
 			default:
-				return "", "", nil, nil, fmt.Errorf("gamepaddb: unexpected platform: %s", tks[1])
+				return "", "", nil, nil //, fmt.Errorf("gamepaddb: unexpected platform: %s", tks[1])
 			}
 			continue
 		}
 
 		gb, err := parseMappingElement(tks[1])
 		if err != nil {
-			return "", "", nil, nil, err
+			return "", "", nil, nil
 		}
 
 		if b, ok := toStandardGamepadButton(tks[0]); ok {
@@ -164,7 +164,7 @@ func parseLine(line string, platform platform) (id string, name string, buttons 
 		// There is no corresponding button in the Web standard gamepad layout.
 	}
 
-	return tokens[0], tokens[1], buttons, axes, nil
+	return tokens[0], tokens[1], buttons, axes
 }
 
 func parseMappingElement(str string) (mapping, error) {
@@ -524,7 +524,7 @@ func Update(mappingData []byte) error {
 
 	for s.Scan() {
 		line := s.Text()
-		id, name, buttons, axes, err := parseLine(line, currentPlatform())
+		id, name, buttons, axes := parseLine(line, currentPlatform())
 
 		if id != "" {
 			lines = append(lines, parsedLine{

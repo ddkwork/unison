@@ -13,6 +13,7 @@ import (
 	"compress/zlib"
 	"encoding/binary"
 	"fmt"
+	"github.com/ddkwork/golibrary/mylog"
 	"hash"
 	"hash/crc32"
 	"image"
@@ -233,8 +234,7 @@ func (d *decoder) parsePLTE(length uint32) error {
 	if length%3 != 0 || np <= 0 || np > 256 || np > 1<<uint(d.depth) {
 		return FormatError("bad PLTE length")
 	}
-	n, err := io.ReadFull(d.r, d.tmp[:3*np])
-	
+	n := mylog.Check2(io.ReadFull(d.r, d.tmp[:3*np]))
 	d.crc.Write(d.tmp[:n])
 	switch d.cb {
 	case cbP1, cbP2, cbP4, cbP8:
@@ -266,10 +266,8 @@ func (d *decoder) parsetRNS(length uint32) error {
 		if length != 2 {
 			return FormatError("bad tRNS length")
 		}
-		n, err := io.ReadFull(d.r, d.tmp[:length])
-
+		n := mylog.Check2(io.ReadFull(d.r, d.tmp[:length]))
 		d.crc.Write(d.tmp[:n])
-
 		copy(d.transparent[:], d.tmp[:length])
 		switch d.cb {
 		case cbG1:
@@ -285,8 +283,7 @@ func (d *decoder) parsetRNS(length uint32) error {
 		if length != 6 {
 			return FormatError("bad tRNS length")
 		}
-		n, err := io.ReadFull(d.r, d.tmp[:length])
-
+		n := mylog.Check2(io.ReadFull(d.r, d.tmp[:length]))
 		d.crc.Write(d.tmp[:n])
 
 		copy(d.transparent[:], d.tmp[:length])

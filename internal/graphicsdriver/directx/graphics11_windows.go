@@ -319,7 +319,7 @@ func (g *graphics11) SetVertices(vertices []float32, indices []uint32) error {
 			g.vertexBuffer.Release()
 			g.vertexBuffer = nil
 		}
-		b, err := g.device.CreateBuffer(&_D3D11_BUFFER_DESC{
+		b := g.device.CreateBuffer(&_D3D11_BUFFER_DESC{
 			ByteWidth:      size,
 			Usage:          _D3D11_USAGE_DYNAMIC,
 			BindFlags:      uint32(_D3D11_BIND_VERTEX_BUFFER),
@@ -336,7 +336,7 @@ func (g *graphics11) SetVertices(vertices []float32, indices []uint32) error {
 			g.indexBuffer.Release()
 			g.indexBuffer = nil
 		}
-		b, err := g.device.CreateBuffer(&_D3D11_BUFFER_DESC{
+		b := g.device.CreateBuffer(&_D3D11_BUFFER_DESC{
 			ByteWidth:      size,
 			Usage:          _D3D11_USAGE_DYNAMIC,
 			BindFlags:      uint32(_D3D11_BIND_INDEX_BUFFER),
@@ -624,7 +624,7 @@ func (g *graphics11) genNextShaderID() graphicsdriver.ShaderID {
 	return g.nextShaderID
 }
 
-func (g *graphics11) blendState(blend graphicsdriver.Blend, stencilMode stencilMode) (*_ID3D11BlendState, error) {
+func (g *graphics11) blendState(blend graphicsdriver.Blend, stencilMode stencilMode) *_ID3D11BlendState {
 	var writeMask uint8
 	if stencilMode == noStencil || stencilMode == drawWithStencil {
 		writeMask = uint8(_D3D11_COLOR_WRITE_ENABLE_ALL)
@@ -635,7 +635,7 @@ func (g *graphics11) blendState(blend graphicsdriver.Blend, stencilMode stencilM
 		writeMask: writeMask,
 	}
 	if bs, ok := g.blendStates[key]; ok {
-		return bs, nil
+		return bs
 	}
 
 	bs, err := g.device.CreateBlendState(&_D3D11_BLEND_DESC{
@@ -655,14 +655,14 @@ func (g *graphics11) blendState(blend graphicsdriver.Blend, stencilMode stencilM
 		},
 	})
 	if err != nil {
-		return nil, err
+		return nil
 	}
 
 	if g.blendStates == nil {
 		g.blendStates = map[blendStateKey]*_ID3D11BlendState{}
 	}
 	g.blendStates[key] = bs
-	return bs, nil
+	return bs
 }
 
 func (g *graphics11) depthStencilState(mode stencilMode) (*_ID3D11DepthStencilState, error) {
