@@ -847,9 +847,7 @@ func (g *graphics12) NewScreenFramebufferImage(width, height int) (graphicsdrive
 		g.screenImage = nil
 	}
 
-	 mylog.Check(g.updateSwapChain(width, height)); err != nil {
-		return nil, err
-	}
+	 mylog.Check(g.updateSwapChain(width, height)); 
 
 	i := &image12{
 		graphics: g,

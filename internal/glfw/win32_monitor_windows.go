@@ -62,9 +62,7 @@ func createMonitor(adapter *_DISPLAY_DEVICEW, display *_DISPLAY_DEVICEW) (*Monit
 		right:  dm.dmPosition.x + int32(dm.dmPelsWidth),
 		bottom: dm.dmPosition.y + int32(dm.dmPelsHeight),
 	}
-	 mylog.Check(_EnumDisplayMonitors(0, &rect, monitorCallbackPtr, _LPARAM(unsafe.Pointer(monitor)))); err != nil {
-		return nil, err
-	}
+	mylog.Check(_EnumDisplayMonitors(0, &rect, monitorCallbackPtr, _LPARAM(unsafe.Pointer(monitor))))
 	return monitor, nil
 }
 
@@ -118,7 +116,7 @@ adapterLoop:
 				return nil
 			}
 
-			 mylog.Check(inputMonitor(monitor, Connected, typ)); 
+			mylog.Check(inputMonitor(monitor, Connected, typ))
 			typ = _GLFW_INSERT_LAST
 		}
 
@@ -138,13 +136,13 @@ adapterLoop:
 				return nil
 			}
 
-			 mylog.Check(inputMonitor(monitor, Connected, typ)); 
+			mylog.Check(inputMonitor(monitor, Connected, typ))
 		}
 	}
 
 	for _, monitor := range disconnected {
 		if monitor != nil {
-			 mylog.Check(inputMonitor(monitor, Disconnected, 0)); 
+			mylog.Check(inputMonitor(monitor, Disconnected, 0))
 		}
 	}
 

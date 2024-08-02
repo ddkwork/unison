@@ -108,9 +108,7 @@ func CreateWindow(width, height int, title string, monitor *Monitor, share *Wind
 	wndconfig.title = title
 	ctxconfig.share = share
 
-	 mylog.Check(checkValidContextConfig(&ctxconfig)); err != nil {
-		return nil, err
-	}
+	 mylog.Check(checkValidContextConfig(&ctxconfig)); 
 
 	window = &Window{
 		videoMode: VidMode{
@@ -148,9 +146,7 @@ func CreateWindow(width, height int, title string, monitor *Monitor, share *Wind
 	_glfw.windows = append(_glfw.windows, window)
 
 	// Open the actual window and create its context
-	 mylog.Check(window.platformCreateWindow(&wndconfig, &ctxconfig, &fbconfig)); err != nil {
-		return nil, err
-	}
+	 mylog.Check(window.platformCreateWindow(&wndconfig, &ctxconfig, &fbconfig)); 
 
 	return window, nil
 }

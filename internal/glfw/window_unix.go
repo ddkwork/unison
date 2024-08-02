@@ -600,9 +600,7 @@ func (w *Window) Hide() error {
 // Returns nil if the window is in windowed mode.
 func (w *Window) GetMonitor() (*Monitor, error) {
 	m := C.glfwGetWindowMonitor(w.data)
-	 mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
-		return nil, err
-	}
+	 mylog.Check(fetchErrorIgnoringPlatformError()); 
 	if m == nil {
 		return nil, nil
 	}
@@ -674,9 +672,7 @@ func (w *Window) SetUserPointer(pointer unsafe.Pointer) error {
 // window. The initial value is nil.
 func (w *Window) GetUserPointer() (unsafe.Pointer, error) {
 	ret := C.glfwGetWindowUserPointer(w.data)
-	 mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
-		return nil, err
-	}
+	 mylog.Check(fetchErrorIgnoringPlatformError()); 
 	return ret, nil
 }
 
@@ -694,9 +690,7 @@ func (w *Window) SetPosCallback(cbfun PosCallback) (previous PosCallback, err er
 	} else {
 		C.glfwSetWindowPosCallbackCB(w.data)
 	}
-	 mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
-		return nil, err
-	}
+	 mylog.Check(fetchErrorIgnoringPlatformError()); 
 	return previous, nil
 }
 
@@ -714,9 +708,7 @@ func (w *Window) SetSizeCallback(cbfun SizeCallback) (previous SizeCallback, err
 	} else {
 		C.glfwSetWindowSizeCallbackCB(w.data)
 	}
-	 mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
-		return nil, err
-	}
+	 mylog.Check(fetchErrorIgnoringPlatformError()); 
 	return previous, nil
 }
 
@@ -733,9 +725,7 @@ func (w *Window) SetFramebufferSizeCallback(cbfun FramebufferSizeCallback) (prev
 	} else {
 		C.glfwSetFramebufferSizeCallbackCB(w.data)
 	}
-	 mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
-		return nil, err
-	}
+	 mylog.Check(fetchErrorIgnoringPlatformError()); 
 	return previous, nil
 }
 
@@ -759,9 +749,7 @@ func (w *Window) SetCloseCallback(cbfun CloseCallback) (previous CloseCallback, 
 	} else {
 		C.glfwSetWindowCloseCallbackCB(w.data)
 	}
-	 mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
-		return nil, err
-	}
+	 mylog.Check(fetchErrorIgnoringPlatformError()); 
 	return previous, nil
 }
 
@@ -801,9 +789,7 @@ func (w *Window) SetContentScaleCallback(cbfun ContentScaleCallback) (ContentSca
 	} else {
 		C.glfwSetWindowContentScaleCallbackCB(w.data)
 	}
-	 mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
-		return nil, err
-	}
+	 mylog.Check(fetchErrorIgnoringPlatformError()); 
 	return previous, nil
 }
 
@@ -825,9 +811,7 @@ func (w *Window) SetRefreshCallback(cbfun RefreshCallback) (previous RefreshCall
 	} else {
 		C.glfwSetWindowRefreshCallbackCB(w.data)
 	}
-	 mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
-		return nil, err
-	}
+	 mylog.Check(fetchErrorIgnoringPlatformError()); 
 	return previous, nil
 }
 
@@ -848,9 +832,7 @@ func (w *Window) SetFocusCallback(cbfun FocusCallback) (previous FocusCallback, 
 	} else {
 		C.glfwSetWindowFocusCallbackCB(w.data)
 	}
-	 mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
-		return nil, err
-	}
+	 mylog.Check(fetchErrorIgnoringPlatformError()); 
 	return previous, nil
 }
 
@@ -867,9 +849,7 @@ func (w *Window) SetIconifyCallback(cbfun IconifyCallback) (previous IconifyCall
 	} else {
 		C.glfwSetWindowIconifyCallbackCB(w.data)
 	}
-	 mylog.Check(fetchErrorIgnoringPlatformError()); err != nil {
-		return nil, err
-	}
+	 mylog.Check(fetchErrorIgnoringPlatformError()); 
 	return previous, nil
 }
 
