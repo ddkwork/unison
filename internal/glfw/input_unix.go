@@ -188,9 +188,7 @@ func (w *Window) GetKey(key Key) (Action, error) {
 func GetKeyName(key Key, scancode int) (string, error) {
 	ret := C.glfwGetKeyName(C.int(key), C.int(scancode))
 	mylog.Check(fetchErrorIgnoringPlatformError())
-	err != nil{
-		return "", err
-	}
+
 	return C.GoString(ret), nil
 }
 

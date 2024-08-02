@@ -325,7 +325,6 @@ type textBlobBuilderRunBuffer struct {
 
 func init() {
 	dir := mylog.Check2(os.UserCacheDir())
-	fatal.IfErr(err)
 	dir = filepath.Join(dir, "unison", "dll_cache")
 	fatal.IfErr(os.MkdirAll(dir, 0755))
 	fatal.IfErr(windows.SetDllDirectory(dir))

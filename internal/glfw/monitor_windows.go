@@ -80,14 +80,10 @@ func inputMonitor(monitor *Monitor, action PeripheralEvent, placement int) error
 			if window.monitor == monitor {
 				width, height := window.platformGetWindowSize()
 				mylog.Check(window.platformSetWindowMonitor(nil, 0, 0, width, height, 0))
-				err != nil{
-					return err
-				}
+		
 				xoff, yoff, _, _ := window.platformGetWindowFrameSize()
 				mylog.Check(window.platformSetWindowPos(xoff, yoff))
-				err != nil{
-					return err
-				}
+		
 			}
 		}
 		for i, m := range _glfw.monitors {

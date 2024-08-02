@@ -329,7 +329,7 @@ func (c *newImageCommand) Exec(commandQueue *commandQueue, graphicsDriver graphi
 	} else {
 		c.result.image = mylog.Check2(graphicsDriver.NewImage(c.width, c.height))
 	}
-	return err
+	return nil
 }
 
 func (c *newImageCommand) NeedsSync() bool {

@@ -272,7 +272,6 @@ func (g *nativeGamepadsDesktop) detectConnection(gamepads *gamepads) error {
 				xinputIndex: i,
 			}
 		}
-	}
 	return nil
 }
 
@@ -291,11 +290,6 @@ func (g *nativeGamepadsDesktop) dinput8EnumDevicesCallback(lpddi *_DIDEVICEINSTA
 
 	var device *_IDirectInputDevice8W
 	mylog.Check(g.dinput8API.CreateDevice(&lpddi.guidInstance, &device, nil))
-	err != nil{
-		g.err, = err
-		return _DIENUM_STOP
-	}
-
 	// lpddi.guidInstance is not reliable as a unique identity when the same multiple devices are connected (#3046).
 	// Use HID Path instead.
 	getDInputPath := func(device *_IDirectInputDevice8W) (string, error) {
@@ -340,22 +334,10 @@ func (g *nativeGamepadsDesktop) dinput8EnumDevicesCallback(lpddi *_DIDEVICEINSTA
 		rgodf:      &dinputObjectDataFormats[0],
 	}
 	mylog.Check(device.SetDataFormat(&dataFormat))
-	err != nil{
-		g.err, = err
-		device.Release()
-		return _DIENUM_STOP
-	}
-
 	dc := _DIDEVCAPS{
 		dwSize: uint32(unsafe.Sizeof(_DIDEVCAPS{})),
 	}
 	mylog.Check(device.GetCapabilities(&dc))
-	err != nil{
-		g.err, = err
-		device.Release()
-		return _DIENUM_STOP
-	}
-
 	dipd := _DIPROPDWORD{
 		diph: _DIPROPHEADER{
 			dwSize:       uint32(unsafe.Sizeof(_DIPROPDWORD{})),
@@ -365,11 +347,6 @@ func (g *nativeGamepadsDesktop) dinput8EnumDevicesCallback(lpddi *_DIDEVICEINSTA
 		dwData: _DIPROPAXISMODE_ABS,
 	}
 	mylog.Check(device.SetProperty(_DIPROP_AXISMODE, &dipd.diph))
-	err != nil{
-		g.err, = err
-		device.Release()
-		return _DIENUM_STOP
-	}
 
 	ctx := enumObjectsContext{
 		device: device,
@@ -450,7 +427,7 @@ func supportsXInput(guid windows.GUID) (bool, error) {
 			cbSize: uint32(unsafe.Sizeof(_RID_DEVICE_INFO{})),
 		}
 		size := uint32(unsafe.Sizeof(rdi))
-		 mylog.Check2(_GetRawInputDeviceInfoW(ridl[i].hDevice, _RIDI_DEVICEINFO, unsafe.Pointer(&rdi), &size)); err != nil {
+	if	 _,e:=(_GetRawInputDeviceInfoW(ridl[i].hDevice, _RIDI_DEVICEINFO, unsafe.Pointer(&rdi), &size)); e != nil {
 			// GetRawInputDeviceInfoW can return an error (#2603).
 			continue
 		}
@@ -461,15 +438,11 @@ func supportsXInput(guid windows.GUID) (bool, error) {
 
 		var name [256]uint16
 		size = uint32(unsafe.Sizeof(name))
-		 mylog.Check2(_GetRawInputDeviceInfoW(ridl[i].hDevice, _RIDI_DEVICENAME, unsafe.Pointer(&name[0]), &size)); err != nil {
-			return false, err
-		}
-
+		 mylog.Check2(_GetRawInputDeviceInfoW(ridl[i].hDevice, _RIDI_DEVICENAME, unsafe.Pointer(&name[0]), &size));
 		if strings.Contains(windows.UTF16ToString(name[:]), "IG_") {
 			return true, nil
 		}
 	}
-
 	return false, nil
 }
 
@@ -558,9 +531,6 @@ func (g *nativeGamepadsDesktop) update(gamepads *gamepads) error {
 
 	if g.deviceChanged.Load() {
 		mylog.Check(g.detectConnection(gamepads))
-		err != nil{
-			g.err, = err
-		}
 		g.deviceChanged.Store(false)
 	}
 

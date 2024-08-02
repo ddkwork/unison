@@ -18,7 +18,6 @@ package graphicscommand
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
 	"image"
 	"os"
@@ -42,13 +41,8 @@ func (i *Image) Dump(graphicsDriver graphicsdriver.Graphics, path string, blackb
 
 	w := bufio.NewWriter(f)
 	mylog.Check(i.dumpTo(w, graphicsDriver, blackbg, rect))
-	err != nil{
-		return "", err
-	}
+
 	mylog.Check(w.Flush())
-	err != nil{
-		return "", err
-	}
 
 	return path, nil
 }
@@ -62,9 +56,6 @@ func DumpImages(images []*Image, graphicsDriver graphicsdriver.Graphics, dir str
 	dir = d
 
 	mylog.Check(os.Mkdir(dir, 0755))
-	err != nil{
-		return "", err
-	}
 
 	for _, img := range images {
 		// Screen image cannot be dumped.
@@ -80,15 +71,8 @@ func DumpImages(images []*Image, graphicsDriver graphicsdriver.Graphics, dir str
 
 		w := bufio.NewWriter(f)
 		mylog.Check(img.dumpTo(w, graphicsDriver, false, image.Rect(0, 0, img.width, img.height)))
-		err != nil{
-			return "", err
-		}
 		mylog.Check(w.Flush())
-		err != nil{
-			return "", err
-		}
 	}
-
 	return dir, nil
 }
 
@@ -98,12 +82,7 @@ func availableFilename(name string) (string, error) {
 	base := name[:len(name)-len(ext)]
 
 	for i := 1; ; i++ {
-		 mylog.Check2(os.Stat(name)); err != nil {
-			if errors.Is(err, os.ErrNotExist) {
-				break
-			}
-			return "", err
-		}
+		mylog.Check2(os.Stat(name))
 		name = fmt.Sprintf("%s_%d%s", base, i, ext)
 	}
 	return name, nil

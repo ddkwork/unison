@@ -374,9 +374,6 @@ func (d *decoder) decode() (image.Image, error) {
 		}
 		n = mylog.Check2(r.Read(d.tmp[:1]))
 	}
-	if err != nil && err != io.EOF {
-		return nil, FormatError(err.Error())
-	}
 	if n != 0 || d.idatLength != 0 {
 		return nil, FormatError("too much pixel data")
 	}

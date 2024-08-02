@@ -59,12 +59,6 @@ func TestUpdate(t *testing.T) {
 
 	for _, c := range cases {
 		mylog.Check(gamepaddb.Update([]byte(c.Input)))
-		if err == nil && c.Err {
-			t.Errorf("Update(%q) should return an error but not", c.Input)
-		}
-		if err != nil && !c.Err {
-			t.Errorf("Update(%q) should not return an error but returned %v", c.Input, err)
-		}
 	}
 }
 

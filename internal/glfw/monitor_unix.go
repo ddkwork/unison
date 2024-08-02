@@ -171,9 +171,7 @@ func (m *Monitor) GetPhysicalSize() (width, height int, err error) {
 func (m *Monitor) GetName() (string, error) {
 	mn := C.glfwGetMonitorName(m.data)
 	mylog.Check(fetchErrorIgnoringPlatformError())
-	err != nil{
-		return "", err
-	}
+
 	if mn == nil {
 		return "", nil
 	}

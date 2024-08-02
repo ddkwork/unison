@@ -61,7 +61,7 @@ func SetVsyncEnabled(enabled bool, graphicsDriver graphicsdriver.Graphics) {
 // FlushCommands flushes the command queue and present the screen if needed.
 // If endFrame is true, the current screen might be used to present.
 func FlushCommands(graphicsDriver graphicsdriver.Graphics, endFrame bool) error {
-	 mylog.Check(theCommandQueueManager.flush(graphicsDriver, endFrame)); 
+	mylog.Check(theCommandQueueManager.flush(graphicsDriver, endFrame))
 	return nil
 }
 
@@ -178,9 +178,7 @@ func (q *commandQueue) Enqueue(command command) {
 
 // Flush flushes the command queue.
 func (q *commandQueue) Flush(graphicsDriver graphicsdriver.Graphics, endFrame bool) error {
-	 mylog.Check(q.err.Load()); err != nil {
-		return err.(error)
-	}
+	mylog.Check(q.err.Load())
 
 	var sync bool
 	// Disable asynchronous rendering when vsync is on, as this causes a rendering delay (#2822).
@@ -198,26 +196,17 @@ func (q *commandQueue) Flush(graphicsDriver graphicsdriver.Graphics, endFrame bo
 
 	logger := debug.SwitchLogger()
 
-	var flushErr error
 	runOnRenderThread(func() {
 		defer logger.Flush()
 
-		 mylog.Check(q.flush(graphicsDriver, endFrame, logger)); err != nil {
-			if sync {
-				flushErr = err
-				return
-			}
-			q.err.Store(err)
+		mylog.Check(q.flush(graphicsDriver, endFrame, logger))
+		if sync {
 			return
 		}
+		return
 
 		theCommandQueueManager.putCommandQueue(q)
 	}, sync)
-
-	if sync && flushErr != nil {
-		return flushErr
-	}
-
 	return nil
 }
 
@@ -232,7 +221,7 @@ func (q *commandQueue) flush(graphicsDriver graphicsdriver.Graphics, endFrame bo
 	vs := q.vertices
 	logger.Logf("Graphics commands:\n")
 
-	 mylog.Check(graphicsDriver.Begin()); 
+	mylog.Check(graphicsDriver.Begin())
 
 	defer func() {
 		// Call End even if an error causes, or the graphics driver's state might be stale (#2388).
@@ -280,13 +269,13 @@ func (q *commandQueue) flush(graphicsDriver graphicsdriver.Graphics, endFrame bo
 			nc++
 		}
 		if 0 < ne {
-			 mylog.Check(graphicsDriver.SetVertices(vs[:nv], es[:ne])); 
+			mylog.Check(graphicsDriver.SetVertices(vs[:nv], es[:ne]))
 			es = es[ne:]
 			vs = vs[nv:]
 		}
 		indexOffset := 0
 		for _, c := range cs[:nc] {
-			 mylog.Check(c.Exec(q, graphicsDriver, indexOffset)); 
+			mylog.Check(c.Exec(q, graphicsDriver, indexOffset))
 			logger.Logf("  %s\n", c)
 			// TODO: indexOffset should be reset if the command type is different
 			// from the previous one. This fix is needed when another drawing command is
@@ -425,9 +414,7 @@ func (c *commandQueuePool) get() (*commandQueue, error) {
 	}
 
 	for _, q := range c.cache {
-		 mylog.Check(q.err.Load()); err != nil {
-			return nil, err.(error)
-		}
+		mylog.Check(q.err.Load())
 	}
 
 	q := c.cache[len(c.cache)-1]
@@ -479,7 +466,7 @@ func (c *commandQueueManager) flush(graphicsDriver graphicsdriver.Graphics, endF
 	if prev == nil {
 		return nil
 	}
-	 mylog.Check(prev.Flush(graphicsDriver, endFrame)); 
+	mylog.Check(prev.Flush(graphicsDriver, endFrame))
 	return nil
 }
 

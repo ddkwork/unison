@@ -47,9 +47,7 @@ func (i *Image) Dump(graphicsDriver graphicsdriver.Graphics, path string, blackb
 
 	buf := &bytes.Buffer{}
 	mylog.Check(i.dumpTo(buf, graphicsDriver, blackbg, rect))
-	err != nil{
-		return "", err
-	}
+
 
 	download(buf, "image/png", i.dumpName(path))
 
@@ -72,9 +70,7 @@ func DumpImages(images []*Image, graphicsDriver graphicsdriver.Graphics, dir str
 		f := mylog.Check2(zw.Create(img.dumpName("*.png")))
 
 		mylog.Check(img.dumpTo(f, graphicsDriver, false, image.Rect(0, 0, img.width, img.height)))
-		err != nil{
-			return "", err
-		}
+
 	}
 
 	_ = zw.Close()

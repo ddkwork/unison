@@ -69,9 +69,7 @@ func TestPrograms(t *testing.T) {
 			defer m.Unlock()
 
 			bin := filepath.Join(tmpdir, n)
-			if out := mylog.Check2(exec.Command("go", "build", "-o", bin, filepath.Join(dir, n)).CombinedOutput()); err != nil {
-				t.Fatalf("%v\n%s", err, string(out))
-			}
+			mylog.Check2(exec.Command("go", "build", "-o", bin, filepath.Join(dir, n)).CombinedOutput())
 
 			ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 			defer cancel()
