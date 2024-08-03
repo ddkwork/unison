@@ -10,6 +10,9 @@
 package unison
 
 import (
+	"github.com/richardwilkes/toolbox/log/tracelog"
+	"log"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -53,6 +56,7 @@ func init() {
 	// All init functions are run on the startup thread. Calling LockOSThread from an init function will cause the main
 	// function to be invoked on that thread.
 	runtime.LockOSThread()
+	slog.SetDefault(slog.New(tracelog.New(log.Default().Writer(), slog.LevelInfo)))
 }
 
 // StartupFinishedCallback will cause f to be called once application startup has completed and it is about to start
