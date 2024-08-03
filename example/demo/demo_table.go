@@ -11,6 +11,7 @@ package demo
 
 import (
 	"fmt"
+	"github.com/ddkwork/unison/enums/align"
 
 	"github.com/ddkwork/golibrary/mylog"
 	"github.com/ddkwork/unison"
@@ -98,8 +99,8 @@ func NewDemoTableWindow(where unison.Point) (*unison.Window, error) {
 		unison.NewTableColumnHeader[*demoRow]("xyz", ""),
 	)
 	header.SetLayoutData(&unison.FlexLayoutData{
-		HAlign: unison.FillAlignment,
-		VAlign: unison.FillAlignment,
+		HAlign: align.Fill,
+		VAlign: align.Fill,
 		HGrab:  true,
 	})
 	content.AddChild(header)
@@ -108,8 +109,8 @@ func NewDemoTableWindow(where unison.Point) (*unison.Window, error) {
 	scrollArea := unison.NewScrollPanel()
 	scrollArea.SetContent(table, unison.FillBehavior, unison.FillBehavior)
 	scrollArea.SetLayoutData(&unison.FlexLayoutData{
-		HAlign: unison.FillAlignment,
-		VAlign: unison.FillAlignment,
+		HAlign: align.Fill,
+		VAlign: align.Fill,
 		HGrab:  true,
 		VGrab:  true,
 	})

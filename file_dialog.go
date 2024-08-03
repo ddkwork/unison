@@ -10,6 +10,7 @@
 package unison
 
 import (
+	"github.com/ddkwork/unison/enums/align"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -136,8 +137,8 @@ func (d *fileDialog) createContent() *Panel {
 	d.parentDirPopup.SetLayoutData(&FlexLayoutData{
 		HSpan:  1,
 		VSpan:  1,
-		HAlign: MiddleAlignment,
-		VAlign: MiddleAlignment,
+		HAlign: align.Middle,
+		VAlign: align.Middle,
 		HGrab:  true,
 	})
 
@@ -150,8 +151,8 @@ func (d *fileDialog) createContent() *Panel {
 		d.fileNameField.SetLayoutData(&FlexLayoutData{
 			HSpan:  1,
 			VSpan:  1,
-			HAlign: FillAlignment,
-			VAlign: MiddleAlignment,
+			HAlign: align.Fill,
+			VAlign: align.Middle,
 			HGrab:  true,
 		})
 	}
@@ -168,8 +169,8 @@ func (d *fileDialog) createContent() *Panel {
 		MinSize: NewSize(300, 200),
 		HSpan:   1,
 		VSpan:   1,
-		HAlign:  FillAlignment,
-		VAlign:  FillAlignment,
+		HAlign:  align.Fill,
+		VAlign:  align.Fill,
 		HGrab:   true,
 		VGrab:   true,
 	})
@@ -190,8 +191,8 @@ func (d *fileDialog) createContent() *Panel {
 		d.filterPopup.SetLayoutData(&FlexLayoutData{
 			HSpan:  1,
 			VSpan:  1,
-			HAlign: MiddleAlignment,
-			VAlign: MiddleAlignment,
+			HAlign: align.Middle,
+			VAlign: align.Middle,
 			HGrab:  true,
 		})
 	}

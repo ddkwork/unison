@@ -10,6 +10,8 @@
 package unison
 
 import (
+	"github.com/ddkwork/unison/enums/align"
+	"github.com/ddkwork/unison/enums/side"
 	"time"
 
 	"github.com/richardwilkes/toolbox"
@@ -31,9 +33,9 @@ var DefaultButtonTheme = ButtonTheme{
 	DrawableOnlyHMargin: 3,
 	DrawableOnlyVMargin: 3,
 	ClickAnimationTime:  100 * time.Millisecond,
-	HAlign:              MiddleAlignment,
-	VAlign:              MiddleAlignment,
-	Side:                LeftSide,
+	HAlign:              align.Middle,
+	VAlign:              align.Middle,
+	Side:                side.Left,
 	HideBase:            false,
 }
 
@@ -54,9 +56,9 @@ var DefaultSVGButtonTheme = ButtonTheme{
 	DrawableOnlyHMargin: 3,
 	DrawableOnlyVMargin: 3,
 	ClickAnimationTime:  100 * time.Millisecond,
-	HAlign:              MiddleAlignment,
-	VAlign:              MiddleAlignment,
-	Side:                LeftSide,
+	HAlign:              align.Middle,
+	VAlign:              align.Middle,
+	Side:                side.Left,
 	HideBase:            false,
 }
 
@@ -76,9 +78,9 @@ type ButtonTheme struct {
 	DrawableOnlyHMargin float32
 	DrawableOnlyVMargin float32
 	ClickAnimationTime  time.Duration
-	HAlign              Alignment
-	VAlign              Alignment
-	Side                Side
+	HAlign              align.Enum
+	VAlign              align.Enum
+	Side                side.Enum
 	HideBase            bool
 	Sticky              bool
 }

@@ -10,6 +10,7 @@
 package unison
 
 import (
+	"github.com/ddkwork/unison/enums/align"
 	"github.com/richardwilkes/toolbox/collection/slice"
 )
 
@@ -271,8 +272,8 @@ func (m *menu) newPanel(forBar bool) *menuPanel {
 		content.AddChild(child)
 		if !forBar {
 			child.SetLayoutData(&FlexLayoutData{
-				HAlign: FillAlignment,
-				VAlign: MiddleAlignment,
+				HAlign: align.Fill,
+				VAlign: align.Middle,
 				HGrab:  true,
 			})
 		}
@@ -345,8 +346,8 @@ func (m *menu) newPanel(forBar bool) *menuPanel {
 	s := NewScrollPanel()
 	s.SetContent(content, FollowBehavior, FillBehavior)
 	s.SetLayoutData(&FlexLayoutData{
-		HAlign: FillAlignment,
-		VAlign: FillAlignment,
+		HAlign: align.Fill,
+		VAlign: align.Fill,
 		HGrab:  true,
 		VGrab:  true,
 	})

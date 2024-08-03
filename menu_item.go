@@ -12,6 +12,7 @@ package unison
 import (
 	"fmt"
 	"github.com/ddkwork/unison/enums/paintstyle"
+	"github.com/ddkwork/unison/enums/side"
 
 	"github.com/ddkwork/golibrary/mylog"
 	"github.com/richardwilkes/toolbox/xmath"
@@ -250,7 +251,7 @@ func (mi *menuItem) sizer(hint Size) (minSize, prefSize, maxSize Size) {
 	if mi.isSeparator {
 		prefSize.Height = 1
 	} else {
-		prefSize = LabelSize(mi.titleCache.Text(mi.Title(), DefaultMenuItemTheme.TitleFont), nil, LeftSide, 0)
+		prefSize = LabelSize(mi.titleCache.Text(mi.Title(), DefaultMenuItemTheme.TitleFont), nil, side.Left, 0)
 		if !mi.isRoot() {
 			prefSize.Width += (DefaultMenuItemTheme.KeyFont.Baseline() + 2) * 2
 		}

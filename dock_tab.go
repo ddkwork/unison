@@ -10,6 +10,7 @@
 package unison
 
 import (
+	"github.com/ddkwork/unison/enums/align"
 	"github.com/ddkwork/unison/enums/paintstyle"
 	"strings"
 
@@ -93,7 +94,7 @@ func newDockTab(dockable Dockable) *dockTab {
 	t.title.LabelTheme = t.LabelTheme
 	t.title.Text = t.fullTitle()
 	t.title.Drawable = t.TitleIcon()
-	t.title.SetLayoutData(&FlexLayoutData{HGrab: true, VAlign: MiddleAlignment})
+	t.title.SetLayoutData(&FlexLayoutData{HGrab: true, VAlign: align.Middle})
 	t.AddChild(t.title)
 	if _, ok := t.dockable.(TabCloser); ok {
 		t.button = NewButton()
@@ -104,7 +105,7 @@ func newDockTab(dockable Dockable) *dockTab {
 			SVG:  CircledXSVG,
 			Size: Size{Width: fSize, Height: fSize},
 		}
-		t.button.SetLayoutData(&FlexLayoutData{HAlign: EndAlignment, VAlign: MiddleAlignment})
+		t.button.SetLayoutData(&FlexLayoutData{HAlign: align.End, VAlign: align.Middle})
 		t.AddChild(t.button)
 		t.button.ClickCallback = func() { t.attemptClose() }
 		flex.Columns++

@@ -143,8 +143,8 @@ func (d *JobDialog) createContent() unison.Paneler {
 	d.img = unison.NewLabel()
 	d.img.SetBorder(unison.NewEmptyBorder(unison.Insets{Left: unison.StdHSpacing}))
 	d.img.SetLayoutData(&unison.FlexLayoutData{
-		HAlign: unison.MiddleAlignment,
-		VAlign: unison.MiddleAlignment,
+		HAlign: align.Middle,
+		VAlign: align.Middle,
 	})
 	bottom.AddChild(d.img)
 	d.createCopies(left)
@@ -165,8 +165,8 @@ func (d *JobDialog) createPrinterPopup(parent *unison.Panel) {
 	d.printers.SetBorder(unison.NewEmptyBorder(unison.Insets{Bottom: unison.StdVSpacing * 4}))
 	d.printers.SetLayoutData(&unison.FlexLayoutData{
 		HSpan:  2,
-		HAlign: unison.MiddleAlignment,
-		VAlign: unison.MiddleAlignment,
+		HAlign: align.Middle,
+		VAlign: align.Middle,
 		HGrab:  true,
 	})
 	parent.AddChild(d.printers)
@@ -281,7 +281,7 @@ func (d *JobDialog) createCopies(parent *unison.Panel) {
 	d.copies = unison.NewNumericField(d.jobAttributes.Copies(), 1, d.printerAttributes.MaxCopies(), strconv.Itoa,
 		strconv.Atoi, func(minimum, maximum int) []int { return []int{maximum} })
 	d.copies.ModifiedCallback = d.adjustOKButton
-	d.copies.SetLayoutData(&unison.FlexLayoutData{VAlign: unison.MiddleAlignment})
+	d.copies.SetLayoutData(&unison.FlexLayoutData{VAlign: align.Middle})
 
 	parent.AddChild(createLabel(i18n.Text("Copies")))
 	parent.AddChild(d.copies)
@@ -302,8 +302,8 @@ order with no overlapping ranges`))
 	d.pageRanges.ModifiedCallback = d.adjustOKButton
 	d.pageRanges.SetText(FormatPageRanges(d.jobAttributes.PageRanges()))
 	d.pageRanges.SetLayoutData(&unison.FlexLayoutData{
-		HAlign: unison.FillAlignment,
-		VAlign: unison.MiddleAlignment,
+		HAlign: align.Fill,
+		VAlign: align.Middle,
 		HGrab:  true,
 	})
 
@@ -314,10 +314,10 @@ order with no overlapping ranges`))
 func createLabel(text string) *unison.Label {
 	label := unison.NewLabel()
 	label.Text = text
-	label.HAlign = unison.EndAlignment
+	label.HAlign = align.End
 	label.SetLayoutData(&unison.FlexLayoutData{
-		HAlign: unison.EndAlignment,
-		VAlign: unison.MiddleAlignment,
+		HAlign: align.End,
+		VAlign: align.Middle,
 	})
 	return label
 }

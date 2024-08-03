@@ -10,7 +10,9 @@
 package unison
 
 import (
+	"github.com/ddkwork/unison/enums/align"
 	"github.com/ddkwork/unison/enums/paintstyle"
+	"github.com/ddkwork/unison/enums/side"
 	"time"
 
 	"github.com/richardwilkes/toolbox/xmath"
@@ -29,9 +31,9 @@ var DefaultCheckBoxTheme = CheckBoxTheme{
 	Gap:                3,
 	CornerRadius:       4,
 	ClickAnimationTime: 100 * time.Millisecond,
-	HAlign:             StartAlignment,
-	VAlign:             MiddleAlignment,
-	Side:               LeftSide,
+	HAlign:             align.Start,
+	VAlign:             align.Middle,
+	Side:               side.Left,
 }
 
 // CheckBoxTheme holds theming data for a CheckBox.
@@ -46,9 +48,9 @@ type CheckBoxTheme struct {
 	Gap                float32
 	CornerRadius       float32
 	ClickAnimationTime time.Duration
-	HAlign             Alignment
-	VAlign             Alignment
-	Side               Side
+	HAlign             align.Enum
+	VAlign             align.Enum
+	Side               side.Enum
 }
 
 // CheckBox represents a clickable checkbox with an optional label.
@@ -120,16 +122,16 @@ func (c *CheckBox) DefaultDraw(canvas *Canvas, _ Rect) {
 	rect := contentRect
 	size := c.boxAndLabelSize()
 	switch c.HAlign {
-	case MiddleAlignment, FillAlignment:
+	case align.Middle, align.Fill:
 		rect.X = xmath.Floor(rect.X + (rect.Width-size.Width)/2)
-	case EndAlignment:
+	case align.End:
 		rect.X += rect.Width - size.Width
 	default: // StartAlignment
 	}
 	switch c.VAlign {
-	case MiddleAlignment, FillAlignment:
+	case align.Middle, align.Fill:
 		rect.Y = xmath.Floor(rect.Y + (rect.Height-size.Height)/2)
-	case EndAlignment:
+	case align.End:
 		rect.Y += rect.Height - size.Height
 	default: // StartAlignment
 	}

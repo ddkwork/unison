@@ -9,7 +9,10 @@
 
 package unison
 
-import "github.com/ddkwork/golibrary/mylog"
+import (
+	"github.com/ddkwork/golibrary/mylog"
+	"github.com/ddkwork/unison/enums/side"
+)
 
 // TODO: Fix scaling for docks, too
 
@@ -112,7 +115,7 @@ func (d *DockLayout) Contains(node DockLayoutNode) bool {
 
 // DockTo docks a DockContainer within this DockLayout. If the DockContainer already exists in this DockLayout, it will
 // be moved to the new location.
-func (d *DockLayout) DockTo(dc *DockContainer, target DockLayoutNode, side Side) {
+func (d *DockLayout) DockTo(dc *DockContainer, target DockLayoutNode, s side.Enum) {
 	// Does the container already exist in our hierarchy?
 	if existingLayout := d.FindLayout(dc); existingLayout != nil {
 		// Yes. Is it the same layout?
@@ -127,12 +130,12 @@ func (d *DockLayout) DockTo(dc *DockContainer, target DockLayoutNode, side Side)
 		}
 		if targetLayout == existingLayout {
 			// Yes. Reposition the target within this layout.
-			p1, p2 := dockOrder(side)
+			p1, p2 := dockOrder(s)
 			if targetLayout.nodes[p1] != dc {
 				targetLayout.nodes[p2] = targetLayout.nodes[p1]
 				targetLayout.nodes[p1] = dc
 			}
-			targetLayout.Horizontal = side.Horizontal()
+			targetLayout.Horizontal = s.Horizontal()
 			return
 		}
 		// Not in the same layout. Remove the container from the hierarchy so we can re-add it.
@@ -140,13 +143,13 @@ func (d *DockLayout) DockTo(dc *DockContainer, target DockLayoutNode, side Side)
 	}
 	switch c := target.(type) {
 	case *DockLayout:
-		c.dockWithin(dc, side)
+		c.dockWithin(dc, s)
 	case *DockContainer:
-		d.FindLayout(c).dockWithContainer(dc, target, side)
+		d.FindLayout(c).dockWithContainer(dc, target, s)
 	}
 }
 
-func (d *DockLayout) dockWithin(dc *DockContainer, side Side) {
+func (d *DockLayout) dockWithin(dc *DockContainer, side side.Enum) {
 	p1, p2 := dockOrder(side)
 	if d.nodes[p1] != nil {
 		if d.nodes[p2] == nil {
@@ -176,19 +179,19 @@ func (d *DockLayout) pushDown() *DockLayout {
 	return layout
 }
 
-func (d *DockLayout) dockWithContainer(dc *DockContainer, target DockLayoutNode, side Side) {
-	p1, p2 := dockOrder(side)
+func (d *DockLayout) dockWithContainer(dc *DockContainer, target DockLayoutNode, s side.Enum) {
+	p1, p2 := dockOrder(s)
 	if d.nodes[p1] != nil {
 		if d.nodes[p2] == nil {
 			d.nodes[p2] = d.nodes[p1]
 			d.nodes[p1] = dc
-			d.Horizontal = side.Horizontal()
+			d.Horizontal = s.Horizontal()
 		} else {
 			layout := &DockLayout{
 				dock:       d.dock,
 				parent:     d,
 				divider:    -1,
-				Horizontal: side.Horizontal(),
+				Horizontal: s.Horizontal(),
 			}
 			layout.nodes[p1] = dc
 			which := p1
@@ -204,12 +207,12 @@ func (d *DockLayout) dockWithContainer(dc *DockContainer, target DockLayoutNode,
 		}
 	} else {
 		d.nodes[p1] = dc
-		d.Horizontal = side.Horizontal()
+		d.Horizontal = s.Horizontal()
 	}
 }
 
-func dockOrder(side Side) (p1, p2 int) {
-	if side == TopSide || side == LeftSide {
+func dockOrder(s side.Enum) (p1, p2 int) {
+	if s == side.Top || s == side.Left {
 		return 0, 1
 	}
 	return 1, 0

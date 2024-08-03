@@ -12,6 +12,7 @@ package unison
 import (
 	"fmt"
 	"github.com/ddkwork/unison/enums/paintstyle"
+	"github.com/ddkwork/unison/enums/side"
 
 	"github.com/richardwilkes/toolbox"
 )
@@ -93,7 +94,7 @@ type Dock struct {
 	dividerDragLayout          *DockLayout
 	dividerDragInitialPosition float32
 	dividerDragEventPosition   float32
-	dragSide                   Side
+	dragSide                   side.Enum
 	dividerDragIsValid         bool
 }
 
@@ -132,7 +133,7 @@ func (d *Dock) RootDockLayout() *DockLayout {
 
 // DockTo a Dockable within this Dock. If the Dockable already exists in this Dock, it will be moved to the new
 // location. nil may be passed in for the target, in which case the top-most layout is used.
-func (d *Dock) DockTo(dockable Dockable, target DockLayoutNode, side Side) {
+func (d *Dock) DockTo(dockable Dockable, target DockLayoutNode, side side.Enum) {
 	if toolbox.IsNil(target) {
 		target = d.layout
 	}
@@ -199,11 +200,11 @@ func (d *Dock) DefaultDrawOver(gc *Canvas, dirty Rect) {
 	if d.dragDockable != nil && d.dragOverNode != nil {
 		r := d.dragOverNode.FrameRect()
 		switch d.dragSide {
-		case TopSide:
+		case side.Top:
 			r.Height = max(r.Height/2, 1)
-		case LeftSide:
+		case side.Left:
 			r.Width = max(r.Width/2, 1)
-		case BottomSide:
+		case side.Bottom:
 			half := max(r.Height/2, 1)
 			r.Y += r.Height - half
 			r.Height = half
@@ -397,18 +398,18 @@ func (d *Dock) updateDragDockable(where Point, data map[string]any) {
 			var extent float32
 			r := d.dragOverNode.FrameRect()
 			if where.X < r.CenterX() {
-				d.dragSide = LeftSide
+				d.dragSide = side.Left
 				extent = where.X - r.X
 			} else {
-				d.dragSide = RightSide
+				d.dragSide = side.Right
 				extent = r.Width - (where.X - r.X)
 			}
 			if where.Y < r.CenterY() {
 				if extent > where.Y-r.Y {
-					d.dragSide = TopSide
+					d.dragSide = side.Top
 				}
 			} else if extent > r.Height-(where.Y-r.Y) {
-				d.dragSide = BottomSide
+				d.dragSide = side.Bottom
 			}
 			d.dragDockable = dockable
 		}

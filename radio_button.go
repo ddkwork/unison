@@ -10,7 +10,9 @@
 package unison
 
 import (
+	"github.com/ddkwork/unison/enums/align"
 	"github.com/ddkwork/unison/enums/paintstyle"
+	"github.com/ddkwork/unison/enums/side"
 	"time"
 
 	"github.com/richardwilkes/toolbox/xmath"
@@ -29,9 +31,9 @@ var DefaultRadioButtonTheme = RadioButtonTheme{
 	Gap:                3,
 	CornerRadius:       4,
 	ClickAnimationTime: 100 * time.Millisecond,
-	HAlign:             MiddleAlignment,
-	VAlign:             MiddleAlignment,
-	Side:               LeftSide,
+	HAlign:             align.Middle,
+	VAlign:             align.Middle,
+	Side:               side.Left,
 }
 
 // RadioButtonTheme holds theming data for a RadioButton.
@@ -46,9 +48,9 @@ type RadioButtonTheme struct {
 	Gap                float32
 	CornerRadius       float32
 	ClickAnimationTime time.Duration
-	HAlign             Alignment
-	VAlign             Alignment
-	Side               Side
+	HAlign             align.Enum
+	VAlign             align.Enum
+	Side               side.Enum
 }
 
 // RadioButton represents a clickable radio button with an optional label.
@@ -118,16 +120,16 @@ func (r *RadioButton) DefaultDraw(canvas *Canvas, _ Rect) {
 	rect := r.ContentRect(false)
 	size := r.circleAndLabelSize()
 	switch r.HAlign {
-	case MiddleAlignment, FillAlignment:
+	case align.Middle, align.Fill:
 		rect.X = xmath.Floor(rect.X + (rect.Width-size.Width)/2)
-	case EndAlignment:
+	case align.End:
 		rect.X += rect.Width - size.Width
 	default: // StartAlignment
 	}
 	switch r.VAlign {
-	case MiddleAlignment, FillAlignment:
+	case align.Middle, align.Fill:
 		rect.Y = xmath.Floor(rect.Y + (rect.Height-size.Height)/2)
-	case EndAlignment:
+	case align.End:
 		rect.Y += rect.Height - size.Height
 	default: // StartAlignment
 	}

@@ -11,6 +11,7 @@ package unison
 
 import (
 	"errors"
+	"github.com/ddkwork/unison/enums/align"
 	"strings"
 
 	"github.com/ddkwork/golibrary/mylog"
@@ -111,8 +112,8 @@ func NewDialog(icon Drawable, iconInk Ink, msgPanel Paneler, buttonInfo []*Dialo
 	p.SetLayoutData(&FlexLayoutData{
 		HSpan:  1,
 		VSpan:  1,
-		HAlign: FillAlignment,
-		VAlign: FillAlignment,
+		HAlign: align.Fill,
+		VAlign: align.Fill,
 		HGrab:  true,
 		VGrab:  true,
 	})
@@ -136,8 +137,8 @@ func NewDialog(icon Drawable, iconInk Ink, msgPanel Paneler, buttonInfo []*Dialo
 	buttonPanel.SetLayoutData(&FlexLayoutData{
 		HSpan:  columns,
 		VSpan:  1,
-		HAlign: EndAlignment,
-		VAlign: MiddleAlignment,
+		HAlign: align.End,
+		VAlign: align.Middle,
 	})
 	content.AddChild(buttonPanel)
 	originalKeyDownCallback := content.KeyDownCallback
@@ -208,7 +209,7 @@ func NewMessagePanel(primary, detail string) *Panel {
 		MinSize: Size{Width: 200},
 		HSpan:   1,
 		VSpan:   1,
-		VAlign:  MiddleAlignment,
+		VAlign:  align.Middle,
 	})
 	return panel
 }

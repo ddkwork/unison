@@ -10,6 +10,7 @@
 package unison
 
 import (
+	"github.com/ddkwork/unison/enums/align"
 	"github.com/richardwilkes/toolbox/i18n"
 )
 
@@ -28,8 +29,8 @@ func (bi *DialogButtonInfo) NewButton(d *Dialog) *Button {
 	b.SetLayoutData(&FlexLayoutData{
 		HSpan:  1,
 		VSpan:  1,
-		HAlign: FillAlignment,
-		VAlign: MiddleAlignment,
+		HAlign: align.Fill,
+		VAlign: align.Middle,
 	})
 	return b
 }
