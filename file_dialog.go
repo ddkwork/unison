@@ -11,6 +11,7 @@ package unison
 
 import (
 	"github.com/ddkwork/unison/enums/align"
+	"github.com/ddkwork/unison/enums/behavior"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -163,7 +164,7 @@ func (d *fileDialog) createContent() *Panel {
 	d.rebuildFileList()
 	d.scroller = NewScrollPanel()
 	d.scroller.SetBorder(NewLineBorder(ControlEdgeColor, 0, NewUniformInsets(1), false))
-	d.scroller.SetContent(d.fileList, FollowBehavior, FillBehavior)
+	d.scroller.SetContent(d.fileList, behavior.Follow, behavior.Fill)
 	content.AddChild(d.scroller)
 	d.scroller.SetLayoutData(&FlexLayoutData{
 		MinSize: NewSize(300, 200),

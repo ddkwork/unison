@@ -11,6 +11,7 @@ package unison
 
 import (
 	"github.com/ddkwork/unison/enums/align"
+	"github.com/ddkwork/unison/enums/behavior"
 	"github.com/richardwilkes/toolbox/collection/slice"
 )
 
@@ -344,7 +345,7 @@ func (m *menu) newPanel(forBar bool) *menuPanel {
 	content.SetLayout(lay)
 	content.Pack()
 	s := NewScrollPanel()
-	s.SetContent(content, FollowBehavior, FillBehavior)
+	s.SetContent(content, behavior.Follow, behavior.Fill)
 	s.SetLayoutData(&FlexLayoutData{
 		HAlign: align.Fill,
 		VAlign: align.Fill,

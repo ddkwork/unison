@@ -12,6 +12,7 @@ package demo
 import (
 	"fmt"
 	"github.com/ddkwork/unison/enums/align"
+	"github.com/ddkwork/unison/enums/behavior"
 	"log/slog"
 	"strings"
 	"unicode"
@@ -138,7 +139,7 @@ func NewDemoWindow(where unison.Point) (*unison.Window, error) {
 
 	// Create a scroll panel and place the image panel inside it
 	scrollArea := unison.NewScrollPanel()
-	scrollArea.SetContent(imgPanel, unison.UnmodifiedBehavior, unison.UnmodifiedBehavior)
+	scrollArea.SetContent(imgPanel, behavior.Unmodified, behavior.Unmodified)
 	scrollArea.SetLayoutData(&unison.FlexLayoutData{
 		HSpan:  1,
 		VSpan:  1,
@@ -532,7 +533,7 @@ func createListPanel() *unison.Panel {
 	lst.SetFrameRect(unison.Rect{Size: prefSize})
 	scroller := unison.NewScrollPanel()
 	scroller.SetBorder(unison.NewLineBorder(unison.ControlEdgeColor, 0, unison.NewUniformInsets(1), false))
-	scroller.SetContent(lst, unison.FillBehavior, unison.FillBehavior)
+	scroller.SetContent(lst, behavior.Fill, behavior.Fill)
 	scroller.SetLayoutData(&unison.FlexLayoutData{
 		HSpan:  1,
 		VSpan:  1,

@@ -12,6 +12,7 @@ package demo
 import (
 	"fmt"
 	"github.com/ddkwork/unison/enums/align"
+	"github.com/ddkwork/unison/enums/behavior"
 
 	"github.com/ddkwork/golibrary/mylog"
 	"github.com/ddkwork/unison"
@@ -107,7 +108,7 @@ func NewDemoTableWindow(where unison.Point) (*unison.Window, error) {
 
 	// Create a scroll panel and place a table panel inside it
 	scrollArea := unison.NewScrollPanel()
-	scrollArea.SetContent(table, unison.FillBehavior, unison.FillBehavior)
+	scrollArea.SetContent(table, behavior.Fill, behavior.Fill)
 	scrollArea.SetLayoutData(&unison.FlexLayoutData{
 		HAlign: align.Fill,
 		VAlign: align.Fill,
