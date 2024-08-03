@@ -20,6 +20,8 @@ require (
 	github.com/richardwilkes/toolbox v1.99.0
 )
 
+replace github.com/richardwilkes/toolbox => ./internal/toolbox-1.99.0
+
 require (
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
 	github.com/dc0d/caseconv v0.5.0 // indirect
