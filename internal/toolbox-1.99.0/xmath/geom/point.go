@@ -54,11 +54,11 @@ func (p *Point[T]) Align() *Point[T] {
 }
 
 // Add modifies this Point by adding the supplied coordinates. Returns itself for easy chaining.
-func (p *Point[T]) Add(pt Point[T]) *Point[T] {
-	p.X += pt.X
-	p.Y += pt.Y
-	return p
-}
+//func (p *Point[T]) Add(pt Point[T]) *Point[T] {
+//	p.X += pt.X
+//	p.Y += pt.Y
+//	return p
+//}
 
 // Subtract modifies this Point by subtracting the supplied coordinates. Returns itself for easy chaining.
 func (p *Point[T]) Subtract(pt Point[T]) *Point[T] {
@@ -84,4 +84,62 @@ func (p Point[T]) toPoint64() Point[float64] {
 		X: reflect.ValueOf(p.X).Float(),
 		Y: reflect.ValueOf(p.Y).Float(),
 	}
+}
+
+// ConvertPoint converts a Point of type F into one of type T.
+func ConvertPoint[T, F xmath.Numeric](pt Point[F]) Point[T] {
+	return NewPoint(T(pt.X), T(pt.Y))
+}
+
+// Add returns a new Point which is the result of adding this Point with the provided Point.
+func (p Point[T]) Add(pt Point[T]) Point[T] {
+	return Point[T]{X: p.X + pt.X, Y: p.Y + pt.Y}
+}
+
+// Sub returns a new Point which is the result of subtracting the provided Point from this Point.
+func (p Point[T]) Sub(pt Point[T]) Point[T] {
+	return Point[T]{X: p.X - pt.X, Y: p.Y - pt.Y}
+}
+
+// Mul returns a new Point which is the result of multiplying the coordinates of this point by the value.
+func (p Point[T]) Mul(value T) Point[T] {
+	return Point[T]{X: p.X * value, Y: p.Y * value}
+}
+
+// Div returns a new Point which is the result of dividing the coordinates of this point by the value.
+func (p Point[T]) Div(value T) Point[T] {
+	return Point[T]{X: p.X / value, Y: p.Y / value}
+}
+
+// Neg returns a new Point that holds the negated coordinates of this Point.
+func (p Point[T]) Neg() Point[T] {
+	return Point[T]{X: -p.X, Y: -p.Y}
+}
+
+// Floor returns a new Point which is aligned to integer coordinates by using Floor on them.
+func (p Point[T]) Floor() Point[T] {
+	return Point[T]{X: xmath.Floor(p.X), Y: xmath.Floor(p.Y)}
+}
+
+// Ceil returns a new Point which is aligned to integer coordinates by using Ceil() on them.
+func (p Point[T]) Ceil() Point[T] {
+	return Point[T]{X: xmath.Ceil(p.X), Y: xmath.Ceil(p.Y)}
+}
+
+// Dot returns the dot product of the two Points.
+func (p Point[T]) Dot(pt Point[T]) T {
+	return p.X*pt.X + p.Y*pt.Y
+}
+
+// Cross returns the cross product of the two Points.
+func (p Point[T]) Cross(pt Point[T]) T {
+	return p.X*pt.Y - p.Y*pt.X
+}
+
+// In returns true if this Point is within the Rect.
+func (p Point[T]) In(r Rect[T]) bool {
+	if r.Empty() {
+		return false
+	}
+	return r.X <= p.X && r.Y <= p.Y && p.X < r.Right() && p.Y < r.Bottom()
 }

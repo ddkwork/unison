@@ -30,6 +30,10 @@ type Rect[T xmath.Numeric] struct {
 	Size[T]  `json:",inline"`
 }
 
+func (r Rect[T]) Empty() bool {
+	return r.Width <= 0 || r.Height <= 0
+}
+
 // NewRect creates a new Rect.
 func NewRect[T xmath.Numeric](x, y, width, height T) Rect[T] {
 	return Rect[T]{
