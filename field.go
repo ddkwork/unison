@@ -12,6 +12,7 @@ package unison
 import (
 	"github.com/ddkwork/unison/enums/align"
 	"github.com/ddkwork/unison/enums/paintstyle"
+	"github.com/ddkwork/unison/enums/pathop"
 	"math"
 	"strings"
 	"time"
@@ -309,7 +310,7 @@ func (f *Field) DefaultDraw(canvas *Canvas, _ Rect) {
 	rect := f.ContentRect(true)
 	canvas.DrawRect(rect, bg.Paint(canvas, rect, paintstyle.Fill))
 	rect = f.ContentRect(false)
-	canvas.ClipRect(rect, IntersectClipOp, false)
+	canvas.ClipRect(rect, pathop.Intersect, false)
 	f.prepareLines(rect.Width - 2)
 	ink := fg
 	if !enabled {

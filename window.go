@@ -12,6 +12,7 @@ package unison
 import (
 	"fmt"
 	"github.com/ddkwork/unison/enums/paintstyle"
+	"github.com/ddkwork/unison/enums/pathop"
 	"image"
 	"time"
 
@@ -857,7 +858,7 @@ func (w *Window) Draw(c *Canvas) {
 				c.Save()
 				c.Translate(w.dragDataLocation.X+w.dragData.Offset.X, w.dragDataLocation.Y+w.dragData.Offset.Y)
 				r := Rect{Size: w.dragData.Drawable.LogicalSize()}
-				c.ClipRect(r, IntersectClipOp, false)
+				c.ClipRect(r, pathop.Intersect, false)
 				w.dragData.Drawable.DrawInRect(c, r, w.dragData.SamplingOptions, w.dragData.Ink.Paint(c, r, paintstyle.Fill))
 				c.Restore()
 			}

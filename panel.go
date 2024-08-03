@@ -10,6 +10,7 @@
 package unison
 
 import (
+	"github.com/ddkwork/unison/enums/pathop"
 	"reflect"
 	"strings"
 
@@ -429,7 +430,7 @@ func (p *Panel) Draw(gc *Canvas, rect Rect) {
 		gc.Save()
 		scale := p.Scale()
 		gc.Scale(scale, scale)
-		gc.ClipRect(rect, IntersectClipOp, false)
+		gc.ClipRect(rect, pathop.Intersect, false)
 		if p.DrawCallback != nil {
 			gc.Save()
 			p.DrawCallback(gc, rect)

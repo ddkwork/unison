@@ -12,6 +12,7 @@ package unison
 import (
 	"github.com/ddkwork/unison/enums/align"
 	"github.com/ddkwork/unison/enums/paintstyle"
+	"github.com/ddkwork/unison/enums/pathop"
 	"github.com/ddkwork/unison/enums/side"
 	"github.com/richardwilkes/toolbox/xmath"
 )
@@ -185,7 +186,7 @@ func DrawLabel(canvas *Canvas, rect Rect, hAlign, vAlign align.Enum, text *Text,
 	}
 
 	canvas.Save()
-	canvas.ClipRect(rect, IntersectClipOp, false)
+	canvas.ClipRect(rect, pathop.Intersect, false)
 	if drawable != nil {
 		rect.X = imgX
 		rect.Y = imgY

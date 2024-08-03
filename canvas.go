@@ -10,6 +10,7 @@
 package unison
 
 import (
+	"github.com/ddkwork/unison/enums/pathop"
 	"github.com/ddkwork/unison/internal/skia"
 	"github.com/richardwilkes/toolbox/xmath"
 )
@@ -22,15 +23,6 @@ const (
 	PointsPointMode PointMode = iota
 	LinesPointMode
 	PolygonPointMode
-)
-
-// ClipOp holds the type of clip operation to perform.
-type ClipOp byte
-
-// Possible values for ClipOp.
-const (
-	DifferenceClipOp ClipOp = iota
-	IntersectClipOp
 )
 
 // Canvas is a drawing surface.
@@ -241,12 +233,12 @@ func (c *Canvas) DrawTextBlob(blob *TextBlob, x, y float32, paint *Paint) {
 }
 
 // ClipRect replaces the clip with the intersection of difference of the current clip and rect.
-func (c *Canvas) ClipRect(rect Rect, op ClipOp, antialias bool) {
+func (c *Canvas) ClipRect(rect Rect, op pathop.Enum, antialias bool) {
 	skia.CanavasClipRectWithOperation(c.canvas, skia.RectToSkRect(&rect), skia.ClipOp(op), antialias)
 }
 
 // ClipPath replaces the clip with the intersection of difference of the current clip and path.
-func (c *Canvas) ClipPath(path *Path, op ClipOp, antialias bool) {
+func (c *Canvas) ClipPath(path *Path, op pathop.Enum, antialias bool) {
 	skia.CanavasClipPathWithOperation(c.canvas, path.path, skia.ClipOp(op), antialias)
 }
 

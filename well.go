@@ -12,6 +12,7 @@ package unison
 import (
 	"context"
 	"github.com/ddkwork/unison/enums/paintstyle"
+	"github.com/ddkwork/unison/enums/pathop"
 	"time"
 
 	"github.com/ddkwork/golibrary/mylog"
@@ -164,7 +165,7 @@ func (w *Well) DefaultDraw(canvas *Canvas, _ Rect) {
 		canvas.Save()
 		path := NewPath()
 		path.RoundedRect(r, radius, radius)
-		canvas.ClipPath(path, IntersectClipOp, true)
+		canvas.ClipPath(path, pathop.Intersect, true)
 		canvas.DrawImageInRect(pattern.Image, r, nil, nil)
 		canvas.Restore()
 	} else {
