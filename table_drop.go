@@ -10,6 +10,7 @@
 package unison
 
 import (
+	"github.com/ddkwork/unison/enums/paintstyle"
 	"slices"
 
 	"github.com/google/uuid"
@@ -41,7 +42,7 @@ func (d *TableDrop[T, U]) DrawOverCallback(gc *Canvas, rect Rect) {
 	if d.inDragOver {
 		r := d.Table.ContentRect(false)
 		r.Inset(NewUniformInsets(1))
-		paint := DropAreaColor.Paint(gc, r, Stroke)
+		paint := DropAreaColor.Paint(gc, r, paintstyle.Stroke)
 		paint.SetStrokeWidth(2)
 		paint.SetColorFilter(Alpha30Filter())
 		gc.DrawRect(r, paint)

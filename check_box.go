@@ -10,6 +10,7 @@
 package unison
 
 import (
+	"github.com/ddkwork/unison/enums/paintstyle"
 	"time"
 
 	"github.com/richardwilkes/toolbox/xmath"
@@ -164,7 +165,7 @@ func (c *CheckBox) DefaultDraw(canvas *Canvas, _ Rect) {
 	if c.State == OffCheckState {
 		return
 	}
-	paint := fg.Paint(canvas, contentRect, Stroke)
+	paint := fg.Paint(canvas, contentRect, paintstyle.Stroke)
 	paint.SetStrokeWidth(2)
 	if !c.Enabled() {
 		paint.SetColorFilter(Grayscale30Filter())

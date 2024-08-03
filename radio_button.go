@@ -10,6 +10,7 @@
 package unison
 
 import (
+	"github.com/ddkwork/unison/enums/paintstyle"
 	"time"
 
 	"github.com/richardwilkes/toolbox/xmath"
@@ -160,7 +161,7 @@ func (r *RadioButton) DefaultDraw(canvas *Canvas, _ Rect) {
 	DrawEllipseBase(canvas, rect, thickness, bg, r.EdgeInk)
 	if r.Selected() {
 		rect.InsetUniform(0.5 + 0.2*circleSize)
-		paint := fg.Paint(canvas, rect, Fill)
+		paint := fg.Paint(canvas, rect, paintstyle.Fill)
 		if !r.Enabled() {
 			paint.SetColorFilter(Grayscale30Filter())
 		}

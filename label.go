@@ -10,6 +10,7 @@
 package unison
 
 import (
+	"github.com/ddkwork/unison/enums/paintstyle"
 	"github.com/richardwilkes/toolbox/xmath"
 )
 
@@ -112,7 +113,7 @@ func DrawLabel(canvas *Canvas, rect Rect, hAlign, vAlign Alignment, text *Text, 
 			ColorFilter: Grayscale30Filter(),
 		}
 	}
-	paint := fg.Paint(canvas, rect, Fill)
+	paint := fg.Paint(canvas, rect, paintstyle.Fill)
 
 	// Determine overall size of content
 	var size, txtSize Size

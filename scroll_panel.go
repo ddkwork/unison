@@ -9,6 +9,8 @@
 
 package unison
 
+import "github.com/ddkwork/unison/enums/paintstyle"
+
 var (
 	_ Layout = &ScrollPanel{}
 	// MouseWheelMultiplier is used by the default theme to multiply incoming mouse wheel event deltas.
@@ -196,7 +198,7 @@ func (s *ScrollPanel) SetPosition(h, v float32) {
 // DefaultDraw provides the default drawing.
 func (s *ScrollPanel) DefaultDraw(canvas *Canvas, _ Rect) {
 	r := s.ContentRect(true)
-	canvas.DrawRect(r, s.BackgroundInk.Paint(canvas, r, Fill))
+	canvas.DrawRect(r, s.BackgroundInk.Paint(canvas, r, paintstyle.Fill))
 }
 
 // Sync the headers and content with the current scroll state.

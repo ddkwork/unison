@@ -15,6 +15,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/ddkwork/unison/enums/paintstyle"
 	"net/url"
 	"path/filepath"
 	"slices"
@@ -365,7 +366,7 @@ func (m *Markdown) processCodeBlock() {
 
 	p := NewPanel()
 	p.DrawCallback = func(gc *Canvas, rect Rect) {
-		gc.DrawRect(rect, m.CodeBackground.Paint(gc, rect, Fill))
+		gc.DrawRect(rect, m.CodeBackground.Paint(gc, rect, paintstyle.Fill))
 	}
 	p.SetLayout(&FlexLayout{Columns: 1})
 	p.SetLayoutData(&FlexLayoutData{
@@ -400,7 +401,7 @@ func (m *Markdown) processBlockquote() {
 
 	p := NewPanel()
 	p.DrawCallback = func(gc *Canvas, rect Rect) {
-		gc.DrawRect(rect, m.CodeBackground.Paint(gc, rect, Fill))
+		gc.DrawRect(rect, m.CodeBackground.Paint(gc, rect, paintstyle.Fill))
 	}
 	p.SetLayout(&FlexLayout{
 		Columns:  1,

@@ -11,6 +11,7 @@ package unison
 
 import (
 	"fmt"
+	"github.com/ddkwork/unison/enums/paintstyle"
 
 	"github.com/richardwilkes/toolbox"
 )
@@ -55,7 +56,7 @@ func (d *DockTheme) DrawHorizontalGripper(canvas *Canvas, r Rect) {
 	gripLength := d.DockGripLength()
 	x := r.X + (r.Width-d.GripWidth)/2
 	y := r.Y + (r.Height-gripLength)/2
-	paint := d.GripInk.Paint(canvas, r, Fill)
+	paint := d.GripInk.Paint(canvas, r, paintstyle.Fill)
 	for yy := y; yy < y+gripLength; yy += d.GripHeight + d.GripGap {
 		canvas.DrawRect(NewRect(x, yy, d.GripWidth, d.GripHeight), paint)
 	}
@@ -70,7 +71,7 @@ func (d *DockTheme) DrawVerticalGripper(canvas *Canvas, r Rect) {
 	gripLength := d.DockGripLength()
 	x := r.X + (r.Width-gripLength)/2
 	y := r.Y + (r.Height-d.GripWidth)/2
-	paint := d.GripInk.Paint(canvas, r, Fill)
+	paint := d.GripInk.Paint(canvas, r, paintstyle.Fill)
 	for xx := x; xx < x+gripLength; xx += d.GripHeight + d.GripGap {
 		canvas.DrawRect(NewRect(xx, y, d.GripHeight, d.GripWidth), paint)
 	}
@@ -187,7 +188,7 @@ func (d *Dock) DockTo(dockable Dockable, target DockLayoutNode, side Side) {
 // DefaultDraw fills in the background.
 func (d *Dock) DefaultDraw(gc *Canvas, _ Rect) {
 	rect := d.ContentRect(true)
-	gc.DrawRect(rect, d.BackgroundInk.Paint(gc, rect, Fill))
+	gc.DrawRect(rect, d.BackgroundInk.Paint(gc, rect, paintstyle.Fill))
 }
 
 // DefaultDrawOver draws the dividers and any drag markers.
@@ -211,11 +212,11 @@ func (d *Dock) DefaultDrawOver(gc *Canvas, dirty Rect) {
 			r.X += r.Width - half
 			r.Width = half
 		}
-		paint := d.DropAreaInk.Paint(gc, r, Fill)
+		paint := d.DropAreaInk.Paint(gc, r, paintstyle.Fill)
 		paint.SetColorFilter(Alpha30Filter())
 		gc.DrawRect(r, paint)
 		r.InsetUniform(1)
-		p := d.DropAreaInk.Paint(gc, r, Stroke)
+		p := d.DropAreaInk.Paint(gc, r, paintstyle.Stroke)
 		p.SetStrokeWidth(2)
 		gc.DrawRect(r, p)
 	}

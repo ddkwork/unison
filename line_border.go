@@ -9,6 +9,8 @@
 
 package unison
 
+import "github.com/ddkwork/unison/enums/paintstyle"
+
 var _ Border = &LineBorder{}
 
 // LineBorder private a lined border.
@@ -53,5 +55,5 @@ func (b *LineBorder) Draw(canvas *Canvas, rect Rect) {
 		path.Rect(rect)
 		path.Rect(clip)
 	}
-	canvas.DrawPath(path, b.ink.Paint(canvas, rect, Fill))
+	canvas.DrawPath(path, b.ink.Paint(canvas, rect, paintstyle.Fill))
 }

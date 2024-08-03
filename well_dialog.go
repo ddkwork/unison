@@ -10,6 +10,7 @@
 package unison
 
 import (
+	"github.com/ddkwork/unison/enums/paintstyle"
 	"strconv"
 	"strings"
 
@@ -458,7 +459,7 @@ func (d *wellDialog) addPreviewBlock(parent *Panel, title string, spaceBefore fl
 		if pattern, ok := ink.(*Pattern); ok {
 			canvas.DrawImageInRect(pattern.Image, r, nil, nil)
 		} else {
-			canvas.DrawRect(r, ink.Paint(canvas, r, Fill))
+			canvas.DrawRect(r, ink.Paint(canvas, r, paintstyle.Fill))
 		}
 	}
 	parent.AddChild(preview)

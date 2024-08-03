@@ -11,6 +11,7 @@ package unison
 
 import (
 	"fmt"
+	"github.com/ddkwork/unison/enums/paintstyle"
 )
 
 var _ Ink = &Gradient{}
@@ -83,7 +84,7 @@ func NewEvenlySpacedGradient(start, end Point, startRadius, endRadius float32, c
 }
 
 // Paint returns a Paint for this Gradient.
-func (g *Gradient) Paint(_ *Canvas, rect Rect, style PaintStyle) *Paint {
+func (g *Gradient) Paint(_ *Canvas, rect Rect, style paintstyle.Enum) *Paint {
 	paint := NewPaint()
 	paint.SetStyle(style)
 	paint.SetColor(Black)

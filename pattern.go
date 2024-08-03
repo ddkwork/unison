@@ -9,6 +9,8 @@
 
 package unison
 
+import "github.com/ddkwork/unison/enums/paintstyle"
+
 var _ Ink = &Pattern{}
 
 // Pattern holds the information necessary to draw an image in a pattern.
@@ -22,7 +24,7 @@ type Pattern struct {
 }
 
 // Paint returns a Paint for this Pattern.
-func (p *Pattern) Paint(canvas *Canvas, _ Rect, style PaintStyle) *Paint {
+func (p *Pattern) Paint(canvas *Canvas, _ Rect, style paintstyle.Enum) *Paint {
 	paint := NewPaint()
 	paint.SetStyle(style)
 	scale := p.Scale

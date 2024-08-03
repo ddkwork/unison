@@ -10,6 +10,7 @@
 package unison
 
 import (
+	"github.com/ddkwork/unison/enums/paintstyle"
 	"time"
 )
 
@@ -143,15 +144,15 @@ func (p *ProgressBar) DefaultDraw(canvas *Canvas, _ Rect) {
 	} else if p.current > 0 {
 		meter.Width = bounds.Width * (p.current / p.maximum)
 	}
-	canvas.DrawRoundedRect(bounds, p.CornerRadius, p.CornerRadius, p.BackgroundInk.Paint(canvas, bounds, Fill))
+	canvas.DrawRoundedRect(bounds, p.CornerRadius, p.CornerRadius, p.BackgroundInk.Paint(canvas, bounds, paintstyle.Fill))
 	if meter.Width > 0 {
 		trimmedMeter := meter
 		trimmedMeter.X += 0.5
 		trimmedMeter.Width--
-		canvas.DrawRoundedRect(trimmedMeter, p.CornerRadius, p.CornerRadius, p.FillInk.Paint(canvas, trimmedMeter, Fill))
+		canvas.DrawRoundedRect(trimmedMeter, p.CornerRadius, p.CornerRadius, p.FillInk.Paint(canvas, trimmedMeter, paintstyle.Fill))
 	}
 	bounds.InsetUniform(p.EdgeThickness / 2)
-	paint := p.EdgeInk.Paint(canvas, bounds, Stroke)
+	paint := p.EdgeInk.Paint(canvas, bounds, paintstyle.Stroke)
 	paint.SetStrokeWidth(p.EdgeThickness)
 	canvas.DrawRoundedRect(bounds, p.CornerRadius, p.CornerRadius, paint)
 	if meter.Width > 0 {

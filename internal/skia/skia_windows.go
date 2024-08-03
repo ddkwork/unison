@@ -14,6 +14,7 @@ import (
 	_ "embed" // Needed for dll embedding
 	"encoding/base64"
 	"fmt"
+	"github.com/ddkwork/unison/enums/paintstyle"
 	"math"
 	"os"
 	"path/filepath"
@@ -1492,7 +1493,7 @@ func PaintGetStyle(paint Paint) PaintStyle {
 	return PaintStyle(r1)
 }
 
-func PaintSetStyle(paint Paint, style PaintStyle) {
+func PaintSetStyle(paint Paint, style paintstyle.Enum) {
 	skPaintSetStyleProc.Call(uintptr(paint), uintptr(style))
 }
 

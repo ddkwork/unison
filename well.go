@@ -11,6 +11,7 @@ package unison
 
 import (
 	"context"
+	"github.com/ddkwork/unison/enums/paintstyle"
 	"time"
 
 	"github.com/ddkwork/golibrary/mylog"
@@ -167,15 +168,15 @@ func (w *Well) DefaultDraw(canvas *Canvas, _ Rect) {
 		canvas.DrawImageInRect(pattern.Image, r, nil, nil)
 		canvas.Restore()
 	} else {
-		canvas.DrawRoundedRect(r, radius, radius, w.ink.Paint(canvas, r, Fill))
+		canvas.DrawRoundedRect(r, radius, radius, w.ink.Paint(canvas, r, paintstyle.Fill))
 	}
 	if !w.Enabled() {
-		p := Black.Paint(canvas, r, Stroke)
+		p := Black.Paint(canvas, r, paintstyle.Stroke)
 		p.SetBlendMode(XorBlendMode)
 		canvas.DrawLine(r.X+1, r.Y+1, r.Right()-1, r.Bottom()-1, p)
 		canvas.DrawLine(r.X+1, r.Bottom()-1, r.Right()-1, r.Y+1, p)
 	}
-	canvas.DrawRoundedRect(r, radius, radius, w.EdgeInk.Paint(canvas, r, Stroke))
+	canvas.DrawRoundedRect(r, radius, radius, w.EdgeInk.Paint(canvas, r, paintstyle.Stroke))
 }
 
 // DefaultMouseDown provides the default mouse down handling.

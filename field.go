@@ -10,6 +10,7 @@
 package unison
 
 import (
+	"github.com/ddkwork/unison/enums/paintstyle"
 	"math"
 	"strings"
 	"time"
@@ -305,7 +306,7 @@ func (f *Field) DefaultDraw(canvas *Canvas, _ Rect) {
 		fg = f.OnBackgroundInk
 	}
 	rect := f.ContentRect(true)
-	canvas.DrawRect(rect, bg.Paint(canvas, rect, Fill))
+	canvas.DrawRect(rect, bg.Paint(canvas, rect, paintstyle.Fill))
 	rect = f.ContentRect(false)
 	canvas.ClipRect(rect, IntersectClipOp, false)
 	f.prepareLines(rect.Width - 2)
@@ -336,7 +337,7 @@ func (f *Field) DefaultDraw(canvas *Canvas, _ Rect) {
 				rect.X = f.textLeftForWidth(0, rect) + f.scrollOffset.X - 0.5
 				rect.Width = 1
 				rect.Height = f.Font.LineHeight()
-				canvas.DrawRect(rect, fg.Paint(canvas, rect, Fill))
+				canvas.DrawRect(rect, fg.Paint(canvas, rect, paintstyle.Fill))
 			}
 			f.scheduleBlink()
 		}
@@ -374,7 +375,7 @@ func (f *Field) DefaultDraw(canvas *Canvas, _ Rect) {
 					Point: Point{X: left, Y: textTop},
 					Size:  Size{Width: right - left, Height: textHeight},
 				}
-				canvas.DrawRect(selRect, f.SelectionInk.Paint(canvas, selRect, Fill))
+				canvas.DrawRect(selRect, f.SelectionInk.Paint(canvas, selRect, paintstyle.Fill))
 				t.Draw(canvas, left, textBaseLine)
 				if selEnd < end {
 					e = end
@@ -394,7 +395,7 @@ func (f *Field) DefaultDraw(canvas *Canvas, _ Rect) {
 				if f.showCursor {
 					t := NewTextFromRunes(f.obscureIfNeeded(f.runes[start:f.selectionEnd]), &TextDecoration{Font: f.Font})
 					canvas.DrawRect(NewRect(textLeft+t.Width()+f.scrollOffset.X-0.5, textTop, 1, textHeight),
-						fg.Paint(canvas, rect, Fill))
+						fg.Paint(canvas, rect, paintstyle.Fill))
 				}
 				f.scheduleBlink()
 			}

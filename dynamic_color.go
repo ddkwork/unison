@@ -11,6 +11,7 @@ package unison
 
 import (
 	"github.com/ddkwork/golibrary/mylog"
+	"github.com/ddkwork/unison/enums/paintstyle"
 	"github.com/richardwilkes/toolbox/collection/slice"
 )
 
@@ -41,7 +42,7 @@ func (c *DynamicColor) GetColor() Color {
 }
 
 // Paint returns a Paint for this DynamicColor. Here to satisfy the Ink interface.
-func (c *DynamicColor) Paint(canvas *Canvas, rect Rect, style PaintStyle) *Paint {
+func (c *DynamicColor) Paint(canvas *Canvas, rect Rect, style paintstyle.Enum) *Paint {
 	return c.Color.Paint(canvas, rect, style)
 }
 

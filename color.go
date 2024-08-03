@@ -1,4 +1,4 @@
-// Copyright ©2021-2022 by Richard A. Wilkes. All rights reserved.
+// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, version 2.0. If a copy of the MPL was not distributed with
@@ -16,7 +16,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ddkwork/golibrary/mylog"
+	"github.com/ddkwork/unison/enums/paintstyle"
 	"github.com/richardwilkes/toolbox/xmath"
 )
 
@@ -37,28 +37,28 @@ type ColorProvider interface {
 // Color contains the value of a color used for drawing, stored as 0xAARRGGBB.
 type Color uint32
 
-// RGB creates a new opaque Color from RGB values in the range 0-255.
+// RGB creates a new opaque Color from RGB (Red, Green Blue) values in the range 0-255.
 func RGB(red, green, blue int) Color {
 	return ARGB(1, red, green, blue)
 }
 
-// ARGB creates a new Color from RGB values in the range 0-255 and an alpha value in the range 0-1.
+// ARGB creates a new Color from RGB (Red, Green Blue) values in the range 0-255 and an alpha value in the range 0-1.
 func ARGB(alpha float32, red, green, blue int) Color {
 	return Color(clamp0To1AndScale255(alpha)<<24 | clamp0To255(red)<<16 | clamp0To255(green)<<8 | clamp0To255(blue))
 }
 
-// ARGBfloat creates a new Color from ARGB values in the range 0-1.
+// ARGBfloat creates a new Color from ARGB (Alpha, Red, Green Blue) values in the range 0-1.
 func ARGBfloat(alpha, red, green, blue float32) Color {
 	return Color(clamp0To1AndScale255(alpha)<<24 | clamp0To1AndScale255(red)<<16 | clamp0To1AndScale255(green)<<8 |
 		clamp0To1AndScale255(blue))
 }
 
-// HSB creates a new opaque Color from HSB values in the range 0-1.
+// HSB creates a new opaque Color from HSB (Hue, Saturation, Brightness) values in the range 0-1.
 func HSB(hue, saturation, brightness float32) Color {
 	return HSBA(hue, saturation, brightness, 1)
 }
 
-// HSBA creates a new Color from HSBA values in the range 0-1.
+// HSBA creates a new Color from HSBA (Hue, Saturation, Brightness, Alpha) values in the range 0-1.
 func HSBA(hue, saturation, brightness, alpha float32) Color {
 	saturation = clamp0To1(saturation)
 	brightness = clamp0To1(brightness)
@@ -118,7 +118,7 @@ func fromLinear(value float64) float32 {
 
 // MustColorDecode is the same as ColorDecode(), but returns Black if an error occurs.
 func MustColorDecode(buffer string) Color {
-	c := mylog.Check2(ColorDecode(buffer)) //nolint:errcheck // Intentional dropping of the error
+	c, _ := ColorDecode(buffer) //nolint:errcheck // Intentional dropping of the error
 	return c
 }
 
@@ -141,35 +141,47 @@ func ColorDecode(buffer string) (Color, error) {
 		buffer = buffer[1:]
 		switch len(buffer) {
 		case 3:
-			red := mylog.Check2(strconv.ParseInt(buffer[0:1], 16, 64))
-
+			red, err := strconv.ParseInt(buffer[0:1], 16, 64)
+			if err != nil {
+				return 0, ErrColorDecode
+			}
 			var green int64
-			green = mylog.Check2(strconv.ParseInt(buffer[1:2], 16, 64))
+			if green, err = strconv.ParseInt(buffer[1:2], 16, 64); err != nil {
+				return 0, ErrColorDecode
+			}
 			var blue int64
-			blue = mylog.Check2(strconv.ParseInt(buffer[2:3], 16, 64))
+			if blue, err = strconv.ParseInt(buffer[2:3], 16, 64); err != nil {
+				return 0, ErrColorDecode
+			}
 			return RGB(int((red<<4)|red), int((green<<4)|green), int((blue<<4)|blue)), nil
 		case 6:
-			red := mylog.Check2(strconv.ParseInt(strings.TrimSpace(buffer[0:2]), 16, 64))
-
+			red, err := strconv.ParseInt(strings.TrimSpace(buffer[0:2]), 16, 64)
+			if err != nil {
+				return 0, ErrColorDecode
+			}
 			var green int64
-			green = mylog.Check2(strconv.ParseInt(strings.TrimSpace(buffer[2:4]), 16, 64))
+			if green, err = strconv.ParseInt(strings.TrimSpace(buffer[2:4]), 16, 64); err != nil {
+				return 0, ErrColorDecode
+			}
 			var blue int64
-			blue = mylog.Check2(strconv.ParseInt(strings.TrimSpace(buffer[4:6]), 16, 64))
+			if blue, err = strconv.ParseInt(strings.TrimSpace(buffer[4:6]), 16, 64); err != nil {
+				return 0, ErrColorDecode
+			}
 			return RGB(int(red), int(green), int(blue)), nil
 		}
 	case strings.HasPrefix(buffer, "rgb(") && strings.HasSuffix(buffer, ")"):
 		parts := strings.SplitN(strings.TrimSpace(buffer[4:len(buffer)-1]), ",", 4)
 		if len(parts) == 3 {
-			red := mylog.Check2(strconv.Atoi(strings.TrimSpace(parts[0])))
-			if red < 0 || red > 255 {
+			red, err := strconv.Atoi(strings.TrimSpace(parts[0]))
+			if err != nil || red < 0 || red > 255 {
 				return 0, ErrColorDecode
 			}
 			var green int
-			if green = mylog.Check2(strconv.Atoi(strings.TrimSpace(parts[1]))); green < 0 || green > 255 {
+			if green, err = strconv.Atoi(strings.TrimSpace(parts[1])); err != nil || green < 0 || green > 255 {
 				return 0, ErrColorDecode
 			}
 			var blue int
-			if blue = mylog.Check2(strconv.Atoi(strings.TrimSpace(parts[2]))); blue < 0 || blue > 255 {
+			if blue, err = strconv.Atoi(strings.TrimSpace(parts[2])); err != nil || blue < 0 || blue > 255 {
 				return 0, ErrColorDecode
 			}
 			return RGB(red, green, blue), nil
@@ -177,20 +189,20 @@ func ColorDecode(buffer string) (Color, error) {
 	case strings.HasPrefix(buffer, "rgba(") && strings.HasSuffix(buffer, ")"):
 		parts := strings.SplitN(strings.TrimSpace(buffer[5:len(buffer)-1]), ",", 5)
 		if len(parts) == 4 {
-			red := mylog.Check2(strconv.Atoi(strings.TrimSpace(parts[0])))
-			if red < 0 || red > 255 {
+			red, err := strconv.Atoi(strings.TrimSpace(parts[0]))
+			if err != nil || red < 0 || red > 255 {
 				return 0, ErrColorDecode
 			}
 			var green int
-			if green = mylog.Check2(strconv.Atoi(strings.TrimSpace(parts[1]))); green < 0 || green > 255 {
+			if green, err = strconv.Atoi(strings.TrimSpace(parts[1])); err != nil || green < 0 || green > 255 {
 				return 0, ErrColorDecode
 			}
 			var blue int
-			if blue = mylog.Check2(strconv.Atoi(strings.TrimSpace(parts[2]))); blue < 0 || blue > 255 {
+			if blue, err = strconv.Atoi(strings.TrimSpace(parts[2])); err != nil || blue < 0 || blue > 255 {
 				return 0, ErrColorDecode
 			}
 			var alpha float64
-			if alpha = mylog.Check2(strconv.ParseFloat(strings.TrimSpace(parts[3]), 32)); alpha < 0 || alpha > 1 {
+			if alpha, err = strconv.ParseFloat(strings.TrimSpace(parts[3]), 32); err != nil || alpha < 0 || alpha > 1 {
 				return 0, ErrColorDecode
 			}
 			return ARGB(float32(alpha), red, green, blue), nil
@@ -198,29 +210,37 @@ func ColorDecode(buffer string) (Color, error) {
 	case strings.HasPrefix(buffer, "hsl(") && strings.HasSuffix(buffer, ")"):
 		parts := strings.SplitN(strings.TrimSpace(buffer[4:len(buffer)-1]), ",", 4)
 		if len(parts) == 3 {
-			hue := mylog.Check2(strconv.ParseInt(strings.TrimSpace(parts[0]), 10, 64))
-			if hue < 0 || hue > 359 {
+			hue, err := strconv.ParseInt(strings.TrimSpace(parts[0]), 10, 64)
+			if err != nil || hue < 0 || hue > 359 {
 				return 0, ErrColorDecode
 			}
 			var saturation float32
-			saturation = mylog.Check2(extractColorPercentage(parts[1]))
+			if saturation, err = extractColorPercentage(parts[1]); err != nil {
+				return 0, ErrColorDecode
+			}
 			var brightness float32
-			brightness = mylog.Check2(extractColorPercentage(parts[2]))
+			if brightness, err = extractColorPercentage(parts[2]); err != nil {
+				return 0, ErrColorDecode
+			}
 			return HSB(float32(hue)/360, saturation, brightness), nil
 		}
 	case strings.HasPrefix(buffer, "hsla(") && strings.HasSuffix(buffer, ")"):
 		parts := strings.SplitN(strings.TrimSpace(buffer[5:len(buffer)-1]), ",", 5)
 		if len(parts) == 4 {
-			hue := mylog.Check2(strconv.ParseInt(strings.TrimSpace(parts[0]), 10, 64))
-			if hue < 0 || hue > 359 {
+			hue, err := strconv.ParseInt(strings.TrimSpace(parts[0]), 10, 64)
+			if err != nil || hue < 0 || hue > 359 {
 				return 0, ErrColorDecode
 			}
 			var saturation float32
-			saturation = mylog.Check2(extractColorPercentage(parts[1]))
+			if saturation, err = extractColorPercentage(parts[1]); err != nil {
+				return 0, ErrColorDecode
+			}
 			var brightness float32
-			brightness = mylog.Check2(extractColorPercentage(parts[2]))
+			if brightness, err = extractColorPercentage(parts[2]); err != nil {
+				return 0, ErrColorDecode
+			}
 			var alpha float64
-			if alpha = mylog.Check2(strconv.ParseFloat(strings.TrimSpace(parts[3]), 32)); alpha < 0 || alpha > 1 {
+			if alpha, err = strconv.ParseFloat(strings.TrimSpace(parts[3]), 32); err != nil || alpha < 0 || alpha > 1 {
 				return 0, ErrColorDecode
 			}
 			return HSBA(float32(hue)/360, saturation, brightness, float32(alpha)), nil
@@ -232,17 +252,18 @@ func ColorDecode(buffer string) (Color, error) {
 func extractColorPercentage(buffer string) (float32, error) {
 	buffer = strings.TrimSpace(buffer)
 	if strings.HasSuffix(buffer, "%") {
-		value := mylog.Check2(strconv.Atoi(strings.TrimSpace(buffer[:len(buffer)-1])))
-		percentage := float32(value) / 100
-		if percentage >= 0 && percentage <= 1 {
-			return percentage, nil
+		if value, err := strconv.Atoi(strings.TrimSpace(buffer[:len(buffer)-1])); err == nil {
+			percentage := float32(value) / 100
+			if percentage >= 0 && percentage <= 1 {
+				return percentage, nil
+			}
 		}
 	}
 	return 0, ErrColorDecode
 }
 
 // Paint returns a Paint for this Color. Here to satisfy the Ink interface.
-func (c Color) Paint(_ *Canvas, _ Rect, style PaintStyle) *Paint {
+func (c Color) Paint(_ *Canvas, _ Rect, style paintstyle.Enum) *Paint {
 	paint := NewPaint()
 	paint.SetStyle(style)
 	paint.SetColor(c)
@@ -283,8 +304,10 @@ func (c Color) MarshalText() ([]byte, error) {
 
 // UnmarshalText implements encoding.TextUnmarshaler.
 func (c *Color) UnmarshalText(text []byte) error {
-	color := mylog.Check2(ColorDecode(string(text)))
-
+	color, err := ColorDecode(string(text))
+	if err != nil {
+		return err
+	}
 	*c = color
 	return nil
 }
@@ -501,10 +524,43 @@ func (c Color) HSB() (hue, saturation, brightness float32) {
 	return
 }
 
-// Luminance returns a value from 0-1 representing the perceived brightness. Lower values represent darker colors, while
-// higher values represent brighter colors.
-func (c Color) Luminance() float32 {
-	return 0.299*c.RedIntensity() + 0.587*c.GreenIntensity() + 0.114*c.BlueIntensity()
+// PerceivedLightness returns a value from 0-1 representing the perceived lightness. Lower values represent darker
+// colors, while higher values represent brighter colors. This is the same as the lightness value returned by calling
+// the .OKLCH() method.
+func (c Color) PerceivedLightness() float32 {
+	lr := toLinear(float64(c.RedIntensity()))
+	lg := toLinear(float64(c.GreenIntensity()))
+	lb := toLinear(float64(c.BlueIntensity()))
+	L := math.Cbrt(0.41222147079999993*lr + 0.5363325363*lg + 0.0514459929*lb)
+	M := math.Cbrt(0.2119034981999999*lr + 0.6806995450999999*lg + 0.1073969566*lb)
+	S := math.Cbrt(0.08830246189999998*lr + 0.2817188376*lg + 0.6299787005000002*lb)
+	return clamp0To1(float32(0.2104542553*L + 0.793617785*M - 0.0040720468*S))
+}
+
+// AdjustPerceivedLightness returns a new color based on this color with its perceived lightness adjusted by the
+// specified amount.
+func (c Color) AdjustPerceivedLightness(adj float32) Color {
+	rl, rc, rh := c.OKLCH()
+	return OKLCH(rl+adj, rc, rh, c.AlphaIntensity())
+}
+
+// Colors used for the On() method.
+var (
+	OnLight = RGB(16, 16, 16)
+	OnDark  = RGB(240, 240, 240)
+)
+
+// On returns OnLight if the input color is light, otherwise OnDark.
+func (c Color) On() Color {
+	return c.OnCustom(OnLight, OnDark)
+}
+
+// OnCustom returns onLightColor if the input color is light, otherwise onDarkColor.
+func (c Color) OnCustom(onLightColor, onDarkColor Color) Color {
+	if c.PerceivedLightness() > 0.6 {
+		return onLightColor
+	}
+	return onDarkColor
 }
 
 // OKLCH returns the lightness (0-1), chroma (0-0.37), and hue (0-360) values using the OKLCH color space.
@@ -623,25 +679,11 @@ func normalizeHue(hue float64) float32 {
 }
 
 func clamp0To1(value float32) float32 {
-	switch {
-	case value < 0:
-		return 0
-	case value > 1:
-		return 1
-	default:
-		return value
-	}
+	return min(max(value, 0), 1)
 }
 
 func clamp0To255(value int) int {
-	switch {
-	case value < 0:
-		return 0
-	case value > 255:
-		return 255
-	default:
-		return value
-	}
+	return min(max(value, 0), 255)
 }
 
 func clamp0To1AndScale255(value float32) int {
@@ -649,14 +691,7 @@ func clamp0To1AndScale255(value float32) int {
 }
 
 func clampChromaForOKLCH(value float32) float32 {
-	switch {
-	case value < 0:
-		return 0
-	case value > 0.37:
-		return 0.37
-	default:
-		return value
-	}
+	return min(max(value, 0), 0.37)
 }
 
 // CSS named colors.

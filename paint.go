@@ -10,19 +10,10 @@
 package unison
 
 import (
+	"github.com/ddkwork/unison/enums/paintstyle"
 	"runtime"
 
 	"github.com/ddkwork/unison/internal/skia"
-)
-
-// PaintStyle holds the type of painting to do.
-type PaintStyle byte
-
-// Possible values for PaintStyle.
-const (
-	Fill PaintStyle = iota
-	Stroke
-	StrokeAndFill
 )
 
 // StrokeCap holds the style for rendering the endpoint of a stroked line.
@@ -174,13 +165,13 @@ func (p *Paint) SetColor(color Color) {
 }
 
 // Style returns the current PaintStyle.
-func (p *Paint) Style() PaintStyle {
-	return PaintStyle(skia.PaintGetStyle(p.paint))
+func (p *Paint) Style() paintstyle.Enum {
+	return paintstyle.Enum(skia.PaintGetStyle(p.paint))
 }
 
 // SetStyle sets the PaintStyle.
-func (p *Paint) SetStyle(style PaintStyle) {
-	skia.PaintSetStyle(p.paint, skia.PaintStyle(style))
+func (p *Paint) SetStyle(style paintstyle.Enum) {
+	skia.PaintSetStyle(p.paint, style)
 }
 
 // StrokeWidth returns the current stroke width.

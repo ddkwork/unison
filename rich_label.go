@@ -9,7 +9,10 @@
 
 package unison
 
-import "github.com/richardwilkes/toolbox/xmath"
+import (
+	"github.com/ddkwork/unison/enums/paintstyle"
+	"github.com/richardwilkes/toolbox/xmath"
+)
 
 // DefaultRichLabelTheme holds the default RichLabelTheme values for RichLabels. Modifying this data will not alter
 // existing RichLabels, but will alter any RichLabels created in the future.
@@ -149,7 +152,7 @@ func (l *RichLabel) DefaultDraw(canvas *Canvas, _ Rect) {
 				ColorFilter: Grayscale30Filter(),
 			}
 		}
-		l.Drawable.DrawInRect(canvas, rect, nil, fg.Paint(canvas, rect, Fill))
+		l.Drawable.DrawInRect(canvas, rect, nil, fg.Paint(canvas, rect, paintstyle.Fill))
 	}
 	if l.Text != nil {
 		if l.Enabled() {

@@ -11,6 +11,7 @@ package unison
 
 import (
 	"fmt"
+	"github.com/ddkwork/unison/enums/paintstyle"
 	"image"
 	"time"
 
@@ -850,14 +851,14 @@ func (w *Window) Draw(c *Canvas) {
 	if w.root != nil {
 		mylog.Call(func() {
 			w.root.ValidateLayout()
-			c.DrawPaint(BackgroundColor.Paint(c, w.LocalContentRect(), Fill))
+			c.DrawPaint(BackgroundColor.Paint(c, w.LocalContentRect(), paintstyle.Fill))
 			w.root.Draw(c, w.LocalContentRect())
 			if w.InDrag() {
 				c.Save()
 				c.Translate(w.dragDataLocation.X+w.dragData.Offset.X, w.dragDataLocation.Y+w.dragData.Offset.Y)
 				r := Rect{Size: w.dragData.Drawable.LogicalSize()}
 				c.ClipRect(r, IntersectClipOp, false)
-				w.dragData.Drawable.DrawInRect(c, r, w.dragData.SamplingOptions, w.dragData.Ink.Paint(c, r, Fill))
+				w.dragData.Drawable.DrawInRect(c, r, w.dragData.SamplingOptions, w.dragData.Ink.Paint(c, r, paintstyle.Fill))
 				c.Restore()
 			}
 		})

@@ -10,6 +10,7 @@
 package unison
 
 import (
+	"github.com/ddkwork/unison/enums/paintstyle"
 	"time"
 
 	"github.com/ddkwork/golibrary/mylog"
@@ -240,7 +241,7 @@ func (l *List[T]) DefaultDraw(canvas *Canvas, dirty Rect) {
 			cell.SetFrameRect(cellRect)
 			y += cellRect.Height
 			r := NewRect(rect.X, cellRect.Y, rect.Width, cellRect.Height)
-			canvas.DrawRect(r, bg.Paint(canvas, r, Fill))
+			canvas.DrawRect(r, bg.Paint(canvas, r, paintstyle.Fill))
 			canvas.Save()
 			tl := cellRect.Point
 			dirty.Point.Subtract(tl)

@@ -56,22 +56,3 @@ var (
 	TooltipColor             = &ThemeColor{Light: RGB(252, 252, 196), Dark: RGB(252, 252, 196)}
 	WarningColor             = &ThemeColor{Light: RGB(224, 128, 0), Dark: RGB(192, 96, 0)}
 )
-
-// ThemeColor holds a pair of colors, one for light mode and one for dark mode.
-type ThemeColor struct {
-	Light Color `json:"light"`
-	Dark  Color `json:"dark"`
-}
-
-// GetColor returns the current color. Here to satisfy the ColorProvider interface.
-func (t *ThemeColor) GetColor() Color {
-	if IsDarkModeEnabled() {
-		return t.Dark
-	}
-	return t.Light
-}
-
-// Paint returns a Paint for this ThemeColor. Here to satisfy the Ink interface.
-func (t *ThemeColor) Paint(canvas *Canvas, rect Rect, style PaintStyle) *Paint {
-	return t.GetColor().Paint(canvas, rect, style)
-}

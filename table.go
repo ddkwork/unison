@@ -10,6 +10,7 @@
 package unison
 
 import (
+	"github.com/ddkwork/unison/enums/paintstyle"
 	"time"
 
 	"github.com/ddkwork/golibrary/mylog"
@@ -197,7 +198,7 @@ func (t *Table[T]) DefaultDraw(canvas *Canvas, dirty Rect) {
 		selectionInk = t.InactiveSelectionInk
 	}
 
-	canvas.DrawRect(dirty, t.BackgroundInk.Paint(canvas, dirty, Fill))
+	canvas.DrawRect(dirty, t.BackgroundInk.Paint(canvas, dirty, paintstyle.Fill))
 
 	var insets Insets
 	if border := t.Border(); border != nil {
@@ -239,17 +240,17 @@ func (t *Table[T]) DefaultDraw(canvas *Canvas, dirty Rect) {
 		rect.Height = t.rowCache[r].height
 		if t.IsRowOrAnyParentSelected(r) {
 			if t.IsRowSelected(r) {
-				canvas.DrawRect(rect, selectionInk.Paint(canvas, rect, Fill))
+				canvas.DrawRect(rect, selectionInk.Paint(canvas, rect, paintstyle.Fill))
 			} else {
-				canvas.DrawRect(rect, t.IndirectSelectionInk.Paint(canvas, rect, Fill))
+				canvas.DrawRect(rect, t.IndirectSelectionInk.Paint(canvas, rect, paintstyle.Fill))
 			}
 		} else if r%2 == 1 {
-			canvas.DrawRect(rect, t.BandingInk.Paint(canvas, rect, Fill))
+			canvas.DrawRect(rect, t.BandingInk.Paint(canvas, rect, paintstyle.Fill))
 		}
 		rect.Y += t.rowCache[r].height
 		if t.ShowRowDivider && r != endBeforeRow-1 {
 			rect.Height = 1
-			canvas.DrawRect(rect, t.InteriorDividerInk.Paint(canvas, rect, Fill))
+			canvas.DrawRect(rect, t.InteriorDividerInk.Paint(canvas, rect, paintstyle.Fill))
 			rect.Y++
 		}
 	}
@@ -260,7 +261,7 @@ func (t *Table[T]) DefaultDraw(canvas *Canvas, dirty Rect) {
 		rect.Width = 1
 		for c := firstCol; c < len(t.Columns)-1; c++ {
 			rect.X += t.Columns[c].Current
-			canvas.DrawRect(rect, t.InteriorDividerInk.Paint(canvas, rect, Fill))
+			canvas.DrawRect(rect, t.InteriorDividerInk.Paint(canvas, rect, paintstyle.Fill))
 			rect.X++
 		}
 	}
@@ -295,7 +296,7 @@ func (t *Table[T]) DefaultDraw(canvas *Canvas, dirty Rect) {
 						canvas.Translate(-offset, -offset)
 					}
 					canvas.DrawPath(CircledChevronRightSVG.PathForSize(NewSize(disclosureSize, disclosureSize)),
-						fg.Paint(canvas, cellRect, Fill))
+						fg.Paint(canvas, cellRect, paintstyle.Fill))
 					canvas.Restore()
 				}
 				indent := t.HierarchyIndent*float32(t.rowCache[r].depth+1) + t.Padding.Left

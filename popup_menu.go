@@ -11,6 +11,7 @@ package unison
 
 import (
 	"fmt"
+	"github.com/ddkwork/unison/enums/paintstyle"
 	"slices"
 
 	"github.com/ddkwork/golibrary/mylog"
@@ -143,7 +144,7 @@ func (p *PopupMenu[T]) DefaultDraw(canvas *Canvas, _ Rect) {
 	path.LineTo(rect.Right()-triWidth, rect.Y+(rect.Height-triHeight)/2)
 	path.LineTo(rect.Right()-triWidth/2, rect.Y+(rect.Height-triHeight)/2+triHeight)
 	path.Close()
-	paint := p.OnBackgroundInk.Paint(canvas, rect, Fill)
+	paint := p.OnBackgroundInk.Paint(canvas, rect, paintstyle.Fill)
 	if !p.Enabled() {
 		paint.SetColorFilter(Grayscale30Filter())
 	}

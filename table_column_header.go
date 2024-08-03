@@ -9,6 +9,8 @@
 
 package unison
 
+import "github.com/ddkwork/unison/enums/paintstyle"
+
 // TableColumnHeader defines the methods a table column header must implement.
 type TableColumnHeader[T TableRowConstraint[T]] interface {
 	Paneler
@@ -89,7 +91,7 @@ func (h *DefaultTableColumnHeader[T]) DefaultDraw(canvas *Canvas, _ Rect) {
 		r.X = r.Right() + h.LabelTheme.Gap
 		r.Y += (r.Height - size.Height) / 2
 		r.Size = size
-		paint := h.OnBackgroundInk.Paint(canvas, r, Fill)
+		paint := h.OnBackgroundInk.Paint(canvas, r, paintstyle.Fill)
 		if !h.Enabled() {
 			paint.SetColorFilter(Grayscale30Filter())
 		}

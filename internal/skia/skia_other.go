@@ -806,7 +806,7 @@ func PaintGetStyle(paint Paint) PaintStyle {
 	return PaintStyle(C.sk_paint_get_style(paint))
 }
 
-func PaintSetStyle(paint Paint, style PaintStyle) {
+func PaintSetStyle(paint Paint, style paintstyle.Enum) {
 	C.sk_paint_set_style(paint, C.sk_paint_style_t(style))
 }
 

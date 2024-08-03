@@ -10,6 +10,7 @@
 package unison
 
 import (
+	"github.com/ddkwork/unison/enums/paintstyle"
 	"slices"
 	"sort"
 
@@ -135,7 +136,7 @@ func (h *TableHeader[T]) combinedInsets() Insets {
 
 // DefaultDraw provides the default drawing.
 func (h *TableHeader[T]) DefaultDraw(canvas *Canvas, dirty Rect) {
-	canvas.DrawRect(dirty, h.BackgroundInk.Paint(canvas, dirty, Fill))
+	canvas.DrawRect(dirty, h.BackgroundInk.Paint(canvas, dirty, paintstyle.Fill))
 
 	var firstCol int
 	insets := h.combinedInsets()
@@ -158,7 +159,7 @@ func (h *TableHeader[T]) DefaultDraw(canvas *Canvas, dirty Rect) {
 		rect.Width = 1
 		for c := firstCol; c < len(h.table.Columns)-1; c++ {
 			rect.X += h.table.Columns[c].Current
-			canvas.DrawRect(rect, h.InteriorDividerColor.Paint(canvas, rect, Fill))
+			canvas.DrawRect(rect, h.InteriorDividerColor.Paint(canvas, rect, paintstyle.Fill))
 			rect.X++
 		}
 	}
