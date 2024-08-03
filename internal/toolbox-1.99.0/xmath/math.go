@@ -132,7 +132,7 @@ func Cbrt[T constraints.Float](x T) T {
 }
 
 // Ceil returns the smallest integer value greater than or equal to x.
-func Ceil[T Numeric](x T) T {
+func Ceil[T constraints.Float](x T) T {
 	return T(math.Ceil(float64(x)))
 }
 
@@ -261,7 +261,7 @@ func Expm1[T constraints.Float](x T) T {
 }
 
 // Floor returns the greatest integer value less than or equal to x.
-func Floor[T Numeric](x T) T {
+func Floor[T constraints.Float](x T) T {
 	return T(math.Floor(float64(x)))
 }
 
@@ -815,24 +815,22 @@ func Yn[T constraints.Float](n int, x T) T {
 }
 
 // EqualWithin returns true if a and b are within the given tolerance of each other.
-func EqualWithin[T Numeric](a, b, tolerance T) bool {
-	return Abs(a-b) <= tolerance
-
-	//if a == b {
-	//	return true
-	//}
-	//delta := Abs(a - b)
-	//if delta <= tolerance {
-	//	return true
-	//}
-	//var mv T
-	//if reflect.TypeOf(mv).Kind() == reflect.Float32 {
-	//	mv = 0x1p-126
-	//} else {
-	//	mv = 0x1p-1022
-	//}
-	//if delta <= mv {
-	//	return delta <= tolerance*mv
-	//}
-	//return delta/max(Abs(a), Abs(b)) <= tolerance
+func EqualWithin[T constraints.Float](a, b, tolerance T) bool {
+	if a == b {
+		return true
+	}
+	delta := Abs(a - b)
+	if delta <= tolerance {
+		return true
+	}
+	var mv T
+	if reflect.TypeOf(mv).Kind() == reflect.Float32 {
+		mv = 0x1p-126
+	} else {
+		mv = 0x1p-1022
+	}
+	if delta <= mv {
+		return delta <= tolerance*mv
+	}
+	return delta/max(Abs(a), Abs(b)) <= tolerance
 }
