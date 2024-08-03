@@ -12,7 +12,7 @@ package unison
 import (
 	"runtime"
 
-	"github.com/richardwilkes/unison/internal/skia"
+	"github.com/ddkwork/unison/internal/skia"
 )
 
 // PathEffect1DStyle holds the 1D path effect.

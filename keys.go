@@ -15,9 +15,9 @@ import (
 	"strings"
 
 	"github.com/ddkwork/golibrary/mylog"
+	"github.com/ddkwork/unison/internal/glfw"
 	"github.com/richardwilkes/json"
 	"github.com/richardwilkes/toolbox/i18n"
-	"github.com/richardwilkes/unison/internal/glfw"
 )
 
 var _ json.Omitter = KeyCode(0)

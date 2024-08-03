@@ -18,11 +18,11 @@ import (
 	"time"
 
 	"github.com/ddkwork/golibrary/mylog"
+	"github.com/ddkwork/unison/internal/glfw"
+	"github.com/ddkwork/unison/internal/skia"
 	"github.com/richardwilkes/toolbox/atexit"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/fatal"
-	"github.com/richardwilkes/unison/internal/glfw"
-	"github.com/richardwilkes/unison/internal/skia"
 )
 
 var (

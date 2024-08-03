@@ -10,7 +10,7 @@
 package unison
 
 import (
-	"github.com/richardwilkes/unison/internal/ns"
+	"github.com/ddkwork/unison/internal/ns"
 )
 
 type macMenuFactory struct {

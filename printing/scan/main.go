@@ -9,12 +9,12 @@ import (
 	"time"
 
 	"github.com/ddkwork/golibrary/mylog"
+	"github.com/ddkwork/unison/printing"
 	"github.com/richardwilkes/toolbox/atexit"
 	"github.com/richardwilkes/toolbox/cmdline"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/fatal"
 	"github.com/richardwilkes/toolbox/xio"
-	"github.com/richardwilkes/unison/printing"
 )
 
 func main() {

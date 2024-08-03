@@ -12,10 +12,10 @@ package demo
 import (
 	"strconv"
 
+	"github.com/ddkwork/unison"
 	"github.com/google/uuid"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/fatal"
-	"github.com/richardwilkes/unison"
 )
 
 var _ unison.TableRowData[*demoRow] = &demoRow{}

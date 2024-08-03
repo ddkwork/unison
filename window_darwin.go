@@ -10,8 +10,8 @@
 package unison
 
 import (
-	"github.com/richardwilkes/unison/internal/glfw"
-	"github.com/richardwilkes/unison/internal/ns"
+	"github.com/ddkwork/unison/internal/glfw"
+	"github.com/ddkwork/unison/internal/ns"
 )
 
 func (w *Window) frameRect() Rect {

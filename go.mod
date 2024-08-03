@@ -1,6 +1,6 @@
-module github.com/richardwilkes/unison
+module github.com/ddkwork/unison
 
-go 1.22.5
+go 1.23
 
 require (
 	github.com/OpenPrinting/goipp v1.1.0

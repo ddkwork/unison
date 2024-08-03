@@ -13,8 +13,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/richardwilkes/unison/internal/glfw"
-	"github.com/richardwilkes/unison/internal/ns"
+	"github.com/ddkwork/unison/internal/glfw"
+	"github.com/ddkwork/unison/internal/ns"
 )
 
 var (

@@ -3,7 +3,7 @@ package unison
 import (
 	"runtime"
 
-	"github.com/richardwilkes/unison/internal/skia"
+	"github.com/ddkwork/unison/internal/skia"
 )
 
 // TextBlob represents runs of text for a font, that may be drawn on a Canvas.

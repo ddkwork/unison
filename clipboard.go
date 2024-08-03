@@ -12,7 +12,7 @@ package unison
 import (
 	"sync"
 
-	"github.com/richardwilkes/unison/internal/glfw"
+	"github.com/ddkwork/unison/internal/glfw"
 )
 
 // GlobalClipboard holds the global clipboard.

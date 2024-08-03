@@ -16,8 +16,8 @@ import (
 	"unicode"
 
 	"github.com/ddkwork/golibrary/mylog"
+	"github.com/ddkwork/unison"
 	"github.com/richardwilkes/toolbox/errs"
-	"github.com/richardwilkes/unison"
 )
 
 var windowCounter int

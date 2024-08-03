@@ -15,8 +15,8 @@ import (
 	"time"
 
 	"github.com/ddkwork/golibrary/mylog"
+	"github.com/ddkwork/unison/internal/glfw"
 	"github.com/richardwilkes/toolbox"
-	"github.com/richardwilkes/unison/internal/glfw"
 
 	"github.com/richardwilkes/toolbox/collection/slice"
 	"github.com/richardwilkes/toolbox/fatal"

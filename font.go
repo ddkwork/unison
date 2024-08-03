@@ -17,8 +17,8 @@ import (
 	"sync"
 
 	"github.com/ddkwork/golibrary/mylog"
+	"github.com/ddkwork/unison/internal/skia"
 	"github.com/richardwilkes/toolbox/errs"
-	"github.com/richardwilkes/unison/internal/skia"
 )
 
 const (

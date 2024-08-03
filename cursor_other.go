@@ -12,7 +12,7 @@
 package unison
 
 import (
-	"github.com/richardwilkes/unison/internal/glfw"
+	"github.com/ddkwork/unison/internal/glfw"
 )
 
 // NewCursor creates a new custom cursor from an image.

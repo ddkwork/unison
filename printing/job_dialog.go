@@ -18,10 +18,10 @@ import (
 	"time"
 
 	"github.com/ddkwork/golibrary/mylog"
+	"github.com/ddkwork/unison"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/i18n"
 	"github.com/richardwilkes/toolbox/xio"
-	"github.com/richardwilkes/unison"
 )
 
 // JobDialog provides a print job dialog.

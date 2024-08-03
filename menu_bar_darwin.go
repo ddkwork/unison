@@ -12,9 +12,9 @@ package unison
 import (
 	"fmt"
 
+	"github.com/ddkwork/unison/internal/ns"
 	"github.com/richardwilkes/toolbox/cmdline"
 	"github.com/richardwilkes/toolbox/i18n"
-	"github.com/richardwilkes/unison/internal/ns"
 )
 
 func quitMenuTitle() string {

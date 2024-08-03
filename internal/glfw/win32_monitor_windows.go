@@ -9,8 +9,8 @@ import (
 	"unsafe"
 
 	"github.com/ddkwork/golibrary/mylog"
-	"github.com/richardwilkes/unison/internal/microsoftgdk"
-	"github.com/richardwilkes/unison/internal/winver"
+	"github.com/ddkwork/unison/internal/microsoftgdk"
+	"github.com/ddkwork/unison/internal/winver"
 
 	"golang.org/x/sys/windows"
 )

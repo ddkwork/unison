@@ -12,8 +12,8 @@ package printing
 import (
 	"strings"
 
+	"github.com/ddkwork/unison"
 	"github.com/richardwilkes/toolbox/i18n"
-	"github.com/richardwilkes/unison"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )

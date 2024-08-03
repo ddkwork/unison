@@ -11,7 +11,7 @@
 
 package unison
 
-import "github.com/richardwilkes/unison/internal/glfw"
+import "github.com/ddkwork/unison/internal/glfw"
 
 func convertMonitorToDisplay(monitor *glfw.Monitor) *Display {
 	x, y := monitor.GetPos()

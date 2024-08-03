@@ -12,8 +12,8 @@ package unison
 import (
 	"io"
 
+	"github.com/ddkwork/unison/internal/skia"
 	"github.com/richardwilkes/toolbox/errs"
-	"github.com/richardwilkes/unison/internal/skia"
 )
 
 // Stream provides a way to use different streams for the same purpose. These streams currently only exist for Skia's

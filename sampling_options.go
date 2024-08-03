@@ -12,7 +12,7 @@ package unison
 import (
 	"unsafe"
 
-	"github.com/richardwilkes/unison/internal/skia"
+	"github.com/ddkwork/unison/internal/skia"
 )
 
 // All of the structures and constants in this file must match the equivalents in Skia

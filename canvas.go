@@ -10,8 +10,8 @@
 package unison
 
 import (
+	"github.com/ddkwork/unison/internal/skia"
 	"github.com/richardwilkes/toolbox/xmath"
-	"github.com/richardwilkes/unison/internal/skia"
 )
 
 // PointMode controls how DrawPoints() renders the points passed to it.

@@ -13,8 +13,8 @@ import (
 	"image"
 
 	"github.com/ddkwork/golibrary/mylog"
+	"github.com/ddkwork/unison/internal/glfw"
 	"github.com/richardwilkes/toolbox/errs"
-	"github.com/richardwilkes/unison/internal/glfw"
 	"golang.org/x/image/draw"
 )
 

@@ -10,8 +10,8 @@
 package unison
 
 import (
+	"github.com/ddkwork/unison/internal/skia"
 	"github.com/richardwilkes/toolbox/errs"
-	"github.com/richardwilkes/unison/internal/skia"
 )
 
 // PDFMetaData holds the metadata about a PDF document.

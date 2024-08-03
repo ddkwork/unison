@@ -12,8 +12,8 @@ package unison
 import (
 	"runtime"
 
+	"github.com/ddkwork/unison/internal/skia"
 	"github.com/richardwilkes/toolbox/errs"
-	"github.com/richardwilkes/unison/internal/skia"
 )
 
 // ArcSize holds the relative size of an arc.

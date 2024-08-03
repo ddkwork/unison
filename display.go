@@ -10,7 +10,7 @@
 package unison
 
 import (
-	"github.com/richardwilkes/unison/internal/glfw"
+	"github.com/ddkwork/unison/internal/glfw"
 )
 
 var lastPrimaryDisplay *Display

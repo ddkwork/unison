@@ -19,10 +19,10 @@ import (
 
 	"github.com/cespare/xxhash/v2"
 	"github.com/ddkwork/golibrary/mylog"
+	"github.com/ddkwork/unison/internal/skia"
 	"github.com/richardwilkes/toolbox/errs"
 	"github.com/richardwilkes/toolbox/softref"
 	"github.com/richardwilkes/toolbox/xio"
-	"github.com/richardwilkes/unison/internal/skia"
 )
 
 var (

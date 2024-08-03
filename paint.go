@@ -12,7 +12,7 @@ package unison
 import (
 	"runtime"
 
-	"github.com/richardwilkes/unison/internal/skia"
+	"github.com/ddkwork/unison/internal/skia"
 )
 
 // PaintStyle holds the type of painting to do.

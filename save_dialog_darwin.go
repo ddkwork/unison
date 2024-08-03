@@ -13,8 +13,8 @@ import (
 	"net/url"
 
 	"github.com/ddkwork/golibrary/mylog"
+	"github.com/ddkwork/unison/internal/ns"
 	"github.com/richardwilkes/toolbox/errs"
-	"github.com/richardwilkes/unison/internal/ns"
 )
 
 type macSaveDialog struct {

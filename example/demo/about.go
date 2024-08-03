@@ -11,8 +11,8 @@ package demo
 
 import (
 	"github.com/ddkwork/golibrary/mylog"
+	"github.com/ddkwork/unison"
 	"github.com/richardwilkes/toolbox/cmdline"
-	"github.com/richardwilkes/unison"
 )
 
 var aboutWindow *unison.Window

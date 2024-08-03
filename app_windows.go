@@ -15,7 +15,7 @@ import (
 	"time"
 
 	"github.com/ddkwork/golibrary/mylog"
-	"github.com/richardwilkes/unison/internal/w32"
+	"github.com/ddkwork/unison/internal/w32"
 	"golang.org/x/sys/windows/registry"
 )
 

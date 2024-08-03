@@ -14,9 +14,9 @@ import (
 	"slices"
 	"sync"
 
+	"github.com/ddkwork/unison/internal/skia"
 	"github.com/richardwilkes/toolbox/txt"
 	"github.com/richardwilkes/toolbox/xmath"
-	"github.com/richardwilkes/unison/internal/skia"
 )
 
 var (

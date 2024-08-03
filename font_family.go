@@ -14,9 +14,9 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/ddkwork/unison/internal/skia"
 	"github.com/richardwilkes/toolbox/collection/dict"
 	"github.com/richardwilkes/toolbox/txt"
-	"github.com/richardwilkes/unison/internal/skia"
 )
 
 var slantMapping = [][]int{

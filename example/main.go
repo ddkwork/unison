@@ -14,9 +14,9 @@ import (
 	"os"
 
 	"github.com/ddkwork/golibrary/mylog"
+	"github.com/ddkwork/unison"
+	"github.com/ddkwork/unison/example/demo"
 	"github.com/richardwilkes/toolbox/cmdline"
-	"github.com/richardwilkes/unison"
-	"github.com/richardwilkes/unison/example/demo"
 )
 
 func main() {

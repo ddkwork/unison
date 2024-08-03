@@ -12,8 +12,8 @@ package unison_test
 import (
 	"testing"
 
+	"github.com/ddkwork/unison"
 	"github.com/richardwilkes/toolbox/check"
-	"github.com/richardwilkes/unison"
 )
 
 func TestUndo(t *testing.T) {

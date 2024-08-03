@@ -10,7 +10,7 @@
 package demo
 
 import (
-	"github.com/richardwilkes/unison"
+	"github.com/ddkwork/unison"
 )
 
 var (

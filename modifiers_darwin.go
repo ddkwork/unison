@@ -12,7 +12,7 @@ package unison
 import (
 	"bytes"
 
-	"github.com/richardwilkes/unison/internal/ns"
+	"github.com/ddkwork/unison/internal/ns"
 )
 
 // OSMenuCmdModifier returns the OS's standard menu command key modifier.
