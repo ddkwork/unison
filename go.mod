@@ -16,15 +16,16 @@ require (
 )
 
 require (
+	github.com/alecthomas/chroma/v2 v2.14.0
 	github.com/ddkwork/golibrary v0.0.0-20240728131742-3497a6ed9010
 	github.com/richardwilkes/toolbox v1.99.0
 )
 
-replace github.com/richardwilkes/toolbox => ./internal/toolbox-1.99.0
-
 require (
+	github.com/axgle/mahonia v0.0.0-20180208002826-3358181d7394 // indirect
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
 	github.com/dc0d/caseconv v0.5.0 // indirect
+	github.com/dlclark/regexp2 v1.11.2 // indirect
 	github.com/fatih/color v1.17.0 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
