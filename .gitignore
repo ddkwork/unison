@@ -5,3 +5,4 @@ log.log
 *.exe
 /widget/
 /update go workspace.cmd
+/cache/
