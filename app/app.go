@@ -1,6 +1,7 @@
 package app
 
 import (
+	"github.com/ddkwork/unison/enums/thememode"
 	"log"
 	"log/slog"
 
@@ -41,7 +42,7 @@ func RunWithIco(title string, ico []byte, layoutCallback func(w *unison.Window))
 func run(title string, ico []byte, layoutCallback func(w *unison.Window)) {
 	mylog.Call(func() {
 		unison.Start(unison.StartupFinishedCallback(func() {
-			unison.SetColorMode(unison.DarkColorMode)
+			unison.SetThemeMode(thememode.Dark)
 			w := mylog.Check2(unison.NewWindow(title))
 			if ico != nil {
 				b := mylog.Check2(unison.NewImageFromBytes(ico, 0.5))

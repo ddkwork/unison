@@ -10,6 +10,7 @@
 package unison
 
 import (
+	"github.com/ddkwork/unison/enums/thememode"
 	"github.com/richardwilkes/toolbox/log/tracelog"
 	"log"
 	"log/slog"
@@ -41,7 +42,7 @@ var (
 	noGlobalMenuBar                   bool
 	quitLock                          sync.RWMutex
 	calledAtExit                      bool
-	currentColorMode                  = AutomaticColorMode
+	currentColorMode                  = thememode.Auto
 	needPlatformDarkModeUpdate        = true
 	platformDarkModeEnabled           bool
 )
@@ -262,12 +263,12 @@ func IsColorModeTrackingPossible() bool {
 }
 
 // CurrentColorMode returns the current ColorMode state.
-func CurrentColorMode() ColorMode {
+func CurrentColorMode() thememode.Enum {
 	return currentColorMode
 }
 
-// SetColorMode sets the current ColorMode.
-func SetColorMode(mode ColorMode) {
+// SetThemeMode sets the current ColorMode.
+func SetThemeMode(mode thememode.Enum) {
 	if currentColorMode != mode {
 		currentColorMode = mode
 		needPlatformDarkModeUpdate = true
@@ -278,9 +279,9 @@ func SetColorMode(mode ColorMode) {
 // IsDarkModeEnabled returns true if the OS is currently using a "dark mode".
 func IsDarkModeEnabled() bool {
 	switch currentColorMode {
-	case LightColorMode:
+	case thememode.Light:
 		return false
-	case DarkColorMode:
+	case thememode.Dark:
 		return true
 	default:
 		if needPlatformDarkModeUpdate {

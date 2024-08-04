@@ -5,7 +5,7 @@ go 1.23
 require (
 	github.com/OpenPrinting/goipp v1.1.0
 	github.com/cespare/xxhash/v2 v2.3.0
-	github.com/ebitengine/purego v0.7.1
+	github.com/ebitengine/purego v0.8.0-alpha.3.0.20240717153933-b9dbbd0c9d2c
 	github.com/google/uuid v1.6.0
 	github.com/grandcat/zeroconf v1.0.0
 	github.com/richardwilkes/json v0.3.0
@@ -16,16 +16,17 @@ require (
 )
 
 require (
-	github.com/alecthomas/chroma/v2 v2.14.0
 	github.com/ddkwork/golibrary v0.0.0-20240802082739-ae4f0bcd4079
-	github.com/richardwilkes/toolbox v1.99.0
+	github.com/richardwilkes/toolbox v1.114.2
+)
+
+replace (
+	github.com/richardwilkes/toolbox => ./internal/toolbox-1.99.0
 )
 
 require (
-	github.com/axgle/mahonia v0.0.0-20180208002826-3358181d7394 // indirect
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
 	github.com/dc0d/caseconv v0.5.0 // indirect
-	github.com/dlclark/regexp2 v1.11.2 // indirect
 	github.com/fatih/color v1.17.0 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect

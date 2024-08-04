@@ -10,6 +10,7 @@
 package unison
 
 import (
+	"github.com/ddkwork/unison/enums/thememode"
 	"sync/atomic"
 	"syscall"
 	"time"
@@ -66,7 +67,7 @@ func updateTheme(k registry.Key, sync bool) error {
 	} else {
 		swapped = atomic.CompareAndSwapUint32(&appUsesLightThemeValue, 0, 1)
 	}
-	if swapped && currentColorMode == AutomaticColorMode {
+	if swapped && currentColorMode == thememode.Auto {
 		if sync {
 			ThemeChanged()
 		} else {
