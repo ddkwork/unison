@@ -56,8 +56,6 @@ github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 h1:Jamvg5psRI
 github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/richardwilkes/json v0.3.0 h1:Rk7tgpaEudc2C+Vg5pt0idJDX8/wXqxBlt3Uz8A/oXY=
 github.com/richardwilkes/json v0.3.0/go.mod h1:+7qk1QXSKh+NkY0meiJwK57rPnVRbltG3bYnt40Ak4c=
-github.com/richardwilkes/toolbox v1.99.0 h1:g7MWqaaA/tvTMiJAXcOWmC/CX0iUsjUsLf8yp55D0b0=
-github.com/richardwilkes/toolbox v1.99.0/go.mod h1:D+INXm3TBCdjEEkUJwVju7ZW/6YihAj825d1GjRUtqA=
 github.com/rivo/uniseg v0.4.7 h1:WUdvkW8uEhrYfLC4ZzdpI2ztxP1I582+49Oc5Mq64VQ=
 github.com/rivo/uniseg v0.4.7/go.mod h1:FN3SvrM+Zdj16jyLfmOkMNblXMcoc8DfTHruCPUcx88=
 github.com/rogpeppe/go-internal v1.12.0 h1:exVL4IDcn6na9z1rAb56Vxr+CgyK3nn3O+epU5NdKM8=
