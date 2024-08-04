@@ -46,7 +46,7 @@ type Label struct {
 	LabelTheme
 	Drawable  Drawable
 	Text      string
-	textCache TextCache
+	TextCache TextCache
 }
 
 // NewLabel creates a new, empty label.
@@ -60,7 +60,7 @@ func NewLabel() *Label {
 
 // DefaultSizes provides the default sizing.
 func (l *Label) DefaultSizes(hint Size) (minSize, prefSize, maxSize Size) {
-	text := l.textCache.Text(l.Text, l.Font)
+	text := l.TextCache.Text(l.Text, l.Font)
 	if text.Empty() && l.Drawable == nil {
 		prefSize.Height = l.Font.LineHeight()
 		prefSize.GrowToInteger()
@@ -77,7 +77,7 @@ func (l *Label) DefaultSizes(hint Size) (minSize, prefSize, maxSize Size) {
 
 // DefaultDraw provides the default drawing.
 func (l *Label) DefaultDraw(canvas *Canvas, _ Rect) {
-	txt := l.textCache.Text(l.Text, l.Font)
+	txt := l.TextCache.Text(l.Text, l.Font)
 	if l.Underline || l.StrikeThrough {
 		txt.AdjustDecorations(func(decoration *TextDecoration) {
 			decoration.Underline = l.Underline
