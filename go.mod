@@ -21,8 +21,6 @@ require (
 	github.com/richardwilkes/toolbox v1.99.0
 )
 
-//replace github.com/richardwilkes/toolbox => ./internal/toolbox-1.99.0
-
 require (
 	github.com/axgle/mahonia v0.0.0-20180208002826-3358181d7394 // indirect
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
