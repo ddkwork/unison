@@ -4,7 +4,4 @@
 log.log
 *.exe
 /widget/
-/internal/toolbox-1.99.0/
-/go.work
-/go.work.sum
 /update go workspace.cmd

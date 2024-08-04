@@ -199,6 +199,14 @@ func (t *Text) AdjustDecorations(adjuster func(decoration *TextDecoration)) {
 	}
 }
 
+func (t *Text) RestoreDecorations(m map[*TextDecoration]TextDecoration) {
+	t.AdjustDecorations(func(decoration *TextDecoration) {
+		if d, ok := m[decoration]; ok {
+			*decoration = d
+		}
+	})
+}
+
 // Draw the Text at the given location. y is where the baseline of the text will be placed.
 func (t *Text) Draw(canvas *Canvas, x, y float32) {
 	if len(t.decorations) == 0 {
