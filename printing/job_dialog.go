@@ -11,6 +11,7 @@ package printing
 
 import (
 	"context"
+	"github.com/ddkwork/unison/enums/align"
 	"io"
 	"net/http"
 	"strconv"
