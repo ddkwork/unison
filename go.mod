@@ -17,7 +17,7 @@ require (
 
 require (
 	github.com/alecthomas/chroma/v2 v2.14.0
-	github.com/ddkwork/golibrary v0.0.0-20240728131742-3497a6ed9010
+	github.com/ddkwork/golibrary v0.0.0-20240802082739-ae4f0bcd4079
 	github.com/richardwilkes/toolbox v1.99.0
 )
 
@@ -33,7 +33,7 @@ require (
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/miekg/dns v1.1.61 // indirect
-	github.com/pkg/term v1.1.0 // indirect
+	github.com/pkg/term v1.2.0-beta.2 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56 // indirect
 	golang.org/x/mod v0.19.0 // indirect

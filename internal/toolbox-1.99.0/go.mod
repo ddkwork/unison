@@ -6,7 +6,7 @@ toolchain go1.21.1
 
 require (
 	github.com/jackpal/gateway v1.0.10
-	github.com/pkg/term v1.1.0
+	github.com/pkg/term v1.2.0-beta.2
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56
 	golang.org/x/image v0.18.0
 	gopkg.in/yaml.v3 v3.0.1

@@ -42,7 +42,6 @@ func (s *surface) prepareCanvas(size Size, _ Rect, scaleX, scaleY float32) (*Can
 		}
 		var fbo int32
 		// gl.GetIntegerv(gl.FRAMEBUFFER_BINDING, &fbo)
-		println(fbo)
 		if s.backend = skia.BackendRenderTargetNewGL(int(size.Width*scaleX), int(size.Height*scaleY), 1, 8,
 			&skia.GLFrameBufferInfo{
 				Fboid: uint32(fbo),
