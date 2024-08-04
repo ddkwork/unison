@@ -12,8 +12,6 @@ import (
 	"github.com/ddkwork/unison/printing"
 	"github.com/richardwilkes/toolbox/atexit"
 	"github.com/richardwilkes/toolbox/cmdline"
-	"github.com/richardwilkes/toolbox/errs"
-	"github.com/richardwilkes/toolbox/fatal"
 	"github.com/richardwilkes/toolbox/xio"
 )
 
@@ -30,7 +28,6 @@ func main() {
 
 func scan(duration time.Duration, output string) {
 	f := mylog.Check2(os.Create(output))
-	fatal.IfErr(err)
 	log.SetOutput(&xio.TeeWriter{Writers: []io.Writer{f, os.Stdout}})
 	pm := &printing.PrintManager{}
 	ctx, cancel := context.WithTimeout(context.Background(), duration)
@@ -46,8 +43,8 @@ func scan(duration time.Duration, output string) {
 		}
 		slog.Info("found printer", "name", printer.Name, "host", printer.Host, "port", printer.Port)
 		var a *printing.PrinterAttributes
-		if a = mylog.Check2(printer.Attributes(duration, true)); err != nil {
-			errs.Log(err)
+		var err error
+		if a, err = printer.Attributes(duration, true); err != nil {
 			continue
 		}
 		for k, v := range a.Attributes {

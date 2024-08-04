@@ -94,7 +94,7 @@ func (p *Printer) Attributes(timeout time.Duration, allowCachedReturn bool) (*Pr
 	defer cancel()
 	rsp := mylog.Check2(p.sendRequest(ctx, req, nil, 0))
 
-	if mylog.Check(checkIPPStatus(rsp)); err != nil {
+	if err := checkIPPStatus(rsp); err != nil {
 		return NewAttributes(nil).ForPrinter(), err
 	}
 	p.attributes = NewAttributes(rsp.Printer).ForPrinter()
@@ -112,9 +112,7 @@ func (p *Printer) Validate(ctx context.Context, jobName, mimeType string, attrib
 	req.Job = attributes.toIPP()
 	rsp := mylog.Check2(p.sendRequest(ctx, req, nil, 0))
 
-	if mylog.Check(checkIPPStatus(rsp)); err != nil {
-		return nil, err
-	}
+	mylog.Check(checkIPPStatus(rsp))
 	return NewAttributes(rsp.Unsupported).ForJob(), nil
 }
 
@@ -181,25 +179,19 @@ func (p *Printer) sendRequest(ctx context.Context, req *goipp.Message, fileData 
 		r = io.MultiReader(r, fileData)
 	}
 	var httpReq *http.Request
-	if httpReq = mylog.Check2(http.NewRequestWithContext(ctx, http.MethodPost, p.uri(), r)); err != nil {
-		return nil, errs.Wrap(err)
-	}
+	httpReq = mylog.Check2(http.NewRequestWithContext(ctx, http.MethodPost, p.uri(), r))
 	httpReq.Header.Set("Content-Length", strconv.Itoa(len(data)+fileLength))
 	httpReq.Header.Set("Content-Type", goipp.ContentType)
 	if p.User != "" && p.Password != "" {
 		httpReq.SetBasicAuth(p.User, p.Password)
 	}
 	var httpResp *http.Response
-	if httpResp = mylog.Check2(p.httpClient.Do(httpReq)); err != nil { //nolint:bodyclose // Body is closed by xio.DiscardAndCloseIgnoringErrors
-		return nil, errs.Wrap(err)
-	}
+	httpResp = mylog.Check2(p.httpClient.Do(httpReq))
 	defer xio.DiscardAndCloseIgnoringErrors(httpResp.Body)
 	if httpResp.StatusCode != http.StatusOK {
 		return nil, errs.Newf("unexpected http response code: %d", httpResp.StatusCode)
 	}
 	rsp := goipp.NewResponse(0, 0, 0)
-	if mylog.Check(rsp.Decode(httpResp.Body)); err != nil {
-		return nil, errs.Wrap(err)
-	}
+	mylog.Check(rsp.Decode(httpResp.Body))
 	return rsp, nil
 }
