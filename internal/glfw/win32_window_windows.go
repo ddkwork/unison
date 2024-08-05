@@ -1833,7 +1833,7 @@ func (w *Window) platformSetCursorPos(xpos, ypos float64) error {
 func (w *Window) platformSetCursorMode(mode int) error {
 	if w.platformWindowFocused() {
 		if mode == CursorDisabled {
-			xpos, ypos := (w.platformGetCursorPos())
+			xpos, ypos := w.platformGetCursorPos()
 			_glfw.platformWindow.restoreCursorPosX = xpos
 			_glfw.platformWindow.restoreCursorPosY = ypos
 			mylog.Check(w.centerCursorInContentArea())
