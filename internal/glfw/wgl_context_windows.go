@@ -335,20 +335,16 @@ func initWGL() error {
 	if microsoftgdk.IsXbox() {
 		return fmt.Errorf("glfw: WGL is not available in Xbox")
 	}
-
 	if _glfw.platformContext.inited {
 		return nil
 	}
-
 	// opengl32.dll must be loaded first. The loading state might affect Windows APIs.
 	// This is needed at least before SetPixelFormat.
 	mylog.Check(opengl32.Load())
-
 	// NOTE: A dummy context has to be created for opengl32.dll to load the
 	//       OpenGL ICD, from which we can then query WGL extensions
 	// NOTE: This code will accept the Microsoft GDI ICD; accelerated context
 	//       creation failure occurs during manual pixel format enumeration
-
 	dc := mylog.Check2(_GetDC(_glfw.platformWindow.helperWindowHandle))
 	pfd := _PIXELFORMATDESCRIPTOR{
 		nVersion:   1,
@@ -360,18 +356,14 @@ func initWGL() error {
 
 	format := mylog.Check2(_ChoosePixelFormat(dc, &pfd))
 	mylog.Check(_SetPixelFormat(dc, format, &pfd))
-
 	rc := wglCreateContext(dc)
-
 	pdc := wglGetCurrentDC()
 	prc := wglGetCurrentContext()
-
 	if e := wglMakeCurrent(dc, rc); e != nil {
 		mylog.Check(wglMakeCurrent(pdc, prc))
 		mylog.Check(wglDeleteContext(rc))
 		mylog.Check(e)
 	}
-
 	// NOTE: Functions must be loaded first as they're needed to retrieve the
 	//       extension string that tells us whether the functions are supported
 	//
@@ -441,11 +433,9 @@ func (w *Window) createContextWGL(ctxconfig *ctxconfig, fbconfig *fbconfig) erro
 		} else {
 			mask |= _WGL_CONTEXT_ES2_PROFILE_BIT_EXT
 		}
-
 		if ctxconfig.debug {
 			flags |= _WGL_CONTEXT_DEBUG_BIT_ARB
 		}
-
 		var attribs []int32
 		if ctxconfig.robustness != 0 {
 			if _glfw.platformContext.ARB_create_context_robustness {
@@ -457,7 +447,6 @@ func (w *Window) createContextWGL(ctxconfig *ctxconfig, fbconfig *fbconfig) erro
 				flags |= _WGL_CONTEXT_ROBUST_ACCESS_BIT_ARB
 			}
 		}
-
 		if ctxconfig.release != 0 {
 			if _glfw.platformContext.ARB_context_flush_control {
 				if ctxconfig.release == ReleaseBehaviorNone {
@@ -467,7 +456,6 @@ func (w *Window) createContextWGL(ctxconfig *ctxconfig, fbconfig *fbconfig) erro
 				}
 			}
 		}
-
 		if ctxconfig.noerror {
 			if _glfw.platformContext.ARB_create_context_no_error {
 				attribs = append(attribs, _WGL_CONTEXT_OPENGL_NO_ERROR_ARB, 1)
@@ -491,7 +479,6 @@ func (w *Window) createContextWGL(ctxconfig *ctxconfig, fbconfig *fbconfig) erro
 		w.context.platform.handle = mylog.Check2(wglCreateContextAttribsARB(w.context.platform.dc, share, &attribs[0]))
 	} else {
 		w.context.platform.handle = wglCreateContext(w.context.platform.dc)
-
 		if share != 0 {
 			mylog.Check(wglShareLists(share, w.context.platform.handle))
 		}
