@@ -24,8 +24,7 @@ type platformContextState struct {
 }
 
 type platformLibraryContextState struct {
-	inited bool
-
+	inited                         bool
 	EXT_swap_control               bool
 	EXT_colorspace                 bool
 	ARB_multisample                bool
@@ -52,9 +51,7 @@ func findPixelFormatAttribValue(attribs []int32, values []int32, attrib int32) i
 func (w *Window) choosePixelFormat(ctxconfig *ctxconfig, fbconfig_ *fbconfig) (int, error) {
 	var nativeCount int32
 	var attribs []int32
-
 	c := mylog.Check2(_DescribePixelFormat(w.context.platform.dc, 1, uint32(unsafe.Sizeof(_PIXELFORMATDESCRIPTOR{})), nil))
-
 	nativeCount = c
 
 	if _glfw.platformContext.ARB_pixel_format {
@@ -95,7 +92,6 @@ func (w *Window) choosePixelFormat(ctxconfig *ctxconfig, fbconfig_ *fbconfig) (i
 		if _glfw.platformContext.ARB_multisample {
 			attribs = append(attribs, _WGL_SAMPLES_ARB)
 		}
-
 		if ctxconfig.client == OpenGLAPI {
 			if _glfw.platformContext.ARB_framebuffer_sRGB || _glfw.platformContext.EXT_framebuffer_sRGB {
 				attribs = append(attribs, _WGL_FRAMEBUFFER_SRGB_CAPABLE_ARB)
@@ -111,7 +107,6 @@ func (w *Window) choosePixelFormat(ctxconfig *ctxconfig, fbconfig_ *fbconfig) (i
 	for i := int32(0); i < nativeCount; i++ {
 		var u fbconfig
 		pixelFormat := uintptr(i) + 1
-
 		if _glfw.platformContext.ARB_pixel_format {
 			// Get pixel format attributes through "modern" extension
 			values := make([]int32, len(attribs))
@@ -143,17 +138,14 @@ func (w *Window) choosePixelFormat(ctxconfig *ctxconfig, fbconfig_ *fbconfig) (i
 			u.accumGreenBits = int(findAttribValue(_WGL_ACCUM_GREEN_BITS_ARB))
 			u.accumBlueBits = int(findAttribValue(_WGL_ACCUM_BLUE_BITS_ARB))
 			u.accumAlphaBits = int(findAttribValue(_WGL_ACCUM_ALPHA_BITS_ARB))
-
 			u.auxBuffers = int(findAttribValue(_WGL_AUX_BUFFERS_ARB))
 
 			if findAttribValue(_WGL_STEREO_ARB) != 0 {
 				u.stereo = true
 			}
-
 			if _glfw.platformContext.ARB_multisample {
 				u.samples = int(findAttribValue(_WGL_SAMPLES_ARB))
 			}
-
 			if ctxconfig.client == OpenGLAPI {
 				if _glfw.platformContext.ARB_framebuffer_sRGB || _glfw.platformContext.EXT_framebuffer_sRGB {
 					if findAttribValue(_WGL_FRAMEBUFFER_SRGB_CAPABLE_ARB) != 0 {
@@ -175,15 +167,12 @@ func (w *Window) choosePixelFormat(ctxconfig *ctxconfig, fbconfig_ *fbconfig) (i
 			if pfd.dwFlags&_PFD_DRAW_TO_WINDOW == 0 || pfd.dwFlags&_PFD_SUPPORT_OPENGL == 0 {
 				continue
 			}
-
 			if pfd.dwFlags&_PFD_GENERIC_ACCELERATED == 0 && pfd.dwFlags&_PFD_GENERIC_FORMAT != 0 {
 				continue
 			}
-
 			if pfd.iPixelType != _PFD_TYPE_RGBA {
 				continue
 			}
-
 			if (pfd.dwFlags&_PFD_DOUBLEBUFFER != 0) != fbconfig_.doublebuffer {
 				continue
 			}
@@ -211,16 +200,13 @@ func (w *Window) choosePixelFormat(ctxconfig *ctxconfig, fbconfig_ *fbconfig) (i
 		u.handle = pixelFormat
 		usableConfigs = append(usableConfigs, &u)
 	}
-
 	if len(usableConfigs) == 0 {
 		return 0, fmt.Errorf("glfw: the driver does not appear to support OpenGL")
 	}
-
 	closest := chooseFBConfig(fbconfig_, usableConfigs)
 	if closest == nil {
 		return 0, fmt.Errorf("glfw: failed to find a suitable pixel format")
 	}
-
 	return int(closest.handle), nil
 }
 
@@ -244,11 +230,9 @@ func swapBuffersWGL(window *Window) error {
 	if window.monitor == nil && winver.IsWindowsVistaOrGreater() {
 		// DWM Composition is always enabled on Win8+
 		enabled := winver.IsWindows8OrGreater()
-
 		if !enabled {
 			enabled = mylog.Check2(_DwmIsCompositionEnabled())
 		}
-
 		// HACK: Use DwmFlush when desktop composition is enabled
 		if enabled {
 			for i := 0; i < window.context.platform.interval; i++ {
@@ -263,11 +247,8 @@ func swapBuffersWGL(window *Window) error {
 
 func swapIntervalWGL(interval int) error {
 	ptr := mylog.Check2(_glfw.contextSlot.get())
-
 	window := (*Window)(unsafe.Pointer(ptr))
-
 	window.context.platform.interval = interval
-
 	if window.monitor == nil && winver.IsWindowsVistaOrGreater() {
 		// DWM Composition is always enabled on Win8+
 		enabled := winver.IsWindows8OrGreater()
@@ -277,14 +258,12 @@ func swapIntervalWGL(interval int) error {
 			// Ignore an error from DWM functions as they might not be implemented e.g. on Proton (#2113).
 			enabled = e
 		}
-
 		// HACK: Disable WGL swap interval when desktop composition is enabled to
 		//       avoid interfering with DWM vsync
 		if enabled {
 			interval = 0
 		}
 	}
-
 	if _glfw.platformContext.EXT_swap_control {
 		mylog.Check(wglSwapIntervalEXT(int32(interval)))
 	}
@@ -293,17 +272,14 @@ func swapIntervalWGL(interval int) error {
 
 func extensionSupportedWGL(extension string) bool {
 	var extensions string
-
 	if wglGetExtensionsStringARB_Available() {
 		extensions = wglGetExtensionsStringARB(wglGetCurrentDC())
 	} else if wglGetExtensionsStringEXT_Available() {
 		extensions = wglGetExtensionsStringEXT()
 	}
-
 	if len(extensions) == 0 {
 		return false
 	}
-
 	for _, str := range strings.Split(extensions, " ") {
 		if extension == str {
 			return true
