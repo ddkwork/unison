@@ -7,6 +7,7 @@ package glfw
 
 import (
 	"fmt"
+	"github.com/ddkwork/unison/internal/glfw/win32"
 	"math"
 	"runtime"
 	"syscall"
@@ -1844,13 +1845,11 @@ func (w *Window) platformSetCursorMode(mode int) error {
 				mylog.Check(w.disableRawMouseMotion())
 			}
 		}
-
 		if mode == CursorDisabled {
 			mylog.Check(captureCursor(w))
 		} else {
 			mylog.Check(releaseCursor())
 		}
-
 		if mode == CursorDisabled {
 			_glfw.platformWindow.disabledCursorWindow = w
 		} else if _glfw.platformWindow.disabledCursorWindow == w {
@@ -1858,13 +1857,10 @@ func (w *Window) platformSetCursorMode(mode int) error {
 			mylog.Check(w.platformSetCursorPos(_glfw.platformWindow.restoreCursorPosX, _glfw.platformWindow.restoreCursorPosY))
 		}
 	}
-
 	in := mylog.Check2(w.cursorInContentArea())
-
 	if in {
 		mylog.Check(w.updateCursorImage())
 	}
-
 	return nil
 }
 
@@ -1913,11 +1909,8 @@ func (c *Cursor) platformCreateStandardCursor(shape StandardCursor) error {
 	default:
 		return fmt.Errorf("glfw: invalid shape: %d", shape)
 	}
-
 	h := mylog.Check2(_LoadImageW(0, uintptr(id), _IMAGE_CURSOR, 0, 0, _LR_DEFAULTSIZE|_LR_SHARED))
-
 	c.platform.handle = _HCURSOR(h)
-
 	return nil
 }
 
@@ -1937,11 +1930,12 @@ func (w *Window) platformSetCursor(cursor *Cursor) error {
 }
 
 func platformSetClipboardString(str string) error {
-	panic("glfw: platformSetClipboardString is not implemented")
+	win32.SetClipboardText(str)
+	return nil
 }
 
 func platformGetClipboardString() string {
-	panic("glfw: platformGetClipboardString is not implemented")
+	return win32.GetClipboardText()
 }
 
 func (w *Window) GetWin32Window() (windows.HWND, error) {
