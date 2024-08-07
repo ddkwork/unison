@@ -2,8 +2,6 @@ module github.com/richardwilkes/toolbox
 
 go 1.23
 
-toolchain go1.21.1
-
 require (
 	github.com/jackpal/gateway v1.0.10
 	github.com/pkg/term v1.2.0-beta.2
