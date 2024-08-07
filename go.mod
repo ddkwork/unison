@@ -16,13 +16,11 @@ require (
 )
 
 require (
-	github.com/ddkwork/golibrary v0.0.0-20240802082739-ae4f0bcd4079
+	github.com/ddkwork/golibrary v0.0.0-20240807032548-2d6a9a212679
 	github.com/richardwilkes/toolbox v1.114.2
 )
 
-replace (
-	github.com/richardwilkes/toolbox => ./internal/toolbox-1.99.0
-)
+replace github.com/richardwilkes/toolbox => ./internal/toolbox-1.99.0
 
 require (
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
