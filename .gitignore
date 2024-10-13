@@ -1,0 +1,9 @@
+/tools
+/logs
+.idea
+log.log
+*.exe
+/widget/
+/update go workspace.cmd
+/cache/
+/example/rep/

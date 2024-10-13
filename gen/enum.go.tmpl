@@ -1,0 +1,124 @@
+// Copyright (c) 2021-2024 by Richard A. Wilkes. All rights reserved.
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, version 2.0. If a copy of the MPL was not distributed with
+// this file, You can obtain one at http://mozilla.org/MPL/2.0/.
+//
+// This Source Code Form is "Incompatible With Secondary Licenses", as
+// defined by the Mozilla Public License, version 2.0.
+
+{{$info := . -}}
+package {{fileLeaf .Pkg}}
+
+import (
+    "strings"
+    {{- if .NeedI18N}}
+
+	"github.com/ddkwork/toolbox/i18n"{{end}}
+	{{if .HasOldKeys}}"github.com/ddkwork/toolbox/txt"{{end}}
+)
+
+// Possible values.
+const (
+	{{- range $i, $one := .Values}}
+	{{$info.IDFor $one}}{{if eq $i 0}} Enum = {{$info.BaseValue}}{{end}}{{if $one.Comment}} // {{$one.Comment}}{{end}}
+	{{- end}}
+)
+
+// All possible values.
+var All = []Enum{
+    {{- range .Values}}
+    {{$info.IDFor .}},
+    {{- end}}
+}
+
+{{wrapComment (printf "Enum %s." .Desc) 120}}
+type Enum {{$info.BaseType}}
+
+// EnsureValid ensures this is of a known value.
+func (e Enum) EnsureValid() Enum {
+    {{if $info.NonContiguous -}}
+    for _, one := range All {
+        if one == e {
+            return e
+        }
+    }
+    {{- else -}}
+    if {{if $info.NeedLowerBoundsCheck}}e >= {{$info.IDFor $info.First}} && {{end}}e <= {{$info.IDFor $info.Last}} {
+        return e
+    }
+    {{- end}}
+	return {{$info.IDFor $info.Default}}
+}
+
+// Key returns the key used in serialization.
+func (e Enum) Key() string {
+    switch e {
+    {{- range .Values}}
+    case {{$info.IDFor .}}:
+        return "{{.Key}}"
+    {{- end}}
+    default:
+        return {{$info.IDFor $info.Default}}.Key()
+    }
+}
+
+{{if .HasOldKeys -}}
+func (e Enum) oldKeys() []string {
+    switch e {
+    {{- range .Values}}
+    case {{$info.IDFor .}}:
+        return {{if .OldKeys}}[]string{ {{join .OldKeys}} }{{else}}nil{{end}}
+    {{- end}}
+    default:
+        return {{$info.IDFor $info.Default}}.oldKeys()
+    }
+}
+{{- end}}
+
+// String implements fmt.Stringer.
+func (e Enum) String() string {
+    switch e {
+    {{- range .Values}}
+    case {{$info.IDFor .}}:
+        return {{if not .NoLocalize}}i18n.Text({{end}}{{printf "%q" .StringValue}}{{if not .NoLocalize}}){{end}}
+    {{- end}}
+    default:
+        return {{$info.IDFor $info.Default}}.String()
+    }
+}
+
+{{if .HasAlt -}}
+// AltString returns the alternate string.
+func (e Enum) AltString() string {
+    switch e {
+    {{- range .Values}}
+    case {{$info.IDFor .}}:
+        return {{if .Alt}}i18n.Text({{printf "%q" .Alt}}){{else}}""{{end}}
+    {{- end}}
+    default:
+        return {{$info.IDFor $info.Default}}.AltString()
+    }
+}
+{{- end}}
+
+// MarshalText implements the encoding.TextMarshaler interface.
+func (e Enum) MarshalText() (text []byte, err error) {
+    return []byte(e.Key()), nil
+}
+
+// UnmarshalText implements the encoding.TextUnmarshaler interface.
+func (e *Enum) UnmarshalText(text []byte) error {
+    *e = Extract(string(text))
+    return nil
+}
+
+// Extract the value from a string.
+func Extract(str string) Enum {
+    for _, e := range All {
+        if strings.EqualFold(e.Key(), str){{if .HasOldKeys}} || txt.CaselessSliceContains(e.oldKeys(), str){{end}} {
+            return e
+        }
+    }
+    return {{$info.IDFor $info.Default}}
+}
