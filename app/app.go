@@ -15,12 +15,12 @@ func (d *colorSettingsDockable) addToStartToolbar(toolbar *unison.Panel) {
 	label := unison.NewLabel()
 	label.SetTitle(i18n.Text("Color Mode"))
 	toolbar.AddChild(label)
-	p := unison.NewPopupMenu[thememode.Enum]()
+	p := unison.NewPopupMenu[thememode.Types]()
 	for _, mode := range thememode.All {
 		p.AddItem(mode)
 	}
 	p.Select(gurps.GlobalSettings().ThemeMode)
-	p.SelectionChangedCallback = func(popup *unison.PopupMenu[thememode.Enum]) {
+	p.SelectionChangedCallback = func(popup *unison.PopupMenu[thememode.Types]) {
 		if mode, ok := popup.Selected(); ok {
 			gurps.GlobalSettings().ThemeMode = mode
 			unison.SetThemeMode(mode)
