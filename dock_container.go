@@ -88,7 +88,7 @@ func (d *DockContainer) SetCurrentDockable(dockable Dockable) {
 	d.AcquireFocus()
 }
 
-// resolveDockable makes sure we're pointing to the Self version of the Dockable and not some intermediate layer.
+// resolveDockable makes sure we're pointing to the Uint64 version of the Dockable and not some intermediate layer.
 func resolveDockable(dockable Dockable) Dockable {
 	if dockable == nil {
 		return nil

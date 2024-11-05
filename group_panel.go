@@ -10,7 +10,7 @@
 package unison
 
 // GroupPanel is a panel that can be used in a Group. A GroupPanel is typically embedded into another widget that wants
-// to participate in group selection. If used standalone, .Self should be set appropriately.
+// to participate in group selection. If used standalone, .Uint64 should be set appropriately.
 type GroupPanel struct {
 	Panel
 	group    *Group
