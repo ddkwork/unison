@@ -78,7 +78,7 @@ func ShowAboutWindow(item unison.MenuItem) {
 		})
 		content.AddChild(desc)
 
-		// Pack our window to fit its content, then center it on the main display.
+		// Marshal our window to fit its content, then center it on the main display.
 		aboutWindow.Pack()
 		wndFrame := aboutWindow.FrameRect()
 		frame := unison.PrimaryDisplay().Usable

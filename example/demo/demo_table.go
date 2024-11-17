@@ -117,7 +117,7 @@ func NewDemoTableWindow(where unison.Point) (*unison.Window, error) {
 	})
 	content.AddChild(scrollArea)
 
-	// Pack our window to fit its content, then set its location on the display and make it visible.
+	// Marshal our window to fit its content, then set its location on the display and make it visible.
 	wnd.Pack()
 	rect := wnd.FrameRect()
 	rect.Point = where
