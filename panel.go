@@ -10,9 +10,10 @@
 package unison
 
 import (
-	"github.com/ddkwork/unison/enums/pathop"
 	"reflect"
 	"strings"
+
+	"github.com/ddkwork/unison/enums/pathop"
 
 	"github.com/ddkwork/golibrary/mylog"
 	"github.com/ddkwork/toolbox"

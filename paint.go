@@ -10,8 +10,9 @@
 package unison
 
 import (
-	"github.com/ddkwork/unison/enums/paintstyle"
 	"runtime"
+
+	"github.com/ddkwork/unison/enums/paintstyle"
 
 	"github.com/ddkwork/unison/internal/skia"
 )

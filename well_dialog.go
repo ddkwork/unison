@@ -10,10 +10,11 @@
 package unison
 
 import (
-	"github.com/ddkwork/unison/enums/align"
-	"github.com/ddkwork/unison/enums/paintstyle"
 	"strconv"
 	"strings"
+
+	"github.com/ddkwork/unison/enums/align"
+	"github.com/ddkwork/unison/enums/paintstyle"
 
 	"github.com/ddkwork/golibrary/mylog"
 	"github.com/ddkwork/toolbox/i18n"

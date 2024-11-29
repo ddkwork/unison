@@ -10,10 +10,11 @@
 package unison
 
 import (
+	"time"
+
 	"github.com/ddkwork/unison/enums/align"
 	"github.com/ddkwork/unison/enums/paintstyle"
 	"github.com/ddkwork/unison/enums/side"
-	"time"
 
 	"github.com/ddkwork/toolbox/xmath"
 )

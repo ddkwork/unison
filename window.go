@@ -11,10 +11,11 @@ package unison
 
 import (
 	"fmt"
-	"github.com/ddkwork/unison/enums/paintstyle"
-	"github.com/ddkwork/unison/enums/pathop"
 	"image"
 	"time"
+
+	"github.com/ddkwork/unison/enums/paintstyle"
+	"github.com/ddkwork/unison/enums/pathop"
 
 	"github.com/ddkwork/golibrary/mylog"
 	"github.com/ddkwork/toolbox"

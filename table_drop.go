@@ -10,8 +10,9 @@
 package unison
 
 import (
-	"github.com/ddkwork/unison/enums/paintstyle"
 	"slices"
+
+	"github.com/ddkwork/unison/enums/paintstyle"
 
 	"github.com/google/uuid"
 )

@@ -7,11 +7,12 @@ package glfw
 
 import (
 	"fmt"
-	"github.com/ddkwork/unison/internal/glfw/win32"
 	"math"
 	"runtime"
 	"syscall"
 	"unsafe"
+
+	"github.com/ddkwork/unison/internal/glfw/win32"
 
 	"github.com/ddkwork/golibrary/mylog"
 	"github.com/ddkwork/unison/internal/microsoftgdk"

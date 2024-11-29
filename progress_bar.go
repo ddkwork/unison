@@ -10,8 +10,9 @@
 package unison
 
 import (
-	"github.com/ddkwork/unison/enums/paintstyle"
 	"time"
+
+	"github.com/ddkwork/unison/enums/paintstyle"
 )
 
 // DefaultProgressBarTheme holds the default ProgressBarTheme values for ProgressBars. Modifying this data will not

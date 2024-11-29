@@ -10,8 +10,9 @@
 package unison
 
 import (
-	"github.com/ddkwork/unison/enums/paintstyle"
 	"strconv"
+
+	"github.com/ddkwork/unison/enums/paintstyle"
 
 	"github.com/ddkwork/toolbox/i18n"
 )

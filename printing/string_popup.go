@@ -10,8 +10,9 @@
 package printing
 
 import (
-	"github.com/ddkwork/unison/enums/align"
 	"strings"
+
+	"github.com/ddkwork/unison/enums/align"
 
 	"github.com/ddkwork/toolbox/i18n"
 	"github.com/ddkwork/unison"

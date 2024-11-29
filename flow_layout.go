@@ -10,8 +10,9 @@
 package unison
 
 import (
-	"github.com/ddkwork/unison/enums/align"
 	"math"
+
+	"github.com/ddkwork/unison/enums/align"
 )
 
 var _ Layout = &FlowLayout{}

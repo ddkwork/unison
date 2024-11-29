@@ -11,8 +11,9 @@ package unison
 
 import (
 	"errors"
-	"github.com/ddkwork/unison/enums/align"
 	"strings"
+
+	"github.com/ddkwork/unison/enums/align"
 
 	"github.com/ddkwork/golibrary/mylog"
 	"github.com/ddkwork/toolbox/errs"

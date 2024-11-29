@@ -1,9 +1,10 @@
 package app
 
 import (
-	"github.com/ddkwork/unison/enums/thememode"
 	"log"
 	"log/slog"
+
+	"github.com/ddkwork/unison/enums/thememode"
 
 	"github.com/ddkwork/golibrary/mylog"
 	"github.com/ddkwork/toolbox/log/tracelog"

@@ -10,13 +10,14 @@
 package unison
 
 import (
-	"github.com/ddkwork/unison/enums/align"
-	"github.com/ddkwork/unison/enums/paintstyle"
-	"github.com/ddkwork/unison/enums/pathop"
 	"math"
 	"strings"
 	"time"
 	"unicode"
+
+	"github.com/ddkwork/unison/enums/align"
+	"github.com/ddkwork/unison/enums/paintstyle"
+	"github.com/ddkwork/unison/enums/pathop"
 
 	"github.com/ddkwork/toolbox/txt"
 )

@@ -11,12 +11,13 @@ package printing
 
 import (
 	"context"
-	"github.com/ddkwork/unison/enums/align"
 	"io"
 	"net/http"
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/ddkwork/unison/enums/align"
 
 	"github.com/ddkwork/golibrary/mylog"
 	"github.com/ddkwork/toolbox/i18n"

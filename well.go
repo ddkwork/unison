@@ -11,9 +11,10 @@ package unison
 
 import (
 	"context"
+	"time"
+
 	"github.com/ddkwork/unison/enums/paintstyle"
 	"github.com/ddkwork/unison/enums/pathop"
-	"time"
 
 	"github.com/ddkwork/golibrary/mylog"
 )

@@ -10,8 +10,6 @@
 package unison
 
 import (
-	"github.com/ddkwork/toolbox/log/tracelog"
-	"github.com/ddkwork/unison/enums/thememode"
 	"log"
 	"log/slog"
 	"os"
@@ -20,6 +18,9 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/ddkwork/toolbox/log/tracelog"
+	"github.com/ddkwork/unison/enums/thememode"
 
 	"github.com/ddkwork/golibrary/mylog"
 	"github.com/ddkwork/toolbox/atexit"

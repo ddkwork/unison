@@ -11,6 +11,7 @@ package unison
 
 import (
 	"fmt"
+
 	"github.com/ddkwork/unison/enums/paintstyle"
 )
 

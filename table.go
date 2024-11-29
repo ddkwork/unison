@@ -10,8 +10,9 @@
 package unison
 
 import (
-	"github.com/ddkwork/unison/enums/paintstyle"
 	"time"
+
+	"github.com/ddkwork/unison/enums/paintstyle"
 
 	"github.com/ddkwork/golibrary/mylog"
 	"github.com/ddkwork/toolbox/xmath"
@@ -668,7 +669,7 @@ func (t *Table[T]) CellFrame(row, col int) Rect {
 	rect.Inset(t.Padding) // 设置单元格的内边距
 	// 如果当前列是层级列，添加缩进
 	if t.Columns[col].ID == t.HierarchyColumnID {
-		indent := t.HierarchyIndent*float32(t.rowCache[row].depth+1) + t.Padding.Left //层级缩进*深度+1+左内边距
+		indent := t.HierarchyIndent*float32(t.rowCache[row].depth+1) + t.Padding.Left // 层级缩进*深度+1+左内边距
 		rect.X += indent                                                              // 更新矩形的左侧 x 坐标
 		rect.Width -= indent                                                          // 更新矩形的宽度
 		if rect.Width < 1 {                                                           // 确保宽度不小于 1

@@ -32,6 +32,6 @@ func main() {
 	cl.Parse(os.Args[1:])
 	unison.Start(unison.StartupFinishedCallback(func() {
 		mylog.Check2(demo.NewDemoTableWindow(unison.PrimaryDisplay().Usable.Point))
-		//mylog.Check2(demo.NewDemoWindow(unison.PrimaryDisplay().Usable.Point))
+		// mylog.Check2(demo.NewDemoWindow(unison.PrimaryDisplay().Usable.Point))
 	})) // Never returns
 }

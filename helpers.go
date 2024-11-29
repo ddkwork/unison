@@ -10,8 +10,9 @@
 package unison
 
 import (
-	"github.com/ddkwork/unison/enums/paintstyle"
 	"strings"
+
+	"github.com/ddkwork/unison/enums/paintstyle"
 )
 
 // DrawRectBase fills and strokes a rectangle.

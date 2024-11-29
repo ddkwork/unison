@@ -11,11 +11,12 @@ package demo
 
 import (
 	"fmt"
-	"github.com/ddkwork/unison/enums/align"
-	"github.com/ddkwork/unison/enums/behavior"
 	"log/slog"
 	"strings"
 	"unicode"
+
+	"github.com/ddkwork/unison/enums/align"
+	"github.com/ddkwork/unison/enums/behavior"
 
 	"github.com/ddkwork/golibrary/mylog"
 	"github.com/ddkwork/toolbox/errs"

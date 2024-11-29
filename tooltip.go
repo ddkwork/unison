@@ -10,9 +10,10 @@
 package unison
 
 import (
-	"github.com/ddkwork/unison/enums/paintstyle"
 	"strings"
 	"time"
+
+	"github.com/ddkwork/unison/enums/paintstyle"
 )
 
 // DefaultTooltipTheme holds the default TooltipTheme values for Tooltips. Modifying this data will not alter existing

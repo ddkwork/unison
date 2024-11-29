@@ -10,9 +10,10 @@
 package unison
 
 import (
-	"github.com/ddkwork/unison/enums/paintstyle"
 	"slices"
 	"sort"
+
+	"github.com/ddkwork/unison/enums/paintstyle"
 
 	"github.com/ddkwork/toolbox/txt"
 	"github.com/ddkwork/toolbox/xmath"

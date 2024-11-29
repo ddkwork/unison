@@ -10,9 +10,10 @@
 package unison
 
 import (
+	"strings"
+
 	"github.com/ddkwork/unison/enums/align"
 	"github.com/ddkwork/unison/enums/paintstyle"
-	"strings"
 
 	"github.com/ddkwork/toolbox/i18n"
 )

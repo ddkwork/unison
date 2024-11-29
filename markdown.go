@@ -15,13 +15,14 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/ddkwork/unison/enums/align"
-	"github.com/ddkwork/unison/enums/paintstyle"
 	"net/url"
 	"path/filepath"
 	"slices"
 	"strings"
 	"time"
+
+	"github.com/ddkwork/unison/enums/align"
+	"github.com/ddkwork/unison/enums/paintstyle"
 
 	"github.com/ddkwork/golibrary/mylog"
 	"github.com/ddkwork/toolbox"

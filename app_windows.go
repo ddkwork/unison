@@ -10,10 +10,11 @@
 package unison
 
 import (
-	"github.com/ddkwork/unison/enums/thememode"
 	"sync/atomic"
 	"syscall"
 	"time"
+
+	"github.com/ddkwork/unison/enums/thememode"
 
 	"github.com/ddkwork/golibrary/mylog"
 	"github.com/ddkwork/unison/internal/w32"
