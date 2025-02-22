@@ -16,7 +16,7 @@ require (
 )
 
 require (
-	github.com/ddkwork/golibrary v0.0.91-0.20250222100916-fc8029a3f592
+	github.com/ddkwork/golibrary v0.0.91-0.20250222134107-b787fdf70afa
 	github.com/ddkwork/toolbox v0.0.0-20250221043304-e2865d103f34
 
 )
