@@ -28,6 +28,8 @@ github.com/ddkwork/golibrary v0.0.91-0.20250223131750-a8104c43bca2 h1:AfDriquwTn
 github.com/ddkwork/golibrary v0.0.91-0.20250223131750-a8104c43bca2/go.mod h1:6yNujFwybY0YmjNj7uDegka5mnO2Xg6XMNNtQ9TZ/gI=
 github.com/ddkwork/toolbox v0.0.0-20250221043304-e2865d103f34 h1:L7nNbyx/xAtXavCXcnANYUCAMk+sX2UqyB3C17yCyGs=
 github.com/ddkwork/toolbox v0.0.0-20250221043304-e2865d103f34/go.mod h1:y0nLLadZl0tIv9sUOSGL8JjRXSwe0oBEaEWMlhVmMAI=
+github.com/ddkwork/toolbox v0.0.0-20250222134758-c8d7f1d3b980 h1:obwlGEnFCqcAGEfztXiKV3l0gQAK+JHUMLvkm/nX8sU=
+github.com/ddkwork/toolbox v0.0.0-20250222134758-c8d7f1d3b980/go.mod h1:8EK9u8p2ZfZP3NjXPZYn27Ajn43e7vXM6uTTXb5SLW0=
 github.com/ebitengine/purego v0.8.1 h1:sdRKd6plj7KYW33EH5As6YKfe8m9zbN9JMrOjNVF/BE=
 github.com/ebitengine/purego v0.8.1/go.mod h1:iIjxzd6CiRiOG0UyXP+V1+jWqUXVjPKLAI0mRfJZTmQ=
 github.com/go-quicktest/qt v1.101.0 h1:O1K29Txy5P2OK0dGo59b7b0LR6wKfIhttaAhHUyn7eI=
