@@ -16,13 +16,13 @@ require (
 )
 
 require (
-	github.com/ddkwork/golibrary v0.0.91-0.20250224160512-cae108870eee
+	github.com/ddkwork/golibrary v0.0.91-0.20250225120832-ed50dea89457
 	github.com/ddkwork/toolbox v0.0.0-20250223132126-bc1aa33ca017
 
 )
 
 require (
-	gioui.org v0.8.0 // indirect
+	gioui.org v0.8.1-0.20250223181602-72a72a2bc21a // indirect
 	gioui.org/shader v1.0.8 // indirect
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
 	github.com/dc0d/caseconv v0.5.0 // indirect
