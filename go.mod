@@ -10,13 +10,13 @@ require (
 	github.com/grandcat/zeroconf v1.0.0
 	github.com/richardwilkes/json v0.3.0
 	github.com/yuin/goldmark v1.7.8
-	golang.org/x/image v0.24.0
-	golang.org/x/sys v0.30.0
-	golang.org/x/text v0.22.0
+	golang.org/x/image v0.25.0
+	golang.org/x/sys v0.31.0
+	golang.org/x/text v0.23.0
 )
 
 require (
-	github.com/ddkwork/golibrary v0.0.91-0.20250305161447-d6e22f9038bf
+	github.com/ddkwork/golibrary v0.0.91-0.20250305180712-ddf6d725a722
 	github.com/ddkwork/toolbox v0.0.0-20250305101644-ff54d4ae6db5
 
 )
@@ -32,9 +32,9 @@ require (
 	github.com/pkg/term v1.2.0-beta.2 // indirect
 	golang.org/x/exp v0.0.0-20250228200357-dead58393ab7 // indirect
 	golang.org/x/exp/shiny v0.0.0-20250228200357-dead58393ab7 // indirect
-	golang.org/x/mod v0.23.0 // indirect
+	golang.org/x/mod v0.24.0 // indirect
 	golang.org/x/net v0.35.0 // indirect
-	golang.org/x/sync v0.11.0 // indirect
+	golang.org/x/sync v0.12.0 // indirect
 	golang.org/x/tools v0.30.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
