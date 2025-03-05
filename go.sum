@@ -14,8 +14,8 @@ github.com/cespare/xxhash/v2 v2.3.0/go.mod h1:VGX0DQ3Q6kWi7AoAeZDth3/j3BFtOZR5XL
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
 github.com/ddkwork/golibrary v0.0.91-0.20250305075445-8b9cd41bb9a4 h1:7TguTXkDPoAj4ziVmmmIYrJDhVKK4g2+j2/WPACeKsw=
 github.com/ddkwork/golibrary v0.0.91-0.20250305075445-8b9cd41bb9a4/go.mod h1:IYLYFeKPVFG48qHFntgbZxjL5d+WHNLn6IUuKx6Su64=
-github.com/ddkwork/toolbox v0.0.0-20250223132126-bc1aa33ca017 h1:tIJzTtEiqFChqKf83AZu9wdjXPCAyvF9lWIwJ+gFuS8=
-github.com/ddkwork/toolbox v0.0.0-20250223132126-bc1aa33ca017/go.mod h1:8Smu+JdlrR8LM1aSIe7pLdsMMEB3+28+x7cT21vxYAM=
+github.com/ddkwork/toolbox v0.0.0-20250227042439-d5b6fa483d45 h1:NplPTieuVqkyT6eZbC9C+dci+KI+LmTxhI/bVE8Whps=
+github.com/ddkwork/toolbox v0.0.0-20250227042439-d5b6fa483d45/go.mod h1:HbTDHZ6bmNtAKzNjCulbn+JIeYOOpsEllbVKEugDsMM=
 github.com/ebitengine/purego v0.9.0-alpha.2.0.20250211193246-e9fe9ab98c53 h1:y31FAV0LwnzpfVBd+ZDPl/LQWKnNSDWv9qy8Gakl9LM=
 github.com/ebitengine/purego v0.9.0-alpha.2.0.20250211193246-e9fe9ab98c53/go.mod h1:iIjxzd6CiRiOG0UyXP+V1+jWqUXVjPKLAI0mRfJZTmQ=
 github.com/go-text/typesetting v0.3.0 h1:OWCgYpp8njoxSRpwrdd1bQOxdjOXDj9Rqart9ML4iF4=
