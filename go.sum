@@ -5,8 +5,8 @@ github.com/cenkalti/backoff v2.2.1+incompatible/go.mod h1:90ReRw6GdpyfrHakVjL/QH
 github.com/cespare/xxhash/v2 v2.3.0 h1:UL815xU9SqsFlibzuggzjXhog7bL6oX9BbNZnL2UFvs=
 github.com/cespare/xxhash/v2 v2.3.0/go.mod h1:VGX0DQ3Q6kWi7AoAeZDth3/j3BFtOZR5XLFGgcrjCOs=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
-github.com/ddkwork/golibrary v0.0.91-0.20250306062730-5f886ac6cff1 h1:5Hdlr9u+8jaA3wSDZLu3hGjmLxA40Ml4J+tt1dRJimg=
-github.com/ddkwork/golibrary v0.0.91-0.20250306062730-5f886ac6cff1/go.mod h1:K88fLHDlKcBxwoZNLYUFe61XSWgGM+zvJqba8xepN+E=
+github.com/ddkwork/golibrary v0.0.91-0.20250306083343-21f236d60891 h1:4fWpJLlbIdGfvVjFRDFIRv1tr9puAbTkgigMsgzDSdE=
+github.com/ddkwork/golibrary v0.0.91-0.20250306083343-21f236d60891/go.mod h1:asHnV6kPJrWJ5J2QeDZnQawJ1iroGQVifvC8+UoMaXA=
 github.com/ddkwork/toolbox v0.0.0-20250306061020-57d9d0f8a742 h1:NDwORRjLyLT/J+QC5TYxtgnCReutmwWOPF1m7eRCRCU=
 github.com/ddkwork/toolbox v0.0.0-20250306061020-57d9d0f8a742/go.mod h1:pgrt/7NU7Ifj67+GiJVZiZ2HnBnr8vOVGKiSbK9L+EM=
 github.com/ebitengine/purego v0.9.0-alpha.2.0.20250211193246-e9fe9ab98c53 h1:y31FAV0LwnzpfVBd+ZDPl/LQWKnNSDWv9qy8Gakl9LM=
