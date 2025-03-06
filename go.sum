@@ -7,8 +7,8 @@ github.com/cespare/xxhash/v2 v2.3.0/go.mod h1:VGX0DQ3Q6kWi7AoAeZDth3/j3BFtOZR5XL
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
 github.com/ddkwork/golibrary v0.0.91-0.20250306083701-983ead031b04 h1:i5LqTlgB9Jv+y9htFwryR+WDy5xAN1NSSS2CnFEorCM=
 github.com/ddkwork/golibrary v0.0.91-0.20250306083701-983ead031b04/go.mod h1:asHnV6kPJrWJ5J2QeDZnQawJ1iroGQVifvC8+UoMaXA=
-github.com/ddkwork/toolbox v0.0.0-20250306061020-57d9d0f8a742 h1:NDwORRjLyLT/J+QC5TYxtgnCReutmwWOPF1m7eRCRCU=
-github.com/ddkwork/toolbox v0.0.0-20250306061020-57d9d0f8a742/go.mod h1:pgrt/7NU7Ifj67+GiJVZiZ2HnBnr8vOVGKiSbK9L+EM=
+github.com/ddkwork/toolbox v0.0.0-20250306080448-31b91d349a9d h1:ek8GdeoOvOgvjDDfhENUoODITp7bNpY7ekzbL5vIidY=
+github.com/ddkwork/toolbox v0.0.0-20250306080448-31b91d349a9d/go.mod h1:FKzRueNFGZIeMFW3RYz+AUEKyg3DGNMGMY2GK5J21aY=
 github.com/ebitengine/purego v0.9.0-alpha.2.0.20250211193246-e9fe9ab98c53 h1:y31FAV0LwnzpfVBd+ZDPl/LQWKnNSDWv9qy8Gakl9LM=
 github.com/ebitengine/purego v0.9.0-alpha.2.0.20250211193246-e9fe9ab98c53/go.mod h1:iIjxzd6CiRiOG0UyXP+V1+jWqUXVjPKLAI0mRfJZTmQ=
 github.com/google/go-cmp v0.7.0 h1:wk8382ETsv4JYUZwIsn6YpYiWiBsYLSJiTsyBybVuN8=
